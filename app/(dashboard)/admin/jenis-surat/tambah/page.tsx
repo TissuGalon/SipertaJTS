@@ -55,6 +55,7 @@ import * as mammoth from 'mammoth';
 import PizZip from 'pizzip';
 import Docxtemplater from 'docxtemplater';
 import { saveAs } from 'file-saver';
+import { supabase } from '@/lib/supabase';
 
 
 const templateSchema = z.object({
@@ -97,12 +98,53 @@ export default function TambahTemplatePage() {
     name: "fields"
   });
 
-  const onSubmit = (data: TemplateFormValues) => {
-    console.log("Saving template:", data);
-    toast.success("Template berhasil disimpan", {
-      description: "Jenis surat baru telah ditambahkan ke sistem."
-    });
-    router.push('/admin/jenis-surat');
+  const onSubmit = async (data: TemplateFormValues) => {
+    try {
+      if (!templateFile) {
+        toast.error("Template Belum Ada", {
+          description: "Silakan upload berkas .docx terlebih dahulu."
+        });
+        return;
+      }
+
+      setIsGenerating(true);
+
+      // 1. Upload file to storage
+      const fileExt = templateFile.name.split('.').pop();
+      const fileName = `${Date.now()}-${data.title.replace(/\s+/g, '_')}.${fileExt}`;
+      const filePath = fileName; // Inside bucket
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('letter_templates')
+        .upload(filePath, templateFile);
+
+      if (uploadError) throw uploadError;
+
+      // 2. Save metadata to database
+      const { error: dbError } = await supabase
+        .from('letter_templates')
+        .insert([{
+          name: data.title,
+          category: data.category,
+          description: data.description,
+          fields: data.fields,
+          file_path: uploadData.path
+        }]);
+
+      if (dbError) throw dbError;
+
+      toast.success("Template berhasil disimpan", {
+        description: "Jenis surat baru telah ditambahkan ke sistem."
+      });
+      router.push('/admin/jenis-surat');
+    } catch (error: any) {
+      console.error("Submission error:", error);
+      toast.error("Gagal Menyimpan", {
+        description: error.message || "Terjadi kesalahan saat menyimpan template."
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const [templateFile, setTemplateFile] = useState<File | null>(null);

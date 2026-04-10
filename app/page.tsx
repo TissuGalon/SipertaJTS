@@ -45,40 +45,87 @@ import {
 } from "@tabler/icons-react"
 import { toast } from "sonner"
 import { motion } from "framer-motion"
+import { supabase } from "@/lib/supabase"
 
 export default function LandingPage() {
   const router = useRouter()
-  const [role, setRole] = useState<"admin" | "student" | "teacher">("student")
+  const [role, setRole] = useState<"admin" | "student" | "dosen">("student")
   const [isLoading, setIsLoading] = useState(false)
+  
+  // Login form state
+  const [loginEmail, setLoginEmail] = useState("")
+  const [loginPassword, setLoginPassword] = useState("")
 
-  const handleLogin = (e: React.FormEvent) => {
+  // Sign up form state
+  const [signUpData, setSignUpData] = useState({
+    name: "",
+    nim: "",
+    email: "",
+    password: ""
+  })
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
-    // Simulate login delay
-    setTimeout(() => {
-      setIsLoading(false)
-      toast.success(
-        `Welcome back! Logged in as ${role === "admin" ? "Admin" : role === "teacher" ? "Lecturer" : "Student"}`
-      )
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: loginEmail,
+        password: loginPassword,
+      })
 
-      if (role === "admin") {
+      if (error) throw error
+
+      toast.success("Login Berhasil")
+
+      const { data: profile } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', data.user.id)
+        .single()
+
+      if (profile?.role === "admin") {
         router.push("/admin/dashboard")
-      } else if (role === "teacher") {
+      } else if (profile?.role === "dosen") {
         router.push("/dosen/dashboard")
       } else {
         router.push("/mahasiswa/dashboard")
       }
-    }, 1500)
+      router.refresh()
+    } catch (error: any) {
+      toast.error("Login Gagal", { description: error.message })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const handleSignUp = (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    setTimeout(() => {
+
+    try {
+      const { error } = await supabase.auth.signUp({
+        email: signUpData.email,
+        password: signUpData.password,
+        options: {
+          data: {
+            name: signUpData.name,
+            nim: signUpData.nim,
+            role: "student" // Default to student from landing page
+          }
+        }
+      })
+
+      if (error) throw error
+
+      toast.success("Registrasi Berhasil", { 
+        description: "Silakan login menggunakan akun baru Anda." 
+      })
+    } catch (error: any) {
+      toast.error("Registrasi Gagal", { description: error.message })
+    } finally {
       setIsLoading(false)
-      toast.success("Registration successful! Please login.")
-    }, 1500)
+    }
   }
 
   return (
@@ -177,6 +224,8 @@ export default function LandingPage() {
                           type="email"
                           placeholder="nim@student.ac.id"
                           className="pl-10"
+                          value={loginEmail}
+                          onChange={(e) => setLoginEmail(e.target.value)}
                           required
                         />
                       </div>
@@ -189,22 +238,11 @@ export default function LandingPage() {
                           id="login-password"
                           type="password"
                           className="pl-10"
+                          value={loginPassword}
+                          onChange={(e) => setLoginPassword(e.target.value)}
                           required
                         />
                       </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="role">Masuk Sebagai</Label>
-                      <Select value={role} onValueChange={(v: any) => setRole(v)}>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Pilih Role" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="student">Mahasiswa</SelectItem>
-                          <SelectItem value="teacher">Dosen / Koordinator</SelectItem>
-                          <SelectItem value="admin">Staf Administrasi</SelectItem>
-                        </SelectContent>
-                      </Select>
                     </div>
                     <Button
                       type="submit"
@@ -220,19 +258,44 @@ export default function LandingPage() {
                   <form onSubmit={handleSignUp} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="signup-name">Nama Lengkap</Label>
-                      <Input id="signup-name" placeholder="John Doe" required />
+                      <Input 
+                        id="signup-name" 
+                        placeholder="John Doe" 
+                        value={signUpData.name}
+                        onChange={(e) => setSignUpData({...signUpData, name: e.target.value})}
+                        required 
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="signup-nim">NIM</Label>
-                      <Input id="signup-nim" placeholder="210101xxx" required />
+                      <Input 
+                        id="signup-nim" 
+                        placeholder="210101xxx" 
+                        value={signUpData.nim}
+                        onChange={(e) => setSignUpData({...signUpData, nim: e.target.value})}
+                        required 
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="signup-email">Email</Label>
-                      <Input id="signup-email" type="email" placeholder="nim@student.ac.id" required />
+                      <Input 
+                        id="signup-email" 
+                        type="email" 
+                        placeholder="nim@student.ac.id" 
+                        value={signUpData.email}
+                        onChange={(e) => setSignUpData({...signUpData, email: e.target.value})}
+                        required 
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="signup-password">Kata Sandi</Label>
-                      <Input id="signup-password" type="password" required />
+                      <Input 
+                        id="signup-password" 
+                        type="password" 
+                        value={signUpData.password}
+                        onChange={(e) => setSignUpData({...signUpData, password: e.target.value})}
+                        required 
+                      />
                     </div>
                     <Button
                       type="submit"

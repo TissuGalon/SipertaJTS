@@ -14,44 +14,61 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
   IconMail,
   IconLock,
   IconSchool,
-  IconShieldLock,
+  IconLoader2,
 } from "@tabler/icons-react"
 import { toast } from "sonner"
+import { supabase } from "@/lib/supabase"
+import Link from "next/link"
 
 export default function LoginPage() {
   const router = useRouter()
-  const [role, setRole] = useState<"admin" | "student" | "teacher">("student")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
-    // Simulate login delay
-    setTimeout(() => {
-      setIsLoading(false)
-      toast.success(
-        `Welcome back! Logged in as ${role === "admin" ? "Admin" : "Student"}`
-      )
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
-      if (role === "admin") {
+      if (error) throw error
+
+      toast.success("Login Berhasil", {
+        description: "Selamat datang kembali di Sistem Surat."
+      })
+
+      // Fetch profile to redirect correctly
+      const { data: profile } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', data.user.id)
+        .single()
+
+      if (profile?.role === "admin") {
         router.push("/admin/dashboard")
-      } else if (role === "teacher") {
+      } else if (profile?.role === "dosen") {
         router.push("/dosen/dashboard")
       } else {
         router.push("/mahasiswa/dashboard")
       }
-    }, 1500)
+      
+      router.refresh()
+    } catch (error: any) {
+      console.error("Login error:", error)
+      toast.error("Login Gagal", {
+        description: error.message || "Email atau password salah."
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -65,10 +82,10 @@ export default function LoginPage() {
             </div>
           </div>
           <CardTitle className="text-2xl font-bold tracking-tight">
-            Letter System
+            Login Sistem Surat
           </CardTitle>
           <CardDescription>
-            Enter your credentials to access your account
+            Masukkan kredensial Anda untuk mengakses akun
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -80,8 +97,10 @@ export default function LoginPage() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="name@university.ac.id"
-                  className="pl-10"
+                  placeholder="nama@email.com"
+                  className="pl-10 h-11"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </div>
@@ -93,54 +112,34 @@ export default function LoginPage() {
                 <Input
                   id="password"
                   type="password"
-                  className="pl-10"
+                  placeholder="••••••••"
+                  className="pl-10 h-11"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
                 />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="role">Sign in as</Label>
-              <Select value={role} onValueChange={(v: any) => setRole(v)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="student">
-                    <div className="flex items-center">
-                      <IconSchool className="mr-2 h-4 w-4" />
-                      Student
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="teacher">
-                    <div className="flex items-center">
-                      <IconSchool className="mr-2 h-4 w-4" />
-                      Teacher
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="admin">
-                    <div className="flex items-center">
-                      <IconShieldLock className="mr-2 h-4 w-4" />
-                      Administrator
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
             <Button
               type="submit"
-              className="mt-2 w-full bg-blue-600 hover:bg-blue-700"
+              className="mt-4 w-full h-11 bg-indigo-600 hover:bg-indigo-700 font-semibold"
               disabled={isLoading}
             >
-              {isLoading ? "Signing in..." : "Sign In"}
+              {isLoading ? (
+                <>
+                  <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Memproses...
+                </>
+              ) : "Sign In"}
             </Button>
           </form>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4 border-t bg-slate-50/50 p-6 dark:bg-slate-900/50">
-          <div className="text-center text-xs text-slate-500">
-            Forgot your password?{" "}
-            <a href="#" className="font-medium text-blue-600 hover:underline">
-              Reset here
-            </a>
+          <div className="text-center text-sm text-slate-500">
+            Belum punya akun?{" "}
+            <Link href="/register" className="font-bold text-indigo-600 hover:underline">
+              Daftar Sekarang
+            </Link>
           </div>
         </CardFooter>
       </Card>
