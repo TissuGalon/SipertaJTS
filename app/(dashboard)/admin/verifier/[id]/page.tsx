@@ -28,37 +28,91 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 import Link from 'next/link';
-import { LETTER_TYPE_LABELS } from '@/types';
+import { supabase } from '@/lib/supabase';
+import { LETTER_TYPE_LABELS, RequestStatus } from '@/types';
 import { toast } from 'sonner';
 import { Textarea } from '@/components/ui/textarea';
 
 export default function DocumentVerifierPage() {
   const { id } = useParams();
   const router = useRouter();
-  const request = mockRequests.find(r => r.id === id);
+  const [request, setRequest] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
   
   const [letterNumber, setLetterNumber] = useState("");
   const [academicYear, setAcademicYear] = useState("2023/2024");
   const [notes, setNotes] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
+
+  React.useEffect(() => {
+    if (id) fetchRequest();
+  }, [id]);
+
+  const fetchRequest = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('letter_requests')
+        .select('*, users(name, nim)')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+      setRequest(data);
+      setLetterNumber(data.letter_number || "");
+      setAcademicYear(data.academic_year || "2023/2024");
+      setNotes(data.admin_notes || "");
+    } catch (error: any) {
+      console.error('Error fetching request:', error);
+      toast.error("Gagal mengambil data pengajuan");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAction = async (status: 'done' | 'rejected') => {
+    try {
+      setIsProcessing(true);
+      const { error } = await supabase
+        .from('letter_requests')
+        .update({
+          status,
+          admin_notes: notes,
+          letter_number: letterNumber,
+          academic_year: academicYear,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast.success(`Permintaan berhasil ${status === 'done' ? 'disetujui' : 'ditolak'}`);
+      router.push('/admin/permintaan');
+    } catch (error: any) {
+      console.error('Error updating request:', error);
+      toast.error("Gagal memproses permintaan");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-[60vh] flex-col items-center justify-center space-y-4">
+        <div className="h-12 w-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-slate-500 font-medium tracking-tight">Memuat data pengajuan...</p>
+      </div>
+    );
+  }
 
   if (!request) {
     return (
       <div className="flex h-[60vh] flex-col items-center justify-center space-y-4">
         <h2 className="text-xl font-semibold">Pengajuan Tidak Ditemukan</h2>
-        <Button onClick={() => router.push('/admin/dashboard')}>Ke Dashboard</Button>
+        <Button onClick={() => router.push('/admin/permintaan')}>Kembali ke Daftar</Button>
       </div>
     );
   }
-
-  const handleAction = (status: 'done' | 'rejected') => {
-    setIsProcessing(true);
-    setTimeout(() => {
-      setIsProcessing(false);
-      toast.success(`Permintaan berhasil ${status === 'done' ? 'disetujui' : 'ditolak'}`);
-      router.push('/admin/dashboard');
-    }, 1500);
-  };
 
   return (
     <div className="h-full flex flex-col space-y-6">
@@ -151,8 +205,8 @@ export default function DocumentVerifierPage() {
                 <IconUser size={20} />
               </div>
               <div>
-                <CardTitle>{request.userName}</CardTitle>
-                <CardDescription>NIM: {request.userNim} • {LETTER_TYPE_LABELS[request.type]}</CardDescription>
+                <CardTitle>{request.users?.name || 'Unknown'}</CardTitle>
+                <CardDescription>NIM: {request.users?.nim || '-'} • {LETTER_TYPE_LABELS[request.type as keyof typeof LETTER_TYPE_LABELS]}</CardDescription>
               </div>
             </CardHeader>
             <CardContent>
@@ -162,7 +216,7 @@ export default function DocumentVerifierPage() {
                     <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">
                       {key.replace(/([A-Z])/g, ' $1').trim()}
                     </span>
-                    <p className="text-sm font-medium">{value}</p>
+                    <p className="text-sm font-medium">{String(value)}</p>
                   </div>
                 ))}
               </div>
@@ -178,6 +232,20 @@ export default function DocumentVerifierPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="status">Status Saat Ini</Label>
+                  <div className="h-10 flex items-center">
+                    <StatusBadge status={request.status} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="date">Tanggal Pengajuan</Label>
+                  <div className="h-10 flex items-center text-sm font-medium">
+                    {new Date(request.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  </div>
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 {request.type === 'surat_magang' && (
                   <div className="space-y-2">

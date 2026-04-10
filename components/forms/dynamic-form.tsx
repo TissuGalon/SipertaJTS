@@ -26,18 +26,22 @@ import { Textarea } from '@/components/ui/textarea';
 import { FileUpload } from './file-upload';
 import { FormFieldConfig } from '@/types';
 
+import { IconLoader2 } from '@tabler/icons-react';
+
 interface DynamicFormProps {
   fields: FormFieldConfig[];
   onSubmit: (data: any) => void;
   submitLabel?: string;
   defaultValues?: Record<string, any>;
+  isLoading?: boolean;
 }
 
 export const DynamicForm: React.FC<DynamicFormProps> = ({ 
   fields, 
   onSubmit, 
   submitLabel = "Submit", 
-  defaultValues = {} 
+  defaultValues = {},
+  isLoading = false
 }) => {
   // Create dynamic schema from fields
   const schema = useMemo(() => {
@@ -109,8 +113,13 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
             }}
           />
         ))}
-        <Button type="submit" className="w-full">
-          {submitLabel}
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? (
+            <>
+              <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />
+              Mengirim...
+            </>
+          ) : submitLabel}
         </Button>
       </form>
     </Form>

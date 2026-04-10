@@ -39,18 +39,45 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from 'next/link';
-import { LETTER_TYPE_LABELS, RequestStatus } from '@/types';
+import { supabase } from '@/lib/supabase';
+import { LETTER_TYPE_LABELS, RequestStatus, LetterRequest } from '@/types';
 import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
 
 export default function PermintaanSuratPage() {
   const [filterStatus, setFilterStatus] = useState<RequestStatus | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [requests] = useState(mockRequests);
+  const [requests, setRequests] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  React.useEffect(() => {
+    fetchRequests();
+  }, []);
+
+  const fetchRequests = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('letter_requests')
+        .select('*, users(name, nim)')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setRequests(data || []);
+    } catch (error: any) {
+      console.error('Error fetching requests:', error);
+      toast.error("Gagal mengambil data pengajuan");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const filteredRequests = requests.filter(req => {
     const matchesStatus = filterStatus === "all" || req.status === filterStatus;
-    const matchesSearch = req.userName.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          req.userNim.includes(searchQuery) ||
+    const userName = req.users?.name || "";
+    const userNim = req.users?.nim || "";
+    const matchesSearch = userName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          userNim.includes(searchQuery) ||
                           req.id.includes(searchQuery);
     return matchesStatus && matchesSearch;
   });
@@ -136,26 +163,47 @@ export default function PermintaanSuratPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {filteredRequests.map((request) => (
+                {isLoading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <tr key={i} className="animate-pulse">
+                      <td className="px-6 py-4">
+                        <div className="h-4 w-32 bg-slate-100 dark:bg-slate-800 rounded mb-2"></div>
+                        <div className="h-3 w-24 bg-slate-50 dark:bg-slate-900 rounded"></div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-4 w-40 bg-slate-100 dark:bg-slate-800 rounded"></div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-4 w-24 bg-slate-100 dark:bg-slate-800 rounded"></div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-6 w-20 bg-slate-100 dark:bg-slate-800 rounded-full"></div>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="h-9 w-20 bg-slate-100 dark:bg-slate-800 rounded ml-auto"></div>
+                      </td>
+                    </tr>
+                  ))
+                ) : filteredRequests.map((request) => (
                   <tr key={request.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-all duration-200">
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
                         <span className="font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                          {request.userName}
+                          {request.users?.name || 'Unknown'}
                         </span>
                         <div className="flex items-center space-x-2 mt-1">
-                          <span className="text-xs text-slate-400 font-mono">ID: {request.id}</span>
+                          <span className="text-xs text-slate-400 font-mono">ID: {request.id.slice(0, 8)}</span>
                           <span className="h-1 w-1 bg-slate-300 rounded-full"></span>
-                          <span className="text-sm font-medium text-slate-500">{request.userNim}</span>
+                          <span className="text-sm font-medium text-slate-500">{request.users?.nim || '-'}</span>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
                         <span className="text-slate-700 dark:text-slate-300 font-medium whitespace-nowrap">
-                          {LETTER_TYPE_LABELS[request.type]}
+                          {LETTER_TYPE_LABELS[request.type as keyof typeof LETTER_TYPE_LABELS]}
                         </span>
-                        {request.details.companyName && (
+                        {request.details?.companyName && (
                           <span className="text-[11px] text-slate-400 mt-0.5 truncate max-w-[150px]">
                             {request.details.companyName}
                           </span>
@@ -165,10 +213,10 @@ export default function PermintaanSuratPage() {
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
                         <span className="text-slate-600 dark:text-slate-400 font-medium">
-                          {new Date(request.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          {new Date(request.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </span>
                         <span className="text-[10px] text-slate-400 mt-0.5">
-                          {new Date(request.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB
+                          {new Date(request.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB
                         </span>
                       </div>
                     </td>

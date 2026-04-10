@@ -18,24 +18,54 @@ import {
 } from '@/components/ui/select';
 import { DynamicForm } from '@/components/forms/dynamic-form';
 import { letterConfigs } from '@/lib/letter-configs';
+import { supabase } from '@/lib/supabase';
 import { LETTER_TYPE_LABELS, LetterType } from '@/types';
 import { toast } from 'sonner';
-import { IconArrowLeft, IconFilePlus } from '@tabler/icons-react';
+import { IconArrowLeft, IconFilePlus, IconLoader2 } from '@tabler/icons-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
 export default function RequestLetterPage() {
   const router = useRouter();
   const [selectedType, setSelectedType] = useState<LetterType | "">("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (data: any) => {
-    console.log('Form data submitted:', data);
-    toast.success("Pengajuan berhasil dikirim!");
-    
-    // Simulate redirect after successful submission
-    setTimeout(() => {
+  const handleSubmit = async (data: any) => {
+    try {
+      setIsSubmitting(true);
+      
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error("Sesi Anda telah berakhir, silakan login kembali.");
+        router.push('/login');
+        return;
+      }
+
+      // Insert request
+      const { error } = await supabase
+        .from('letter_requests')
+        .insert({
+          user_id: user.id,
+          type: selectedType,
+          details: data,
+          status: 'pending',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+
+      if (error) throw error;
+
+      toast.success("Pengajuan berhasil dikirim!");
+      
       router.push('/mahasiswa/dashboard');
-    }, 1500);
+    } catch (error: any) {
+      console.error('Error submitting request:', error);
+      toast.error("Gagal mengirim pengajuan, silakan coba lagi.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -88,6 +118,7 @@ export default function RequestLetterPage() {
             <DynamicForm 
               fields={letterConfigs[selectedType]} 
               onSubmit={handleSubmit}
+              isLoading={isSubmitting}
               submitLabel="Kirim Pengajuan" 
             />
           </CardContent>
