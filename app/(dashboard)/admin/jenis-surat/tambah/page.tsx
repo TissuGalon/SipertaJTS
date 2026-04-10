@@ -52,15 +52,10 @@ import { DynamicForm } from '@/components/forms/dynamic-form';
 import { FormFieldConfig } from '@/types';
 import Link from 'next/link';
 import * as mammoth from 'mammoth';
-import TurndownService from 'turndown';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import PizZip from 'pizzip';
+import Docxtemplater from 'docxtemplater';
+import { saveAs } from 'file-saver';
 
-const turndownService = new TurndownService({
-  headingStyle: 'atx',
-  codeBlockStyle: 'fenced',
-  emDelimiter: '*'
-});
 
 const templateSchema = z.object({
   title: z.string().min(3, "Judul template minimal 3 karakter"),
@@ -93,10 +88,7 @@ export default function TambahTemplatePage() {
       title: "",
       description: "",
       category: "Akademik",
-      fields: [
-        { name: "nama_lengkap", label: "Nama Lengkap", type: "text", placeholder: "Contoh: John Doe", required: true },
-        { name: "nim", label: "NIM", type: "text", placeholder: "Contoh: 12345678", required: true }
-      ]
+      fields: []
     }
   });
 
@@ -114,32 +106,122 @@ export default function TambahTemplatePage() {
   };
 
   const [templateFile, setTemplateFile] = useState<File | null>(null);
-  const [markdownContent, setMarkdownContent] = useState<string>("");
+  const [templateBuffer, setTemplateBuffer] = useState<ArrayBuffer | null>(null);
   const [isConverting, setIsConverting] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
-  const handleDocxToMarkdown = async (file: File) => {
+  const handleDocxUpload = async (file: File) => {
     setIsConverting(true);
     const reader = new FileReader();
     reader.onload = async (e) => {
       try {
         const arrayBuffer = e.target?.result as ArrayBuffer;
-        const result = await mammoth.convertToHtml({ arrayBuffer });
-        const html = result.value;
-        const markdown = turndownService.turndown(html);
-        setMarkdownContent(markdown);
-        toast.success("Konversi Berhasil", {
-          description: "Berkas .docx telah dikonversi ke format Markdown untuk penyesuaian."
+        setTemplateBuffer(arrayBuffer);
+        
+        // Extract raw text to find placeholders
+        const result = await mammoth.extractRawText({ arrayBuffer });
+        const text = result.value;
+        
+        // Find placeholders like {{variableName}} or {{parent.child}}
+        const regex = /{{\s*([a-zA-Z0-9_.]+)\s*}}/g;
+        const matches = text.matchAll(regex);
+        const uniqueVariables = new Set<string>();
+        
+        for (const match of matches) {
+          uniqueVariables.add(match[1]);
+        }
+
+        // Get current fields to avoid duplicates
+        const currentFields = form.getValues("fields");
+        const currentFieldNames = new Set(currentFields.map(f => f.name));
+        
+        let addedCount = 0;
+        for (const variable of uniqueVariables) {
+          if (!currentFieldNames.has(variable)) {
+            // Simple logic to format label: camelCase to Title Case
+            const label = variable
+              .replace(/([A-Z])/g, ' $1')
+              .replace(/^./, (str) => str.toUpperCase())
+              .trim();
+              
+            append({
+              name: variable,
+              label: label,
+              type: "text",
+              required: true,
+              placeholder: `Masukkan ${label.toLowerCase()}...`
+            });
+            addedCount++;
+          }
+        }
+
+        toast.success("Template Terkoneksi", {
+          description: addedCount > 0 
+            ? `Berhasil mengimpor ${addedCount} field baru dari template.` 
+            : "Berkas .docx siap digunakan."
         });
       } catch (error) {
-        console.error("Conversion error:", error);
-        toast.error("Konversi Gagal", {
-          description: "Terjadi kesalahan saat mengonversi berkas ke Markdown."
+        console.error("Upload error:", error);
+        toast.error("Gagal Memproses Berkas", {
+          description: "Terjadi kesalahan saat mengekstraksi data dari berkas .docx."
         });
       } finally {
         setIsConverting(false);
       }
     };
     reader.readAsArrayBuffer(file);
+  };
+
+  const handleGenerateTest = (data: any) => {
+    if (!templateBuffer) {
+      toast.error("Template Belum Siap", {
+        description: "Harap upload berkas .docx terlebih dahulu."
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const zip = new PizZip(templateBuffer);
+      const doc = new Docxtemplater(zip, {
+        paragraphLoop: true,
+        linebreaks: true,
+        delimiters: { start: '{{', end: '}}' }
+      });
+
+      // Render the document with form data
+      doc.render(data);
+
+      const out = doc.getZip().generate({
+        type: "blob",
+        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      });
+
+      saveAs(out, `TEST_${form.getValues("title").replace(/\s+/g, '_') || 'template'}.docx`);
+      
+      toast.success("Uji Coba Berhasil", {
+        description: "Berkas contoh telah diunduh. Silakan periksa hasil mapping."
+      });
+    } catch (error: any) {
+      console.error("Docxtemplater error:", error);
+      
+      let errorMessage = "Terjadi kesalahan saat memetakan data ke template.";
+      
+      // Detailed error reporting for MultiError
+      if (error.properties && error.properties.errors instanceof Array) {
+        const detailedErrors = error.properties.errors.map((e: any) => e.properties.explanation).join("\n");
+        console.error("Docxtemplater detailed errors:", detailedErrors);
+        errorMessage = "Template bermasalah (Tag terdeteksi ganda/rusak). Solusi: Hapus tag tersebut di Word dan ketik ulang secara manual.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      toast.error("Gagal Generate", {
+        description: errorMessage
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   // Prepare fields for DynamicForm preview
@@ -301,7 +383,7 @@ export default function TambahTemplatePage() {
                     const file = e.target.files?.[0];
                     if (file) {
                       setTemplateFile(file);
-                      handleDocxToMarkdown(file);
+                      handleDocxUpload(file);
                     }
                   }}
                 />
@@ -320,47 +402,6 @@ export default function TambahTemplatePage() {
                   </div>
                 )}
               </div>
-
-              {(markdownContent || isConverting) && (
-                <div className="mt-8 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                       <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white">
-                         <IconSettings size={16} />
-                       </div>
-                       <div>
-                         <h4 className="font-bold text-slate-800 dark:text-slate-200">Penyesuaian Isi Surat</h4>
-                         <p className="text-xs text-slate-500">Edit isi surat dalam format Markdown (isi dari .docx)</p>
-                       </div>
-                    </div>
-                    <Badge variant="outline" className="text-[10px] bg-indigo-50 text-indigo-600 border-indigo-200">
-                      EDITABLE
-                    </Badge>
-                  </div>
-
-                  <div className="relative">
-                    {isConverting && (
-                      <div className="absolute inset-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center rounded-xl">
-                        <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-3"></div>
-                        <p className="text-sm font-medium text-slate-600">Mengonversi dokumen...</p>
-                      </div>
-                    )}
-                    <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
-                      <div className="bg-slate-50 dark:bg-slate-800/50 px-4 py-2 border-b border-slate-200 dark:border-slate-800 flex items-center space-x-4">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Markdown Editor</span>
-                        <div className="h-4 w-px bg-slate-200 dark:bg-slate-800"></div>
-                        <span className="text-[10px] text-slate-500">Gunakan `{"{{field_id}}"}` untuk variabel</span>
-                      </div>
-                      <Textarea 
-                        value={markdownContent}
-                        onChange={(e) => setMarkdownContent(e.target.value)}
-                        placeholder="Isi surat akan muncul di sini setelah dikonversi..."
-                        className="min-h-[300px] border-none focus-visible:ring-0 rounded-none bg-white dark:bg-slate-900 font-mono text-sm leading-relaxed p-6"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
 
               <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                  <div className="p-3 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-lg border border-indigo-100 dark:border-indigo-900/30 flex items-start space-x-3">
@@ -522,20 +563,6 @@ export default function TambahTemplatePage() {
                   <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/30 rounded-2xl flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-inner">
                     <IconTemplate size={24} />
                   </div>
-                  <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
-                    <button 
-                      onClick={() => setPreviewMode("form")}
-                      className={`px-3 py-1.5 text-[11px] font-bold rounded-md transition-all ${previewMode === 'form' ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                    >
-                      Formulir
-                    </button>
-                    <button 
-                      onClick={() => setPreviewMode("content")}
-                      className={`px-3 py-1.5 text-[11px] font-bold rounded-md transition-all ${previewMode === 'content' ? 'bg-white dark:bg-slate-700 text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                    >
-                      Isi Surat
-                    </button>
-                  </div>
                 </div>
                 <CardTitle className="text-xl">
                   {form.watch("title") || "Judul Template"}
@@ -545,32 +572,20 @@ export default function TambahTemplatePage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6 flex-1">
-                {previewMode === 'form' ? (
                   <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
+                     <div className="mb-4 flex items-center justify-between">
+                       <h4 className="text-xs font-bold uppercase tracking-widest text-slate-400">Sandbox Form</h4>
+                       <Badge variant="outline" className="text-[10px] bg-indigo-50 text-indigo-600 border-indigo-200">TEST MODE</Badge>
+                     </div>
                      <DynamicForm 
                        fields={previewFields} 
-                       onSubmit={(data) => console.log("Preview submit:", data)}
-                       submitLabel="Ajukan Surat"
+                       onSubmit={handleGenerateTest}
+                       submitLabel={isGenerating ? "Sedang Memproses..." : "Generate & Download DOCX (Uji)"}
                      />
+                     <p className="mt-4 text-[10px] text-slate-400 italic text-center">
+                       Tombol di atas akan mengisi template `.docx` yang diupload dengan data menggunakan `Docxtemplater`.
+                     </p>
                   </div>
-                ) : (
-                  <div className="p-6 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 min-h-[400px]">
-                    {markdownContent ? (
-                       <div className="prose prose-sm dark:prose-invert max-w-none prose-headings:text-slate-900 dark:prose-headings:text-white prose-p:text-slate-600 dark:prose-p:text-slate-400">
-                         <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                           {markdownContent}
-                         </ReactMarkdown>
-                       </div>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center h-full py-20 text-center">
-                        <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-300 mb-4">
-                          <IconFileWord size={32} />
-                        </div>
-                        <p className="text-sm text-slate-400">Belum ada template dokumen yang dikonversi.</p>
-                      </div>
-                    )}
-                  </div>
-                )}
               </CardContent>
               <CardFooter className="bg-slate-50/50 dark:bg-slate-800/50 flex flex-col items-start gap-2 text-xs text-slate-400 border-t border-slate-100 dark:border-slate-800 p-6">
                 <div className="flex items-center">

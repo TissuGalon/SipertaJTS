@@ -63,42 +63,50 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
             key={field.name}
             control={form.control}
             name={field.name}
-            render={({ field: formField }) => (
-              <FormItem>
-                <FormLabel>{field.label}</FormLabel>
-                <FormControl>
-                  {field.type === 'select' ? (
-                    <Select onValueChange={formField.onChange} value={formField.value}>
-                      <SelectTrigger>
-                        <SelectValue placeholder={field.placeholder || "Select an option"} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {field.options?.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : field.type === 'file' ? (
-                    <FileUpload onFilesChange={(files) => formField.onChange(files)} />
-                  ) : field.type === 'textarea' ? (
-                    <Textarea
-                      placeholder={field.placeholder}
-                      {...formField}
-                    />
-                  ) : (
-                    <Input 
-                      type={field.type} 
-                      placeholder={field.placeholder} 
-                      {...formField} 
-                    />
-                  )}
-                </FormControl>
-                {field.description && <FormDescription>{field.description}</FormDescription>}
-                <FormMessage />
-              </FormItem>
-            )}
+            render={({ field: formField }) => {
+              const { value, ...fieldProps } = formField;
+              return (
+                <FormItem>
+                  <FormLabel>{field.label}</FormLabel>
+                  <FormControl>
+                    {field.type === 'select' ? (
+                      <Select 
+                        onValueChange={fieldProps.onChange} 
+                        value={value as string}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder={field.placeholder || "Select an option"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {field.options?.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : field.type === 'file' ? (
+                      <FileUpload onFilesChange={(files) => fieldProps.onChange(files)} />
+                    ) : field.type === 'textarea' ? (
+                      <Textarea
+                        placeholder={field.placeholder}
+                        {...fieldProps}
+                        value={(value as string) ?? ""}
+                      />
+                    ) : (
+                      <Input 
+                        type={field.type} 
+                        placeholder={field.placeholder} 
+                        {...fieldProps} 
+                        value={(value as string) ?? ""}
+                      />
+                    )}
+                  </FormControl>
+                  {field.description && <FormDescription>{field.description}</FormDescription>}
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
           />
         ))}
         <Button type="submit" className="w-full">
