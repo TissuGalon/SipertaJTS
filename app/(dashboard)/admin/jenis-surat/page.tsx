@@ -26,7 +26,8 @@ import {
   IconFileWord,
   IconDownload,
   IconTrash,
-  IconLoader2
+  IconLoader2,
+  IconRocket
 } from '@tabler/icons-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -57,7 +58,7 @@ export default function ManajemenSuratPage() {
       const { data, error } = await supabase
         .from('letter_templates')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('name', { ascending: true }); // Better to sort by name for management
 
       if (error) throw error;
       setTemplates(data || []);
@@ -68,6 +69,34 @@ export default function ManajemenSuratPage() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleToggleStatus = async (id: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('letter_templates')
+        .update({ is_active: !currentStatus })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setTemplates(templates.map(t => 
+        t.id === id ? { ...t, is_active: !currentStatus } : t
+      ));
+
+      if (selectedTemplate?.id === id) {
+        setSelectedTemplate({ ...selectedTemplate, is_active: !currentStatus });
+      }
+
+      toast.success("Status Berhasil Diperbarui", {
+        description: `Layanan surat sekarang ${!currentStatus ? 'Aktif' : 'Nonaktif'}.`
+      });
+    } catch (error: any) {
+      console.error("Error toggling status:", error);
+      toast.error("Gagal Memperbarui Status", {
+        description: error.message
+      });
     }
   };
 
@@ -195,7 +224,10 @@ export default function ManajemenSuratPage() {
                   <Badge variant="secondary" className="bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 border-none px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider">
                     {template.category}
                   </Badge>
-                  <Switch checked={true} />
+                  <Switch 
+                    checked={template.is_active ?? true} 
+                    onCheckedChange={() => handleToggleStatus(template.id, template.is_active ?? true)}
+                  />
                 </div>
                 <CardTitle className="text-lg group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                   {template.name}
@@ -248,13 +280,24 @@ export default function ManajemenSuratPage() {
                   Lihat Detail
                 </Button>
                 <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-9 w-9 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20"
-                  onClick={() => handleDelete(template.id, template.file_path)}
+                  variant="outline" 
+                  size="sm" 
+                  asChild
+                  className="flex-1 h-9 rounded-lg border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600"
                 >
-                  <IconTrash size={18} />
+                  <Link href={`/admin/jenis-surat/test/${template.id}`}>
+                    <IconRocket size={16} className="mr-2" />
+                    Uji Coba
+                  </Link>
                 </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-9 w-9 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20"
+                    onClick={() => handleDelete(template.id, template.file_path)}
+                  >
+                    <IconTrash size={18} />
+                  </Button>
               </CardFooter>
             </Card>
           ))}
@@ -318,12 +361,22 @@ export default function ManajemenSuratPage() {
                     <span className="text-xs text-slate-500 italic text-indigo-600 dark:text-indigo-400 ">Dapat diakses oleh mahasiswa</span>
                   </div>
                 </div>
-                <Switch checked={true} />
+                <Switch 
+                  checked={selectedTemplate.is_active ?? true} 
+                  onCheckedChange={() => handleToggleStatus(selectedTemplate.id, selectedTemplate.is_active ?? true)}
+                />
               </div>
 
               <div className="flex justify-end space-x-3 pt-2">
                 <Button variant="ghost" onClick={() => setSelectedTemplate(null)}>Tutup</Button>
-                <Button className="bg-indigo-600 hover:bg-indigo-700">Edit Konfigurasi</Button>
+                <Button 
+                  asChild
+                  className="bg-indigo-600 hover:bg-indigo-700"
+                >
+                  <Link href={`/admin/jenis-surat/edit/${selectedTemplate.id}`}>
+                    Edit Konfigurasi
+                  </Link>
+                </Button>
               </div>
             </div>
           )}
