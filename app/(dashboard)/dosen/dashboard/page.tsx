@@ -63,7 +63,7 @@ export default function TeacherDashboard() {
         req.id === id ? { ...req, status: "processing" as RequestStatus } : req
       )
     )
-    toast.success("Request approved for processing")
+    toast.success("Permintaan disetujui untuk diproses")
   }
 
   const handleReject = (id: string) => {
@@ -72,7 +72,7 @@ export default function TeacherDashboard() {
         req.id === id ? { ...req, status: "rejected" as RequestStatus } : req
       )
     )
-    toast.error("Request rejected")
+    toast.error("Permintaan ditolak")
   }
 
   return (
@@ -82,7 +82,7 @@ export default function TeacherDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Total Requests
+              Total Pengajuan
             </CardTitle>
             <IconClipboardList className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -92,7 +92,7 @@ export default function TeacherDashboard() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Verifying</CardTitle>
+            <CardTitle className="text-sm font-medium">Verifikasi</CardTitle>
             <IconHourglass className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -101,7 +101,7 @@ export default function TeacherDashboard() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending</CardTitle>
+            <CardTitle className="text-sm font-medium">Tertunda</CardTitle>
             <IconHourglass className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -110,7 +110,7 @@ export default function TeacherDashboard() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completed</CardTitle>
+            <CardTitle className="text-sm font-medium">Selesai</CardTitle>
             <IconCircleCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -122,9 +122,9 @@ export default function TeacherDashboard() {
       {/* Requests Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Letter Requests</CardTitle>
+          <CardTitle>Daftar Pengajuan Surat</CardTitle>
           <CardDescription>
-            Manage and verify student letter requests
+            Kelola dan verifikasi permintaan surat mahasiswa
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -132,7 +132,7 @@ export default function TeacherDashboard() {
             <div className="relative flex-1">
               <IconSearch className="absolute top-2.5 left-2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by name, NIM, or request ID..."
+                placeholder="Cari berdasarkan nama, NIM, atau ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-8"
@@ -145,15 +145,15 @@ export default function TeacherDashboard() {
               }
             >
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by status" />
+                <SelectValue placeholder="Filter status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="verifying">Verifying</SelectItem>
-                <SelectItem value="processing">Processing</SelectItem>
-                <SelectItem value="done">Done</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
+                <SelectItem value="all">Semua Status</SelectItem>
+                <SelectItem value="pending">Tertunda</SelectItem>
+                <SelectItem value="verifying">Verifikasi</SelectItem>
+                <SelectItem value="processing">Proses</SelectItem>
+                <SelectItem value="done">Selesai</SelectItem>
+                <SelectItem value="rejected">Ditolak</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -163,22 +163,22 @@ export default function TeacherDashboard() {
               <thead>
                 <tr className="border-b">
                   <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                    Request ID
+                    ID Request
                   </th>
                   <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                    Student
+                    Mahasiswa
                   </th>
                   <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                    Type
+                    Jenis
                   </th>
                   <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
                     Status
                   </th>
                   <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                    Created
+                    Tgl Dibuat
                   </th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                    Actions
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground" style={{ width: '120px' }}>
+                    Aksi
                   </th>
                 </tr>
               </thead>
@@ -208,7 +208,7 @@ export default function TeacherDashboard() {
                     <td className="p-4 align-middle">
                       <div className="flex items-center space-x-2">
                         <Button variant="ghost" size="sm" asChild>
-                          <Link href={`/teacher/verifier/${request.id}`}>
+                          <Link href={`/dosen/verifier/${request.id}`}>
                             <IconEye className="h-4 w-4" />
                           </Link>
                         </Button>

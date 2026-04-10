@@ -6,7 +6,7 @@ export const mockStudents: User[] = [
     name: "Ahmad Fauzi",
     nim: "21010123",
     email: "ahmad@student.ac.id",
-    role: "student",
+    role: "mahasiswa",
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ahmad",
   },
 ]
@@ -21,14 +21,24 @@ export const mockAdmins: User[] = [
   },
 ]
 
-export const mockTeachers: User[] = [
-  {
-    id: "t1",
-    name: "Dr. Budi Santoso",
-    email: "budi@lecturer.ac.id",
-    role: "teacher",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Budi",
-  },
+export const mockLecturers: User[] = [
+  { id: "l1", name: "Drs. Amru", email: "amru@pnl.ac.id", role: "dosen", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Amru" },
+  { id: "l2", name: "Ir. Herri Mahyar", email: "herri@pnl.ac.id", role: "dosen", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Herri" },
+  { id: "l3", name: "Mulizar, S.T., M.T.", email: "mulizar@pnl.ac.id", role: "dosen", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Mulizar" },
+  { id: "l4", name: "Nazira Suha Al Bakri, S.T., M.T.", email: "nazira@pnl.ac.id", role: "dosen", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Nazira" },
+  { id: "l5", name: "Dr. Eng. Ir. Hamzah, M.T.", email: "hamzah@pnl.ac.id", role: "dosen", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Hamzah" },
+  { id: "l6", name: "Ir. Syamsul Bahri, M.T.", email: "syamsul@pnl.ac.id", role: "dosen", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Syamsul" },
+  { id: "l7", name: "Dra. Siti Hajar, M.T.", email: "siti@pnl.ac.id", role: "dosen", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Siti" },
+  { id: "l8", name: "M. Yunus, S.T., M.T.", email: "yunus@pnl.ac.id", role: "dosen", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Yunus" },
+  { id: "l9", name: "Fadhli, S.T., M.T.", email: "fadhli@pnl.ac.id", role: "dosen", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Fadhli" },
+  { id: "l10", name: "Zulkifli, S.T., M.T.", email: "zulkifli@pnl.ac.id", role: "dosen", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Zulkifli" },
+  ...Array.from({ length: 46 }).map((_, i) => ({
+    id: `l${i + 11}`,
+    name: `Dosen Jurusan Sipil ${i + 11}`,
+    email: `dosen${i + 11}@pnl.ac.id`,
+    role: "dosen" as const,
+    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=Lecturer${i + 11}`
+  }))
 ]
 
 export const mockRequests: LetterRequest[] = [
@@ -75,7 +85,7 @@ export const mockRequests: LetterRequest[] = [
     userId: "s1",
     userName: "Ahmad Fauzi",
     userNim: "21010123",
-    type: "permintaan_penelitian",
+    type: "surat_penelitian",
     status: "rejected",
     createdAt: "2024-03-10T09:00:00Z",
     updatedAt: "2024-03-11T11:00:00Z",

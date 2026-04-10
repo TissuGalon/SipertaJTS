@@ -45,8 +45,8 @@ export default function DocumentVerifierPage() {
   if (!request) {
     return (
       <div className="flex h-[60vh] flex-col items-center justify-center space-y-4">
-        <h2 className="text-xl font-semibold">Request Not Found</h2>
-        <Button onClick={() => router.push('/admin/dashboard')}>Back to Dashboard</Button>
+        <h2 className="text-xl font-semibold">Pengajuan Tidak Ditemukan</h2>
+        <Button onClick={() => router.push('/admin/dashboard')}>Ke Dashboard</Button>
       </div>
     );
   }
@@ -55,7 +55,7 @@ export default function DocumentVerifierPage() {
     setIsProcessing(true);
     setTimeout(() => {
       setIsProcessing(false);
-      toast.success(`Request ${status === 'done' ? 'approved' : 'rejected'} successfully`);
+      toast.success(`Permintaan berhasil ${status === 'done' ? 'disetujui' : 'ditolak'}`);
       router.push('/admin/dashboard');
     }, 1500);
   };
@@ -70,17 +70,17 @@ export default function DocumentVerifierPage() {
             </Button>
           </Link>
           <div>
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Document Verifier</h2>
-            <p className="text-sm text-slate-500">Review and validate student letter request</p>
+            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Verifikasi Dokumen</h2>
+            <p className="text-sm text-slate-500">Tinjau dan validasi pengajuan surat mahasiswa</p>
           </div>
         </div>
         <div className="flex items-center space-x-2">
           <Button variant="outline" size="sm" className="hidden sm:flex">
             <IconChevronLeft size={16} className="mr-1" />
-            Previous
+            Sebelumnya
           </Button>
           <Button variant="outline" size="sm" className="hidden sm:flex">
-            Next
+            Selanjutnya
             <IconChevronRight size={16} className="ml-1" />
           </Button>
           <StatusBadge status={request.status} />
@@ -170,24 +170,26 @@ export default function DocumentVerifierPage() {
           </Card>
 
           {/* Verification Form */}
-          <Card className="border-indigo-100 dark:border-indigo-900/30">
+          <Card className="border-indigo-100 dark:border-indigo-900/30 shadow-xl ring-1 ring-indigo-500/10">
             <CardHeader>
               <CardTitle className="text-base flex items-center">
                 <IconInfoCircle size={18} className="mr-2 text-indigo-600" />
-                Administrative Details
+                Detail Administrasi
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="letterNumber">Nomor Surat</Label>
-                  <Input 
-                    id="letterNumber" 
-                    placeholder="Contoh: 123/UN/AK/2024" 
-                    value={letterNumber}
-                    onChange={(e) => setLetterNumber(e.target.value)}
-                  />
-                </div>
+                {request.type === 'surat_magang' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="letterNumber">Nomor Surat</Label>
+                    <Input 
+                      id="letterNumber" 
+                      placeholder="Contoh: 123/UN/AK/2024" 
+                      value={letterNumber}
+                      onChange={(e) => setLetterNumber(e.target.value)}
+                    />
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="academicYear">Tahun Akademik</Label>
                   <Input 
@@ -198,10 +200,10 @@ export default function DocumentVerifierPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="notes">Notes for Student</Label>
+                <Label htmlFor="notes">Catatan untuk Mahasiswa</Label>
                 <Textarea 
                   id="notes" 
-                  placeholder="Optional: Provide feedback or reasons for rejection..." 
+                  placeholder="Opsional: Berikan feedback atau alasan penolakan..." 
                   className="min-h-[100px]"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
@@ -216,15 +218,15 @@ export default function DocumentVerifierPage() {
                 disabled={isProcessing}
               >
                 <IconX size={18} className="mr-2" />
-                Reject
+                Tolak
               </Button>
               <Button 
-                className="flex-[2] bg-indigo-600 hover:bg-indigo-700"
+                className="flex-[2] bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/20"
                 onClick={() => handleAction('done')}
                 disabled={isProcessing}
               >
                 <IconCheck size={18} className="mr-2" />
-                Approve & Process
+                Setujui & Proses
               </Button>
             </CardFooter>
           </Card>

@@ -43,9 +43,9 @@ export default function TeacherVerifierPage() {
   if (!request) {
     return (
       <div className="flex h-[60vh] flex-col items-center justify-center space-y-4">
-        <h2 className="text-xl font-semibold">Request Not Found</h2>
-        <Button onClick={() => router.push("/teacher/dashboard")}>
-          Back to Dashboard
+        <h2 className="text-xl font-semibold">Pengajuan Tidak Ditemukan</h2>
+        <Button onClick={() => router.push("/dosen/dashboard")}>
+          Kembali ke Dashboard
         </Button>
       </div>
     )
@@ -55,62 +55,62 @@ export default function TeacherVerifierPage() {
     setIsProcessing(true)
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000))
-    toast.success("Request approved and forwarded to admin")
-    router.push("/teacher/dashboard")
+    toast.success("Pengajuan disetujui dan diteruskan ke admin")
+    router.push("/dosen/dashboard")
   }
 
   const handleReject = async () => {
     setIsProcessing(true)
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000))
-    toast.error("Request rejected")
-    router.push("/teacher/dashboard")
+    toast.error("Pengajuan ditolak")
+    router.push("/dosen/dashboard")
   }
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center space-x-4">
-        <Button variant="ghost" size="sm" onClick={() => router.back()}>
+        <Button variant="ghost" size="sm" onClick={() => router.back()} className="rounded-full">
           <IconArrowLeft className="mr-2 h-4 w-4" />
-          Back
+          Kembali
         </Button>
         <div>
-          <h1 className="text-2xl font-bold">Verify Request</h1>
+          <h1 className="text-2xl font-bold">Verifikasi Pengajuan</h1>
           <p className="text-muted-foreground">
-            Review and verify student letter request
+            Tinjau dan verifikasi permintaan surat mahasiswa
           </p>
         </div>
       </div>
 
       {/* Request Details */}
       <div className="grid gap-6 md:grid-cols-2">
-        <Card>
+        <Card className="border-none shadow-xl">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
-              <IconUser className="h-5 w-5" />
-              <span>Student Information</span>
+              <IconUser className="h-5 w-5 text-indigo-600" />
+              <span>Informasi Mahasiswa</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label className="text-sm font-medium">Name</Label>
+              <Label className="text-xs font-bold uppercase text-slate-400">Nama</Label>
               <p className="text-sm text-muted-foreground">
                 {request.userName}
               </p>
             </div>
             <div>
-              <Label className="text-sm font-medium">NIM</Label>
+              <Label className="text-xs font-bold uppercase text-slate-400">NIM</Label>
               <p className="text-sm text-muted-foreground">{request.userNim}</p>
             </div>
             <div>
-              <Label className="text-sm font-medium">Request Type</Label>
+              <Label className="text-xs font-bold uppercase text-slate-400">Jenis Pengajuan</Label>
               <p className="text-sm text-muted-foreground">
                 {LETTER_TYPE_LABELS[request.type]}
               </p>
             </div>
             <div>
-              <Label className="text-sm font-medium">Status</Label>
+              <Label className="text-xs font-bold uppercase text-slate-400">Status</Label>
               <div className="mt-1">
                 <StatusBadge status={request.status} />
               </div>
@@ -118,16 +118,16 @@ export default function TeacherVerifierPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-none shadow-xl">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
-              <IconInfoCircle className="h-5 w-5" />
-              <span>Request Details</span>
+              <IconInfoCircle className="h-5 w-5 text-amber-600" />
+              <span>Detail Pengajuan</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label className="text-sm font-medium">Created</Label>
+              <Label className="text-xs font-bold uppercase text-slate-400">Dibuat Pada</Label>
               <p className="text-sm text-muted-foreground">
                 {new Date(request.createdAt).toLocaleDateString("id-ID", {
                   year: "numeric",
@@ -139,7 +139,7 @@ export default function TeacherVerifierPage() {
               </p>
             </div>
             <div>
-              <Label className="text-sm font-medium">Last Updated</Label>
+              <Label className="text-xs font-bold uppercase text-slate-400">Terakhir Diperbarui</Label>
               <p className="text-sm text-muted-foreground">
                 {new Date(request.updatedAt).toLocaleDateString("id-ID", {
                   year: "numeric",
@@ -152,7 +152,7 @@ export default function TeacherVerifierPage() {
             </div>
             {request.letterNumber && (
               <div>
-                <Label className="text-sm font-medium">Letter Number</Label>
+                <Label className="text-xs font-bold uppercase text-slate-400">Nomor Surat</Label>
                 <p className="text-sm text-muted-foreground">
                   {request.letterNumber}
                 </p>
@@ -160,7 +160,7 @@ export default function TeacherVerifierPage() {
             )}
             {request.academicYear && (
               <div>
-                <Label className="text-sm font-medium">Academic Year</Label>
+                <Label className="text-xs font-bold uppercase text-slate-400">Tahun Akademik</Label>
                 <p className="text-sm text-muted-foreground">
                   {request.academicYear}
                 </p>
@@ -171,18 +171,18 @@ export default function TeacherVerifierPage() {
       </div>
 
       {/* Letter Details */}
-      <Card>
+      <Card className="border-none shadow-xl">
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <IconFileText className="h-5 w-5" />
-            <span>Letter Details</span>
+            <IconFileText className="h-5 w-5 text-blue-600" />
+            <span>Rincian Surat</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2">
             {Object.entries(request.details).map(([key, value]) => (
               <div key={key}>
-                <Label className="text-sm font-medium capitalize">
+                <Label className="text-xs font-bold uppercase text-slate-400">
                   {key.replace(/([A-Z])/g, " $1").trim()}
                 </Label>
                 <p className="text-sm text-muted-foreground">{String(value)}</p>
@@ -194,11 +194,11 @@ export default function TeacherVerifierPage() {
 
       {/* Attached Files */}
       {request.files.length > 0 && (
-        <Card>
+        <Card className="border-none shadow-xl">
           <CardHeader>
-            <CardTitle>Attached Files</CardTitle>
+            <CardTitle>Berkas Terlampir</CardTitle>
             <CardDescription>
-              Documents submitted with this request
+              Dokumen yang diunggah bersama pengajuan ini
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -230,9 +230,9 @@ export default function TeacherVerifierPage() {
 
       {/* Admin Notes */}
       {request.adminNotes && (
-        <Card>
+        <Card className="border-none shadow-md bg-slate-50">
           <CardHeader>
-            <CardTitle>Previous Notes</CardTitle>
+            <CardTitle className="text-sm font-semibold">Catatan Sebelumnya</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
@@ -243,20 +243,20 @@ export default function TeacherVerifierPage() {
       )}
 
       {/* Verification Actions */}
-      <Card>
+      <Card className="border-none shadow-xl ring-1 ring-emerald-500/10">
         <CardHeader>
-          <CardTitle>Verification</CardTitle>
+          <CardTitle>Verifikasi Koordinator</CardTitle>
           <CardDescription>
-            Add notes and take action on this request
+            Berikan catatan dan tentukan tindakan untuk pengajuan ini
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="notes">Verification Notes</Label>
+              <Label htmlFor="notes">Catatan Verifikasi</Label>
               <Textarea
                 id="notes"
-                placeholder="Add your verification notes here..."
+                placeholder="Tambahkan catatan verifikasi di sini..."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
@@ -264,23 +264,23 @@ export default function TeacherVerifierPage() {
             </div>
           </div>
         </CardContent>
-        <CardFooter className="flex justify-end space-x-2">
+        <CardFooter className="flex justify-end space-x-3 bg-slate-50/50 p-6 border-t">
           <Button
             variant="outline"
             onClick={handleReject}
             disabled={isProcessing}
-            className="text-red-600 hover:text-red-700"
+            className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50"
           >
             <IconX className="mr-2 h-4 w-4" />
-            Reject
+            Tolak
           </Button>
           <Button
             onClick={handleApprove}
             disabled={isProcessing}
-            className="bg-green-600 hover:bg-green-700"
+            className="flex-[2] bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-500/20"
           >
             <IconCheck className="mr-2 h-4 w-4" />
-            Approve
+            Setujui & Teruskan
           </Button>
         </CardFooter>
       </Card>

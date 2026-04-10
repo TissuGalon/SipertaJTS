@@ -9,6 +9,7 @@ import {
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 import { mockRequests } from '@/lib/mock-data';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { TimelineStepper } from '@/components/ui/timeline-stepper';
@@ -32,8 +33,8 @@ export default function LetterDetailPage() {
   if (!request) {
     return (
       <div className="flex h-[60vh] flex-col items-center justify-center space-y-4">
-        <h2 className="text-xl font-semibold">Request Not Found</h2>
-        <Button onClick={() => router.push('/student/dashboard')}>Back to Dashboard</Button>
+        <h2 className="text-xl font-semibold">Pengajuan Tidak Ditemukan</h2>
+        <Button onClick={() => router.push('/mahasiswa/dashboard')}>Kembali ke Dashboard</Button>
       </div>
     );
   }
@@ -42,21 +43,21 @@ export default function LetterDetailPage() {
     <div className="mx-auto max-w-4xl space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Link href="/student/dashboard">
-            <Button variant="ghost" size="icon">
+          <Link href="/mahasiswa/dashboard">
+            <Button variant="ghost" size="icon" className="rounded-full">
               <IconArrowLeft size={20} />
             </Button>
           </Link>
           <div>
             <h2 className="text-2xl font-bold tracking-tight">{LETTER_TYPE_LABELS[request.type]}</h2>
-            <p className="text-sm text-slate-500">ID: {request.id}</p>
+            <p className="text-sm text-slate-500 font-mono tracking-tighter">ID: {request.id}</p>
           </div>
         </div>
         <div className="flex items-center space-x-2">
           {request.status === 'done' && (
-            <Button className="bg-emerald-600 hover:bg-emerald-700">
+            <Button className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-lg shadow-emerald-500/20">
               <IconDownload size={18} className="mr-2" />
-              Download Letter
+              Unduh Surat
             </Button>
           )}
           <StatusBadge status={request.status} />
@@ -66,9 +67,9 @@ export default function LetterDetailPage() {
       <div className="grid gap-6 md:grid-cols-3">
         <div className="md:col-span-2 space-y-6">
           {/* Status Timeline */}
-          <Card>
+          <Card className="border-none shadow-xl">
             <CardHeader>
-              <CardTitle>Request Status</CardTitle>
+              <CardTitle>Status Pengajuan</CardTitle>
             </CardHeader>
             <CardContent className="pt-6">
               <TimelineStepper currentStatus={request.status} />
@@ -76,10 +77,12 @@ export default function LetterDetailPage() {
           </Card>
 
           {/* Details */}
-          <Card>
-            <CardHeader className="flex flex-row items-center space-x-3">
-              <IconFileDescription className="text-blue-600" />
-              <CardTitle>Form Details</CardTitle>
+          <Card className="border-none shadow-xl">
+            <CardHeader className="flex flex-row items-center space-x-3 border-b border-slate-50 dark:border-slate-800 mb-2">
+              <div className="p-2 rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-900/30">
+                <IconFileDescription size={20} />
+              </div>
+              <CardTitle>Rincian Data</CardTitle>
             </CardHeader>
             <CardContent>
               <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
@@ -94,9 +97,9 @@ export default function LetterDetailPage() {
           </Card>
 
           {/* Uploaded Files */}
-          <Card>
+          <Card className="border-none shadow-xl">
             <CardHeader>
-              <CardTitle>Attachment Files</CardTitle>
+              <CardTitle>Berkas Lampiran</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid gap-3">
@@ -108,8 +111,8 @@ export default function LetterDetailPage() {
                       </div>
                       <span className="text-sm font-medium">{file.name}</span>
                     </div>
-                    <Button variant="ghost" size="sm" asChild>
-                      <a href={file.url}>Preview</a>
+                    <Button variant="ghost" size="sm" asChild className="text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+                      <a href={file.url}>Pratinjau</a>
                     </Button>
                   </div>
                 ))}
@@ -120,37 +123,37 @@ export default function LetterDetailPage() {
 
         <div className="space-y-6">
           {/* Info Side Card */}
-          <Card>
+          <Card className="border-none shadow-xl bg-gradient-to-br from-indigo-600 to-indigo-700 text-white">
             <CardHeader>
-              <CardTitle className="text-base">Submission Info</CardTitle>
+              <CardTitle className="text-base text-white/90">Info Pengajuan</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center space-x-3 text-sm">
-                <IconCalendarEvent size={18} className="text-slate-400" />
+                <IconCalendarEvent size={18} className="text-white/60" />
                 <div>
-                  <p className="text-slate-500">Submitted on</p>
-                  <p className="font-medium">{new Date(request.createdAt).toLocaleString('id-ID')}</p>
+                  <p className="text-white/60">Dikirim pada</p>
+                  <p className="font-semibold">{new Date(request.createdAt).toLocaleString('id-ID')}</p>
                 </div>
               </div>
               <div className="flex items-center space-x-3 text-sm">
-                <IconClock size={18} className="text-slate-400" />
+                <IconClock size={18} className="text-white/60" />
                 <div>
-                  <p className="text-slate-500">Last updated</p>
-                  <p className="font-medium">{new Date(request.updatedAt).toLocaleString('id-ID')}</p>
+                  <p className="text-white/60">Update terakhir</p>
+                  <p className="font-semibold">{new Date(request.updatedAt).toLocaleString('id-ID')}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           {/* Admin Notes */}
-          <Card className={request.adminNotes ? "border-amber-200 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-900/10" : ""}>
+          <Card className={cn("border-none shadow-xl", request.adminNotes ? "bg-amber-50 dark:bg-amber-900/10 ring-1 ring-amber-200 dark:ring-amber-900/50" : "")}>
             <CardHeader className="flex flex-row items-center space-x-2">
               <IconMessageCircle className={request.adminNotes ? "text-amber-600" : "text-slate-400"} size={20} />
-              <CardTitle className="text-base text-inherit">Admin Notes</CardTitle>
+              <CardTitle className="text-base text-inherit">Catatan Admin</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-slate-600 dark:text-slate-300 italic">
-                {request.adminNotes || "No notes from administrator."}
+                {request.adminNotes || "Tidak ada catatan dari administrator."}
               </p>
             </CardContent>
           </Card>

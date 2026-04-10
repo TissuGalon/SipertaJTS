@@ -19,12 +19,12 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { mockStudents } from '@/lib/mock-data';
 
 const navItems = [
-  { label: 'Dashboard', href: '/student/dashboard', icon: IconLayoutDashboard },
-  { label: 'Request Letter', href: '/student/request', icon: IconFilePlus },
-  { label: 'My Letters', href: '/student/dashboard#my-letters', icon: IconFiles },
+  { label: 'Dashboard', href: '/mahasiswa/dashboard', icon: IconLayoutDashboard },
+  { label: 'Ajukan Surat', href: '/mahasiswa/request', icon: IconFilePlus },
+  { label: 'Riwayat Surat', href: '/mahasiswa/dashboard#my-letters', icon: IconFiles },
 ];
 
-export default function StudentLayout({ children }: { children: React.ReactNode }) {
+export default function MahasiswaLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const user = mockStudents[0];
 
@@ -36,7 +36,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
           <div className="flex h-16 items-center px-6 border-b">
             <div className="flex items-center space-x-2 text-blue-600">
               <IconSchool size={24} />
-              <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">LetterSys</span>
+              <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">Si Perta</span>
             </div>
           </div>
           
@@ -65,7 +65,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
             <Link href="/login">
               <Button variant="ghost" className="w-full justify-start text-rose-500 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-900/20">
                 <IconLogout size={20} className="mr-3" />
-                Sign Out
+                Keluar
               </Button>
             </Link>
           </div>
@@ -87,7 +87,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
                 <div className="flex h-16 items-center px-6 border-b">
                   <div className="flex items-center space-x-2 text-blue-600">
                     <IconSchool size={24} />
-                    <span className="text-lg font-bold tracking-tight">LetterSys</span>
+                    <span className="text-lg font-bold tracking-tight">Si Perta</span>
                   </div>
                 </div>
                 <nav className="space-y-1 p-4">
@@ -103,7 +103,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
                   ))}
                   <Link href="/login" className="flex items-center space-x-3 rounded-lg px-3 py-2 text-sm font-medium text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20">
                     <IconLogout size={20} />
-                    <span>Sign Out</span>
+                    <span>Keluar</span>
                   </Link>
                 </nav>
               </SheetContent>

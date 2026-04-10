@@ -17,23 +17,23 @@ import {
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Input } from "@/components/ui/input"
-import { mockTeachers } from "@/lib/mock-data"
+import { mockLecturers } from "@/lib/mock-data"
 
 const navItems = [
   {
-    label: "Teacher Dashboard",
-    href: "/teacher/dashboard",
+    label: "Dashboard Dosen",
+    href: "/dosen/dashboard",
     icon: IconLayoutDashboard,
   },
 ]
 
-export default function TeacherLayout({
+export default function DosenLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   const pathname = usePathname()
-  const user = mockTeachers[0] // Assuming mock data for teacher
+  const user = mockLecturers[0] // Assuming mock data for lecturer
 
   return (
     <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950">
@@ -44,7 +44,7 @@ export default function TeacherLayout({
             <div className="flex items-center space-x-2 text-green-600">
               <IconShieldCheck size={24} />
               <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
-                TeacherSys
+                Si Perta
               </span>
             </div>
           </div>
@@ -90,7 +90,7 @@ export default function TeacherLayout({
               size="sm"
             >
               <IconLogout size={16} className="mr-2" />
-              Logout
+              Keluar
             </Button>
           </div>
         </div>
@@ -113,7 +113,7 @@ export default function TeacherLayout({
               <div className="flex items-center space-x-2 text-green-600">
                 <IconShieldCheck size={24} />
                 <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
-                  TeacherSys
+                  Si Perta
                 </span>
               </div>
             </div>
@@ -159,7 +159,7 @@ export default function TeacherLayout({
                 size="sm"
               >
                 <IconLogout size={16} className="mr-2" />
-                Logout
+                Keluar
               </Button>
             </div>
           </div>
@@ -172,7 +172,7 @@ export default function TeacherLayout({
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <h1 className="text-xl font-semibold text-slate-900 dark:text-white">
-                Teacher Dashboard
+                Dashboard Dosen
               </h1>
             </div>
             <div className="flex items-center space-x-4">

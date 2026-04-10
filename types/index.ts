@@ -1,6 +1,6 @@
 import * as z from "zod"
 
-export type Role = "admin" | "student" | "teacher"
+export type Role = "admin" | "mahasiswa" | "dosen"
 
 export type RequestStatus =
   | "pending"
@@ -21,9 +21,9 @@ export interface User {
 export type LetterType =
   | "surat_magang"
   | "surat_aktif_kuliah"
-  | "permintaan_penelitian"
-  | "undangan_seminar"
-  | "penyelesaian_studi"
+  | "surat_penelitian"
+  | "surat_cuti"
+  | "surat_sidang"
 
 export interface LetterRequest {
   id: string
@@ -52,9 +52,9 @@ export interface TimelineEvent {
 export const LETTER_TYPE_LABELS: Record<LetterType, string> = {
   surat_magang: "Surat Magang",
   surat_aktif_kuliah: "Surat Aktif Kuliah",
-  permintaan_penelitian: "Permintaan Penelitian",
-  undangan_seminar: "Undangan Seminar",
-  penyelesaian_studi: "Penyelesaian Studi",
+  surat_penelitian: "Surat Penelitian",
+  surat_cuti: "Surat Cuti",
+  surat_sidang: "Surat Sidang/Seminar",
 }
 
 export type FieldType =

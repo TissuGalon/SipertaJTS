@@ -21,8 +21,11 @@ import { Input } from '@/components/ui/input';
 import { mockAdmins } from '@/lib/mock-data';
 
 const navItems = [
-  { label: 'Admin Dashboard', href: '/admin/dashboard', icon: IconLayoutDashboard },
-  { label: 'Bulk Import', href: '/admin/import', icon: IconFileUpload },
+  { label: 'Dashboard', href: '/admin/dashboard', icon: IconLayoutDashboard },
+  { label: 'Data Dosen', href: '/admin/dosen', icon: IconChecklist },
+  { label: 'Data Mahasiswa', href: '/admin/mahasiswa', icon: IconChecklist },
+  { label: 'Permintaan Surat', href: '/admin/permintaan', icon: IconChecklist },
+  { label: 'Manajemen Surat', href: '/admin/jenis-surat', icon: IconFileUpload },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -37,7 +40,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="flex h-16 items-center px-6 border-b">
             <div className="flex items-center space-x-2 text-indigo-600">
               <IconShieldLock size={24} />
-              <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">AdminSys</span>
+              <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">Si Perta</span>
             </div>
           </div>
           
@@ -65,12 +68,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="p-4 border-t space-y-2">
             <Button variant="ghost" className="w-full justify-start text-slate-600 dark:text-slate-400">
               <IconSettings size={20} className="mr-3" />
-              Settings
+              Pengaturan
             </Button>
             <Link href="/login">
               <Button variant="ghost" className="w-full justify-start text-rose-500 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-900/20">
                 <IconLogout size={20} className="mr-3" />
-                Logout
+                Keluar
               </Button>
             </Link>
           </div>
@@ -92,7 +95,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <div className="flex h-16 items-center px-6 border-b">
                   <div className="flex items-center space-x-2 text-indigo-600">
                     <IconShieldLock size={24} />
-                    <span className="text-lg font-bold tracking-tight">AdminSys</span>
+                    <span className="text-lg font-bold tracking-tight">Si Perta</span>
                   </div>
                 </div>
                 <nav className="space-y-1 p-4">
@@ -113,7 +116,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div className="relative max-w-md w-full hidden md:block">
               <IconSearch className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
               <Input 
-                placeholder="Search by NIM, Name or Letter ID..." 
+                placeholder="Cari NIM, Nama, atau ID Surat..." 
                 className="pl-10 h-9 bg-slate-50 border-none ring-0 focus-visible:ring-1 focus-visible:ring-indigo-100 dark:bg-slate-800" 
               />
             </div>

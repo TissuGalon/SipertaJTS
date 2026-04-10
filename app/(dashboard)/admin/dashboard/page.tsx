@@ -54,17 +54,17 @@ export default function AdminDashboard() {
   };
 
   const stats = [
-    { label: 'Total Requests', value: requests.length, icon: IconClipboardList, color: 'text-slate-600', bg: 'bg-slate-100' },
-    { label: 'Pending Review', value: requests.filter(r => r.status === 'pending').length, icon: IconHourglass, color: 'text-amber-600', bg: 'bg-amber-100' },
-    { label: 'Verified Today', value: requests.filter(r => r.status === 'done').length, icon: IconCircleCheck, color: 'text-emerald-600', bg: 'bg-emerald-100' },
-    { label: 'Active Students', value: 1240, icon: IconUsers, color: 'text-indigo-600', bg: 'bg-indigo-100' },
+    { label: 'Total Pengajuan', value: requests.length, icon: IconClipboardList, color: 'text-slate-600', bg: 'bg-slate-100' },
+    { label: 'Perlu Tinjauan', value: requests.filter(r => r.status === 'pending').length, icon: IconHourglass, color: 'text-amber-600', bg: 'bg-amber-100' },
+    { label: 'Selesai Hari Ini', value: requests.filter(r => r.status === 'done').length, icon: IconCircleCheck, color: 'text-emerald-600', bg: 'bg-emerald-100' },
+    { label: 'Mahasiswa Aktif', value: 1240, icon: IconUsers, color: 'text-indigo-600', bg: 'bg-indigo-100' },
   ];
 
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Admin Dashboard</h2>
-        <p className="text-slate-500">Overview and management of all student letter requests.</p>
+        <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Dashboard Admin</h2>
+        <p className="text-slate-500">Ringkasan dan manajemen seluruh pengajuan surat mahasiswa.</p>
       </div>
 
       {/* Stats Grid */}
@@ -85,10 +85,10 @@ export default function AdminDashboard() {
       </div>
 
       {/* Requests Management */}
-      <Card>
+      <Card className="border-none shadow-xl">
         <CardHeader>
-          <CardTitle>Letter Requests</CardTitle>
-          <CardDescription>Manage and verify student letter submissions</CardDescription>
+          <CardTitle>Kelola Pengajuan Surat</CardTitle>
+          <CardDescription>Manajemen dan verifikasi berkas surat mahasiswa</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0 mb-6">
@@ -96,7 +96,7 @@ export default function AdminDashboard() {
               <div className="relative w-full">
                 <IconSearch className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                 <Input 
-                  placeholder="Search NIM or Name..." 
+                  placeholder="Cari NIM atau Nama..." 
                   className="pl-10" 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -107,15 +107,15 @@ export default function AdminDashboard() {
               <Select value={filterStatus} onValueChange={(v: any) => setFilterStatus(v)}>
                 <SelectTrigger className="w-[180px]">
                   <IconFilter className="mr-2 h-4 w-4 text-slate-400" />
-                  <SelectValue placeholder="All Status" />
+                  <SelectValue placeholder="Semua Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="verifying">Verifying</SelectItem>
-                  <SelectItem value="processing">Processing</SelectItem>
-                  <SelectItem value="done">Done</SelectItem>
-                  <SelectItem value="rejected">Rejected</SelectItem>
+                  <SelectItem value="all">Semua Status</SelectItem>
+                  <SelectItem value="pending">Tertunda</SelectItem>
+                  <SelectItem value="verifying">Verifikasi</SelectItem>
+                  <SelectItem value="processing">Proses</SelectItem>
+                  <SelectItem value="done">Selesai</SelectItem>
+                  <SelectItem value="rejected">Ditolak</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -125,11 +125,11 @@ export default function AdminDashboard() {
             <table className="w-full text-sm">
               <thead className="bg-slate-50 dark:bg-slate-900 border-b">
                 <tr>
-                  <th className="h-12 px-4 text-left font-medium text-slate-500">Student Info</th>
-                  <th className="h-12 px-4 text-left font-medium text-slate-500">Letter Type</th>
+                  <th className="h-12 px-4 text-left font-medium text-slate-500">Info Mahasiswa</th>
+                  <th className="h-12 px-4 text-left font-medium text-slate-500">Jenis Surat</th>
                   <th className="h-12 px-4 text-left font-medium text-slate-500">Status</th>
-                  <th className="h-12 px-4 text-left font-medium text-slate-500">Date</th>
-                  <th className="h-12 px-4 text-right font-medium text-slate-500">Actions</th>
+                  <th className="h-12 px-4 text-left font-medium text-slate-500">Tanggal</th>
+                  <th className="h-12 px-4 text-right font-medium text-slate-500">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -155,7 +155,7 @@ export default function AdminDashboard() {
                         <Link href={`/admin/verifier/${request.id}`}>
                           <Button variant="outline" size="sm" className="h-8 px-2 text-indigo-600 hover:text-indigo-700">
                             <IconEye size={16} className="mr-1" />
-                            Verify
+                            Verifikasi
                           </Button>
                         </Link>
                         {request.status === 'pending' && (
@@ -188,7 +188,7 @@ export default function AdminDashboard() {
                 {filteredRequests.length === 0 && (
                   <tr>
                     <td colSpan={5} className="p-8 text-center text-slate-500">
-                      No requests found matching your criteria.
+                      Tidak ada pengajuan yang sesuai dengan kriteria.
                     </td>
                   </tr>
                 )}
