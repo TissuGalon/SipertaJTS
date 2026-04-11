@@ -33,6 +33,9 @@ import { supabase } from '@/lib/supabase';
 import { LETTER_TYPE_LABELS, RequestStatus } from '@/types';
 import { toast } from 'sonner';
 import { Textarea } from '@/components/ui/textarea';
+import PizZip from 'pizzip';
+import Docxtemplater from 'docxtemplater';
+import { saveAs } from 'file-saver';
 
 export default function DocumentVerifierPage() {
   const { id } = useParams();
@@ -79,7 +82,7 @@ export default function DocumentVerifierPage() {
       setIsLoading(true);
       const { data, error } = await supabase
         .from('letter_requests')
-        .select('*, users(name, nim)')
+        .select('*, users(name, nim), letter_templates(*)')
         .eq('id', id)
         .single();
 
@@ -93,6 +96,56 @@ export default function DocumentVerifierPage() {
       toast.error("Gagal mengambil data pengajuan");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDownload = async () => {
+    if (!request.letter_templates?.file_path) {
+      toast.error("Template berkas tidak ditemukan untuk jenis surat ini");
+      return;
+    }
+
+    try {
+      setIsProcessing(true);
+      const { data, error } = await supabase.storage
+        .from('letter_templates')
+        .download(request.letter_templates.file_path);
+
+      if (error) throw error;
+
+      const arrayBuffer = await data.arrayBuffer();
+      const zip = new PizZip(arrayBuffer);
+      const doc = new Docxtemplater(zip, {
+        paragraphLoop: true,
+        linebreaks: true,
+        delimiters: { start: '{{', end: '}}' }
+      });
+
+      // Prepare data for template
+      // Combine user info and request details
+      const templateData = {
+        ...request.details,
+        Nama: request.users?.name,
+        NIM: request.users?.nim,
+        NomorSurat: letterNumber,
+        TahunAkademik: academicYear,
+        Tanggal: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }),
+      };
+
+      doc.render(templateData);
+
+      const out = doc.getZip().generate({
+        type: "blob",
+        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      });
+
+      saveAs(out, `${request.letter_templates.name}_${request.users?.nim}.docx`);
+      toast.success("Dokumen berhasil diunduh");
+    } catch (error: any) {
+      console.error('Error downloading document:', error);
+      toast.error("Gagal menjenerate dokumen: " + (error.message || "Unknown error"));
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -141,8 +194,8 @@ export default function DocumentVerifierPage() {
   }
 
   return (
-    <div className="h-full flex flex-col space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="h-full flex flex-col space-y-6 print:space-y-0 print:p-0">
+      <div className="flex items-center justify-between print:hidden">
         <div className="flex items-center space-x-4">
           <Link href="/admin/dashboard">
             <Button variant="ghost" size="icon">
@@ -179,76 +232,150 @@ export default function DocumentVerifierPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 overflow-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 overflow-hidden print:block print:w-full">
         {/* Left: Document Preview */}
-        <Card className="flex flex-col h-full bg-slate-100/50 dark:bg-slate-900/50 overflow-hidden">
-          <CardHeader className="bg-white dark:bg-slate-900 border-b py-3">
+        <Card className="flex flex-col h-full bg-slate-100/50 dark:bg-slate-900/50 overflow-hidden print:bg-white print:border-none print:shadow-none print:h-auto print:w-full">
+          <CardHeader className="bg-white dark:bg-slate-900 border-b py-3 print:hidden">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <IconFileText size={18} className="text-blue-600" />
                 <span className="text-sm font-semibold truncate max-w-[200px]">
-                  Lampiran: {request.files?.[0]?.name || 'Document.pdf'}
+                  {request.letter_templates?.name || 'Dokumen Surat'}
                 </span>
               </div>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-8 w-8"
-                onClick={() => {
-                  if (request.files?.[0]?.url) window.open(request.files[0].url, '_blank');
-                  else toast.info("Tidak ada file untuk dibuka");
-                }}
-              >
-                <IconExternalLink size={16} />
-              </Button>
+              <div className="flex items-center space-x-1">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="h-8 text-[10px] font-bold uppercase"
+                  onClick={handleDownload}
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? 'Processing...' : 'Download .DOCX'}
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8"
+                  onClick={() => {
+                    // Logic to open/print
+                    window.print();
+                  }}
+                >
+                  <IconExternalLink size={16} />
+                </Button>
+              </div>
             </div>
           </CardHeader>
-          <CardContent className="flex-1 flex items-center justify-center p-0 overflow-hidden">
-            {/* Mock PDF Viewer */}
-            <div className="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center p-8">
-              <div className="w-full max-w-lg aspect-[1/1.4] bg-white dark:bg-slate-950 shadow-2xl rounded p-12 space-y-8 animate-in zoom-in-95 duration-500">
-                <div className="flex flex-col items-center border-b pb-8 text-center">
+          <CardContent className="flex-1 flex items-center justify-center p-0 overflow-hidden print:overflow-visible">
+            {/* Dynamic Document Preview */}
+            <div className="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center p-4 sm:p-8 overflow-y-auto print:bg-white print:p-0 print:overflow-visible">
+              <div className="w-full max-w-lg min-h-[141%] bg-white dark:bg-slate-950 shadow-2xl rounded p-6 sm:p-12 space-y-6 sm:space-y-8 animate-in zoom-in-95 duration-500 scale-[0.8] sm:scale-100 origin-top print:shadow-none print:scale-100 print:p-0 print:min-h-0 print:animate-none">
+                {/* Letter Header */}
+                <div className="flex flex-col items-center border-b-2 border-slate-900 pb-4 text-center">
                   <div className="h-16 w-16 bg-slate-100 dark:bg-slate-900 rounded-full mb-4 flex items-center justify-center">
                     <IconSchool className="text-indigo-600" size={32} />
                   </div>
-                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">KEMENTERIAN PENDIDIKAN DAN KEBUDAYAAN</h3>
-                  <p className="text-[10px] font-bold text-slate-600">UNIVERSITAS TEKNOLOGI INFORMASI</p>
-                </div>
-                <div className="space-y-4">
-                  <h4 className="text-center font-bold underline uppercase decoration-slate-300">
-                    {LETTER_TYPE_LABELS[request.type as keyof typeof LETTER_TYPE_LABELS] || "SURAT KETERANGAN"}
-                  </h4>
-                  <p className="text-[11px] text-justify leading-relaxed">
-                    Yang bertanda tangan di bawah ini menerangkan bahwa mahasiswa dengan nama <b>{request.users?.name}</b>, 
-                    NIM <b>{request.users?.nim}</b>, adalah benar terdaftar sebagai mahasiswa aktif pada semester ini 
-                    Tahun Akademik <b>{academicYear}</b>.
+                  <h3 className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white leading-tight">
+                    KEMENTERIAN PENDIDIKAN, KEBUDAYAAN,<br />RISET, DAN TEKNOLOGI
+                  </h3>
+                  <p className="text-[9px] sm:text-[10px] font-bold text-slate-900 mt-1 uppercase">
+                    UNIVERSITAS TEKNOLOGI INFORMASI - FAKULTAS TEKNIK
                   </p>
-                  <div className="grid grid-cols-2 gap-4 text-[10px]">
-                    {Object.entries(request.details).slice(0, 4).map(([key, value]) => (
-                      <div key={key} className="border-b border-slate-100 pb-1">
-                        <span className="text-slate-400 uppercase font-black">{key}:</span>
-                        <span className="ml-2 font-medium">{String(value)}</span>
-                      </div>
-                    ))}
-                  </div>
+                  <p className="text-[8px] text-slate-500 mt-1 italic">
+                    Jl. Teknologi No. 123, Kampus Terpadu, Semarang 50123
+                  </p>
                 </div>
-                <div className="pt-12 flex justify-end">
-                  <div className="text-right">
-                    <p className="text-[10px] mb-12">Semarang, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-                    <div className="h-0.5 w-40 bg-slate-200 mb-1 ml-auto"></div>
-                    <p className="text-[10px] font-bold">Kepala Bagian Administrasi</p>
+
+                <div className="space-y-6">
+                  {/* Letter Title & Number */}
+                  <div className="text-center space-y-1">
+                    <h4 className="font-bold underline uppercase decoration-1 underline-offset-4 text-sm sm:text-base">
+                      {request.letter_templates?.name || (LETTER_TYPE_LABELS[request.type as keyof typeof LETTER_TYPE_LABELS] || "SURAT KETERANGAN")}
+                    </h4>
+                    <p className="text-[10px] font-medium">
+                      Nomor: {letterNumber || "..../..../..../...."}
+                    </p>
+                  </div>
+
+                  {/* Letter Body */}
+                  <div className="text-[11px] sm:text-xs text-justify leading-loose space-y-4">
+                    <p>
+                      Yang bertanda tangan di bawah ini, Pimpinan Fakultas Teknik Universitas Teknologi Informasi menerangkan bahwa:
+                    </p>
+                    
+                    <div className="ml-8 space-y-2">
+                      <div className="grid grid-cols-4 gap-2">
+                        <span className="col-span-1">Nama</span>
+                        <span className="col-span-3 font-bold">: {request.users?.name}</span>
+                      </div>
+                      <div className="grid grid-cols-4 gap-2">
+                        <span className="col-span-1">NIM</span>
+                        <span className="col-span-3 font-bold">: {request.users?.nim}</span>
+                      </div>
+                      <div className="grid grid-cols-4 gap-2">
+                        <span className="col-span-1">Prodi</span>
+                        <span className="col-span-3">: {request.details?.JurusanProdi || request.details?.prodi || request.details?.department || "Teknik Sipil"}</span>
+                      </div>
+                      <div className="grid grid-cols-4 gap-2">
+                        <span className="col-span-1">Semester</span>
+                        <span className="col-span-3">: {request.details?.TingkatSemester || request.details?.semester || "-"}</span>
+                      </div>
+                    </div>
+
+                    <p>
+                      Adalah benar mahasiswa yang terdaftar aktif pada Fakultas Teknik Universitas Teknologi Informasi pada Tahun Akademik <b>{academicYear}</b>.
+                    </p>
+
+                    <p>
+                      {request.details?.Keperluan || request.details?.purpose ? (
+                        <>Surat ini diberikan untuk keperluan: <b>{request.details.Keperluan || request.details.purpose}</b>.</>
+                      ) : (
+                        "Demikian surat keterangan ini diberikan untuk dapat dipergunakan sebagaimana mestinya."
+                      )}
+                    </p>
+                  </div>
+
+                  {/* All Other Details Grid */}
+                  {Object.entries(request.details).filter(([k]) => !['Nama', 'NIM', 'JurusanProdi', 'TingkatSemester', 'Keperluan', 'name', 'nim', 'prodi', 'semester', 'purpose'].includes(k)).length > 0 && (
+                    <div className="pt-4 border-t border-dashed border-slate-200">
+                      <p className="text-[9px] font-bold text-slate-400 uppercase mb-2">Informasi Tambahan:</p>
+                      <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-[10px]">
+                        {Object.entries(request.details)
+                          .filter(([k]) => !['Nama', 'NIM', 'JurusanProdi', 'TingkatSemester', 'Keperluan', 'name', 'nim', 'prodi', 'semester', 'purpose'].includes(k))
+                          .map(([key, value]) => (
+                          <div key={key} className="flex justify-between border-b border-slate-50 pb-1">
+                            <span className="text-slate-500">{key.replace(/([A-Z])/g, ' $1').trim()}:</span>
+                            <span className="font-medium text-right">{String(value)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Signature Area */}
+                <div className="pt-8 flex justify-end">
+                  <div className="text-center min-w-[180px]">
+                    <p className="text-[10px] mb-16">
+                      Semarang, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    </p>
+                    <p className="text-[10px] font-bold border-t border-slate-900 pt-1">
+                      Kepala Bagian Administrasi
+                    </p>
+                    <p className="text-[9px] text-slate-500">NIP. 19750812 200003 1 002</p>
                   </div>
                 </div>
               </div>
             </div>
           </CardContent>
-          <CardFooter className="bg-white dark:bg-slate-900 border-t py-2 justify-center">
-            <span className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Document Preview Simulation</span>
+          <CardFooter className="bg-white dark:bg-slate-900 border-t py-2 justify-center print:hidden">
+            <span className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Live Document Preview</span>
           </CardFooter>
         </Card>
 
         {/* Right: Info & Actions */}
-        <div className="space-y-6 overflow-y-auto">
+        <div className="space-y-6 overflow-y-auto print:hidden">
           {/* Student Info */}
           <Card>
             <CardHeader className="flex flex-row items-center space-x-3">
@@ -257,7 +384,9 @@ export default function DocumentVerifierPage() {
               </div>
               <div>
                 <CardTitle>{request.users?.name || 'Unknown'}</CardTitle>
-                <CardDescription>NIM: {request.users?.nim || '-'} • {LETTER_TYPE_LABELS[request.type as keyof typeof LETTER_TYPE_LABELS]}</CardDescription>
+                <CardDescription>
+                  NIM: {request.users?.nim || '-'} • {request.letter_templates?.name || (LETTER_TYPE_LABELS[request.type as keyof typeof LETTER_TYPE_LABELS] || request.type)}
+                </CardDescription>
               </div>
             </CardHeader>
             <CardContent>
@@ -298,17 +427,15 @@ export default function DocumentVerifierPage() {
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                {request.type === 'surat_magang' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="letterNumber">Nomor Surat</Label>
-                    <Input 
-                      id="letterNumber" 
-                      placeholder="Contoh: 123/UN/AK/2024" 
-                      value={letterNumber}
-                      onChange={(e) => setLetterNumber(e.target.value)}
-                    />
-                  </div>
-                )}
+                <div className="space-y-2">
+                  <Label htmlFor="letterNumber">Nomor Surat</Label>
+                  <Input 
+                    id="letterNumber" 
+                    placeholder="Contoh: 123/UN/AK/2024" 
+                    value={letterNumber}
+                    onChange={(e) => setLetterNumber(e.target.value)}
+                  />
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="academicYear">Tahun Akademik</Label>
                   <Input 
