@@ -23,6 +23,13 @@ import { Input } from '@/components/ui/input';
 import { supabase } from '@/lib/supabase';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   CommandDialog,
   CommandEmpty,
   CommandGroup,
@@ -47,13 +54,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [userProfile, setUserProfile] = useState<{ name: string; email: string; role: string } | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [navCounts, setNavCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
   useEffect(() => {
-    const fetchUser = async () => {
+    const fetchData = async () => {
+      // Fetch user profile
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         const { data: profile } = await supabase
@@ -66,8 +75,28 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           setUserProfile(profile)
         }
       }
+
+      // Fetch sidebar counts
+      const [
+        { count: reqCount },
+        { count: templateCount },
+        { count: mahasiswaCount },
+        { count: dosenCount }
+      ] = await Promise.all([
+        supabase.from('letter_requests').select('*', { count: 'exact', head: true }),
+        supabase.from('letter_templates').select('*', { count: 'exact', head: true }),
+        supabase.from('mahasiswa').select('*', { count: 'exact', head: true }),
+        supabase.from('dosen').select('*', { count: 'exact', head: true })
+      ]);
+      
+      setNavCounts({
+        '/admin/permintaan': reqCount || 0,
+        '/admin/jenis-surat': templateCount || 0,
+        '/admin/mahasiswa': mahasiswaCount || 0,
+        '/admin/dosen': dosenCount || 0
+      });
     }
-    fetchUser()
+    fetchData()
   }, [])
 
   // Keyboard shortcut for search
@@ -119,14 +148,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         key={item.href}
                         href={item.href}
                         className={cn(
-                          "flex items-center space-x-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                          "flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                           isActive 
                             ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400" 
                             : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
                         )}
                       >
-                        <item.icon size={20} />
-                        <span>{item.label}</span>
+                        <div className="flex items-center space-x-3">
+                          <item.icon size={20} />
+                          <span>{item.label}</span>
+                        </div>
+                        {typeof navCounts[item.href] !== 'undefined' && (
+                          <span className={cn(
+                            "text-[10px] font-bold px-2 py-0.5 rounded-full",
+                            isActive 
+                              ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-400" 
+                              : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
+                          )}>
+                            {navCounts[item.href]}
+                          </span>
+                        )}
                       </Link>
                     );
                   })}
@@ -178,16 +219,36 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                           {category}
                         </h3>
                         <div className="space-y-1">
-                          {navItems.filter(item => item.category === category).map((item) => (
-                            <Link
-                              key={item.href}
-                              href={item.href}
-                              className="flex items-center space-x-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800"
-                            >
-                              <item.icon size={20} />
-                              <span>{item.label}</span>
-                            </Link>
-                          ))}
+                          {navItems.filter(item => item.category === category).map((item) => {
+                            const isActive = pathname === item.href;
+                            return (
+                              <Link
+                                key={item.href}
+                                href={item.href}
+                                className={cn(
+                                  "flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                                  isActive 
+                                    ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400" 
+                                    : "text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800"
+                                )}
+                              >
+                                <div className="flex items-center space-x-3">
+                                  <item.icon size={20} />
+                                  <span>{item.label}</span>
+                                </div>
+                                {typeof navCounts[item.href] !== 'undefined' && (
+                                  <span className={cn(
+                                    "text-[10px] font-bold px-2 py-0.5 rounded-full",
+                                    isActive 
+                                      ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-400" 
+                                      : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
+                                  )}>
+                                    {navCounts[item.href]}
+                                  </span>
+                                )}
+                              </Link>
+                            );
+                          })}
                         </div>
                       </div>
                     ))}
@@ -216,11 +277,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
           
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="icon" className="relative">
-              <IconBell size={20} />
-              <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-indigo-500 ring-2 ring-white dark:ring-slate-900" />
-            </Button>
-            <div className="flex items-center space-x-3 border-l pl-4">
+            <div className="flex items-center space-x-3">
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-medium text-slate-900 dark:text-white">
                   {userProfile?.name || "Loading..."}
@@ -229,12 +286,34 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   {userProfile?.role || "User"}
                 </p>
               </div>
-              <Avatar className="h-9 w-9 ring-2 ring-indigo-100 dark:ring-indigo-900/30">
-                <AvatarImage src="" alt={userProfile?.name} />
-                <AvatarFallback className="bg-indigo-600 text-white text-xs">
-                  {userProfile?.name?.charAt(0) || "U"}
-                </AvatarFallback>
-              </Avatar>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0">
+                    <Avatar className="h-9 w-9 ring-2 hover:ring-4 ring-indigo-100 dark:ring-indigo-900/30 transition-all cursor-pointer">
+                      <AvatarImage src="" alt={userProfile?.name} />
+                      <AvatarFallback className="bg-indigo-600 text-white text-xs">
+                        {userProfile?.name?.charAt(0) || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal border-b pb-2 mb-2">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{userProfile?.name}</p>
+                      <p className="text-xs leading-none text-slate-500">{userProfile?.email}</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuItem className="cursor-pointer" onClick={() => router.push('/admin/pengaturan')}>
+                    <IconSettings className="mr-2 h-4 w-4" />
+                    <span>Pengaturan</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="text-rose-500 cursor-pointer focus:bg-rose-50 focus:text-rose-600 dark:focus:bg-rose-950/50" onClick={handleLogout}>
+                    <IconLogout className="mr-2 h-4 w-4" />
+                    <span>Keluar</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </header>

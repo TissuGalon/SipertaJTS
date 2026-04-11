@@ -243,37 +243,12 @@ export default function AdminDashboard() {
                       {new Date(request.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end items-center space-x-1">
-                        <Link href={`/admin/verifier/${request.id}`}>
-                          <Button variant="outline" size="sm" className="h-8 px-3 text-indigo-600 border-indigo-100 hover:bg-indigo-50">
-                            <IconEye size={16} className="mr-1.5" />
-                            Detail
-                          </Button>
-                        </Link>
-                        {request.status === 'pending' && (
-                          <div className="flex space-x-1 animate-in slide-in-from-right-2 duration-300">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8 text-emerald-600 hover:bg-emerald-50 rounded-full"
-                              onClick={() => handleAction(request.id, 'verifying')}
-                            >
-                              <IconCheck size={16} />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8 text-rose-600 hover:bg-rose-50 rounded-full"
-                              onClick={() => handleAction(request.id, 'rejected')}
-                            >
-                              <IconX size={16} />
-                            </Button>
-                          </div>
-                        )}
-                        <Button variant="ghost" size="icon" className="h-8 w-8 opacity-40 hover:opacity-100">
-                          <IconDotsVertical size={16} />
+                      <Link href={`/admin/verifier/${request.id}`}>
+                        <Button variant="outline" size="sm" className="h-8 px-3 text-indigo-600 border-indigo-100 hover:bg-indigo-50">
+                          <IconEye size={16} className="mr-1.5" />
+                          Detail
                         </Button>
-                      </div>
+                      </Link>
                     </td>
                   </tr>
                 ))}

@@ -43,6 +43,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { id as localeID } from "date-fns/locale";
+import { DateRange } from "react-day-picker";
 import {
   Dialog,
   DialogContent,
@@ -59,6 +68,7 @@ import { toast } from 'sonner';
 export default function PermintaanSuratPage() {
   const [filterStatus, setFilterStatus] = useState<RequestStatus | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [date, setDate] = useState<DateRange | undefined>(undefined);
   const [requests, setRequests] = useState<any[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -82,7 +92,7 @@ export default function PermintaanSuratPage() {
   React.useEffect(() => {
     setMounted(true);
     fetchRequests();
-  }, [filterStatus, searchQuery, currentPage]);
+  }, [filterStatus, searchQuery, currentPage, date]);
 
   const fetchRequests = async () => {
     try {
@@ -101,6 +111,15 @@ export default function PermintaanSuratPage() {
       // Apply Filters
       if (filterStatus !== "all") {
         query = query.eq('status', filterStatus);
+      }
+
+      if (date?.from) {
+        query = query.gte('created_at', date.from.toISOString());
+      }
+      if (date?.to) {
+        const toDate = new Date(date.to);
+        toDate.setDate(toDate.getDate() + 1);
+        query = query.lt('created_at', toDate.toISOString());
       }
 
       const from = (currentPage - 1) * itemsPerPage;
@@ -175,6 +194,16 @@ export default function PermintaanSuratPage() {
 
       let query = supabase.from('letter_requests').select(selectQuery);
       if (filterStatus !== "all") query = query.eq('status', filterStatus);
+      
+      if (date?.from) {
+        query = query.gte('created_at', date.from.toISOString());
+      }
+      if (date?.to) {
+        const toDate = new Date(date.to);
+        toDate.setDate(toDate.getDate() + 1);
+        query = query.lt('created_at', toDate.toISOString());
+      }
+
       if (searchQuery) {
         query = query.or(`name.ilike.%${searchQuery}%,nim.ilike.%${searchQuery}%`, { foreignTable: 'users' });
       }
@@ -313,9 +342,64 @@ export default function PermintaanSuratPage() {
               ) : (
                 <div className="w-[180px] h-11 border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50 rounded-lg animate-pulse" />
               )}
-              <Button variant="outline" size="icon" className="h-11 w-11 shrink-0 border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50">
-                <IconCalendarEvent size={20} className="text-slate-500" />
-              </Button>
+              {mounted ? (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      className={cn(
+                        "h-11 px-3 border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50 font-normal shrink-0",
+                        !date && "text-slate-500"
+                      )}
+                    >
+                      <IconCalendarEvent size={18} className="mr-2 text-slate-500" />
+                      {date?.from ? (
+                        date.to ? (
+                          <>
+                            {format(date.from, "dd LLL yy", { locale: localeID })} -{" "}
+                            {format(date.to, "dd LLL yy", { locale: localeID })}
+                          </>
+                        ) : (
+                          format(date.from, "dd LLL yy", { locale: localeID })
+                        )
+                      ) : (
+                        <span className="hidden sm:inline">Filter Tanggal</span>
+                      )}
+                      {!date?.from && <span className="sm:hidden">Tanggal</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 z-50 border-none shadow-2xl rounded-2xl overflow-hidden" align="end">
+                    <Calendar
+                      initialFocus
+                      mode="range"
+                      defaultMonth={date?.from}
+                      selected={date}
+                      onSelect={(newDate) => {
+                        setDate(newDate);
+                        setCurrentPage(1);
+                      }}
+                      numberOfMonths={1}
+                      className="bg-white dark:bg-slate-900"
+                    />
+                    {date && (
+                      <div className="p-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50">
+                        <Button 
+                          variant="ghost" 
+                          className="w-full h-9 text-xs font-semibold text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-xl" 
+                          onClick={() => {
+                            setDate(undefined);
+                            setCurrentPage(1);
+                          }}
+                        >
+                          Reset Filter Date
+                        </Button>
+                      </div>
+                    )}
+                  </PopoverContent>
+                </Popover>
+              ) : (
+                <div className="w-[140px] h-11 border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50 rounded-lg animate-pulse" />
+              )}
             </div>
           </div>
         </CardContent>
