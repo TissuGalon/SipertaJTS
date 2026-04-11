@@ -58,7 +58,7 @@ export default function TeacherDashboard() {
     if (error) {
       toast.error("Gagal mengambil data pengajuan")
     } else {
-      const mappedData = data.map((req: any) => ({
+      const mappedData = (data || []).map((req: any) => ({
         ...req,
         userName: req.users?.name || "Unknown",
         userNim: req.users?.nim || "-",
@@ -83,9 +83,9 @@ export default function TeacherDashboard() {
 
   const stats = {
     total: requests.length,
-    verifying: requests.filter((r) => r.status === "verifying").length,
-    pending: requests.filter((r) => r.status === "pending").length,
-    done: requests.filter((r) => r.status === "done").length,
+    verifying: requests.filter((r: any) => r.status === "verifying").length,
+    pending: requests.filter((r: any) => r.status === "pending").length,
+    done: requests.filter((r: any) => r.status === "done").length,
   }
 
   const handleApprove = async (id: string) => {

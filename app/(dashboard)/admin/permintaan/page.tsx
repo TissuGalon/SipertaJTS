@@ -168,11 +168,11 @@ export default function PermintaanSuratPage() {
       if (error) throw error;
 
       const stats = {
-        total: data.length,
-        done: data.filter(r => r.status === 'done').length,
-        pending: data.filter(r => r.status === 'pending').length,
-        rejected: data.filter(r => r.status === 'rejected').length,
-        verifying: data.filter(r => r.status === 'verifying' || r.status === 'processing').length
+        total: data?.length || 0,
+        done: (data || []).filter((r: any) => r.status === 'done').length,
+        pending: (data || []).filter((r: any) => r.status === 'pending').length,
+        rejected: (data || []).filter((r: any) => r.status === 'rejected').length,
+        verifying: (data || []).filter((r: any) => r.status === 'verifying' || r.status === 'processing').length
       };
 
       setMonthlyStats(stats);

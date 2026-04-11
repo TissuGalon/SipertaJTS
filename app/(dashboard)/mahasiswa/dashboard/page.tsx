@@ -103,16 +103,16 @@ export default function StudentDashboard() {
   const getStatusCount = (status: RequestStatus | 'all') => {
     if (status === 'all') return requests.length;
     if (status === 'pending') {
-      return requests.filter(r => r.status === 'pending' || r.status === 'verifying').length;
+      return requests.filter((r: any) => r.status === 'pending' || r.status === 'verifying').length;
     }
-    return requests.filter(r => r.status === status).length;
+    return requests.filter((r: any) => r.status === status).length;
   };
 
   const stats = [
     { label: 'Total Pengajuan', value: getStatusCount('all'), icon: IconFileText, color: 'text-blue-600', bg: 'bg-blue-100', shadow: 'shadow-blue-500/20' },
     { label: 'Sedang Diproses', value: getStatusCount('pending'), icon: IconClock, color: 'text-amber-600', bg: 'bg-amber-100', shadow: 'shadow-amber-500/20' },
-    { label: 'Selesai', value: requests.filter(r => r.status === 'done').length, icon: IconCheck, color: 'text-emerald-600', bg: 'bg-emerald-100', shadow: 'shadow-emerald-500/20' },
-    { label: 'Ditolak', value: requests.filter(r => r.status === 'rejected').length, icon: IconX, color: 'text-rose-600', bg: 'bg-rose-100', shadow: 'shadow-rose-500/20' },
+    { label: 'Selesai', value: requests.filter((r: any) => r.status === 'done').length, icon: IconCheck, color: 'text-emerald-600', bg: 'bg-emerald-100', shadow: 'shadow-emerald-500/20' },
+    { label: 'Ditolak', value: requests.filter((r: any) => r.status === 'rejected').length, icon: IconX, color: 'text-rose-600', bg: 'bg-rose-100', shadow: 'shadow-rose-500/20' },
   ];
 
   const latestRequest = requests[0];
