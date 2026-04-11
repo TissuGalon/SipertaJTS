@@ -73,7 +73,13 @@ const templateSchema = z.object({
       label: z.string(),
       value: z.string()
     })).optional()
-  })).min(1, "Minimal harus ada satu field")
+  })).min(1, "Minimal harus ada satu field"),
+  requirements: z.array(z.object({
+    id: z.string().min(1, "ID wajib diisi"),
+    label: z.string().min(1, "Label wajib diisi"),
+    required: z.boolean(),
+    description: z.string().optional()
+  })).optional()
 });
 
 type TemplateFormValues = z.infer<typeof templateSchema>;
@@ -89,7 +95,8 @@ export default function TambahTemplatePage() {
       title: "",
       description: "",
       category: "Akademik",
-      fields: []
+      fields: [],
+      requirements: []
     }
   });
 
@@ -97,6 +104,16 @@ export default function TambahTemplatePage() {
     control: form.control,
     name: "fields"
   });
+
+  const { fields: reqFields, append: appendReq, remove: removeReq } = useFieldArray({
+    control: form.control,
+    name: "requirements"
+  });
+
+  const [templateFile, setTemplateFile] = useState<File | null>(null);
+  const [templateBuffer, setTemplateBuffer] = useState<ArrayBuffer | null>(null);
+  const [isConverting, setIsConverting] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const onSubmit = async (data: TemplateFormValues) => {
     try {
@@ -128,6 +145,7 @@ export default function TambahTemplatePage() {
           category: data.category,
           description: data.description,
           fields: data.fields,
+          requirements: data.requirements,
           file_path: uploadData.path
         }]);
 
@@ -146,11 +164,6 @@ export default function TambahTemplatePage() {
       setIsGenerating(false);
     }
   };
-
-  const [templateFile, setTemplateFile] = useState<File | null>(null);
-  const [templateBuffer, setTemplateBuffer] = useState<ArrayBuffer | null>(null);
-  const [isConverting, setIsConverting] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
 
   const handleDocxUpload = async (file: File) => {
     setIsConverting(true);
@@ -465,6 +478,110 @@ export default function TambahTemplatePage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between px-2">
               <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 flex items-center">
+                Struktur Lampiran Dokumen
+                <Badge variant="secondary" className="ml-2 bg-amber-50 text-amber-600 dark:bg-amber-900/30 border-none px-2 py-0">
+                  {reqFields.length} Form Upload
+                </Badge>
+              </h3>
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm"
+                onClick={() => appendReq({ id: "", label: "", required: true })}
+                className="border-amber-200 dark:border-amber-900 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+              >
+                <IconPlus size={16} className="mr-2" />
+                Tambah Form Upload
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              {reqFields.map((field, index) => (
+                <Card key={field.id} className="group border-none shadow-sm bg-amber-50/30 dark:bg-slate-900 relative overflow-hidden transition-all hover:ring-2 hover:ring-amber-500/10">
+                  <div className="absolute top-0 left-0 bottom-0 w-1 bg-amber-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="mt-2 text-slate-300 dark:text-slate-700 cursor-grab active:cursor-grabbing">
+                        <IconGripVertical size={20} />
+                      </div>
+                      <div className="flex-1 space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-xs uppercase tracking-wider text-slate-400 font-bold">Nama Dokumen</Label>
+                            <Input 
+                              placeholder="KTP / Kartu Keluarga" 
+                              {...form.register(`requirements.${index}.label` as const)}
+                              className="h-9 border-slate-200 dark:border-slate-800"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-xs uppercase tracking-wider text-slate-400 font-bold">ID (Internal)</Label>
+                            <Input 
+                              placeholder="ktp_kk" 
+                              {...form.register(`requirements.${index}.id` as const)}
+                              className="h-9 font-mono text-sm border-slate-200 dark:border-slate-800"
+                            />
+                          </div>
+                          <div className="space-y-2 flex flex-col justify-end">
+                            <Label className="text-xs uppercase tracking-wider text-slate-400 font-bold mb-2">Wajib Diunggah?</Label>
+                            <div className="flex items-center space-x-2">
+                              {/* Simple select for required boolean */}
+                              <Select 
+                                onValueChange={(val) => form.setValue(`requirements.${index}.required`, val === 'true')}
+                                defaultValue={form.getValues(`requirements.${index}.required`) ? 'true' : 'false'}
+                              >
+                                <SelectTrigger className="h-9 border-slate-200 dark:border-slate-800">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="true">Wajib (Ya)</SelectItem>
+                                  <SelectItem value="false">Pilihan (Tidak)</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4">
+                           <div className="space-y-2">
+                             <Label className="text-xs uppercase tracking-wider text-slate-400 font-bold">Catatan / Deskripsi Tambahan</Label>
+                             <Input 
+                               placeholder="Scan berwarna resolusi tinggi..." 
+                               {...form.register(`requirements.${index}.description` as const)}
+                               className="h-9 border-slate-200 dark:border-slate-800"
+                             />
+                           </div>
+                        </div>
+                      </div>
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => removeReq(index)}
+                        className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20"
+                      >
+                        <IconTrash size={18} />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+
+              <Button 
+                type="button" 
+                variant="ghost" 
+                className="w-full h-16 border-2 border-dashed border-slate-200 dark:border-slate-800 text-slate-400 hover:border-amber-300 hover:text-amber-500 transition-all rounded-xl"
+                onClick={() => appendReq({ id: "", label: "", required: true })}
+              >
+                <IconPlus className="mr-2" />
+                Tambah Form Lampiran Baru
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between px-2">
+              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 flex items-center">
                 Struktur Formulir
                 <Badge variant="secondary" className="ml-2 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 border-none px-2 py-0">
                   {fields.length} Field
@@ -474,8 +591,10 @@ export default function TambahTemplatePage() {
                 type="button" 
                 variant="outline" 
                 size="sm"
+                disabled
                 onClick={() => append({ name: "", label: "", type: "text", required: true })}
-                className="border-indigo-200 dark:border-indigo-900 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+                className="border-indigo-200 dark:border-indigo-900 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Field formulir ditambahkan secara otomatis dari berkas Word (.docx)"
               >
                 <IconPlus size={16} className="mr-2" />
                 Tambah Field
@@ -570,8 +689,10 @@ export default function TambahTemplatePage() {
               <Button 
                 type="button" 
                 variant="ghost" 
-                className="w-full h-16 border-2 border-dashed border-slate-200 dark:border-slate-800 text-slate-400 hover:border-indigo-300 hover:text-indigo-500 transition-all rounded-xl"
+                disabled
+                className="w-full h-16 border-2 border-dashed border-slate-200 dark:border-slate-800 text-slate-400 hover:border-indigo-300 hover:text-indigo-500 transition-all rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={() => append({ name: "", label: "", type: "text", required: true })}
+                title="Field formulir ditambahkan secara otomatis dari berkas Word (.docx)"
               >
                 <IconPlus className="mr-2" />
                 Tambah Form Field Baru

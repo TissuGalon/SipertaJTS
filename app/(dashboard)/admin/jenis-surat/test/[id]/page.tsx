@@ -21,7 +21,9 @@ import {
   IconVariable,
   IconExternalLink,
   IconFileWord,
-  IconCircleCheck
+  IconCircleCheck,
+  IconCloudUpload,
+  IconPaperclip
 } from '@tabler/icons-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
@@ -184,10 +186,6 @@ export default function TestTemplatePage() {
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nama Surat</p>
                 <p className="font-semibold text-slate-900 dark:text-white">{template.name}</p>
               </div>
-              <div className="space-y-1">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Kategori</p>
-                <Badge variant="outline">{template.category}</Badge>
-              </div>
               <div className="space-y-1 pt-2">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center">
                   <IconVariable size={12} className="mr-1" />
@@ -201,6 +199,26 @@ export default function TestTemplatePage() {
                   ))}
                 </div>
               </div>
+              {template.requirements && template.requirements.length > 0 && (
+                <div className="space-y-1 pt-2 border-t border-slate-100 dark:border-slate-800 pt-4">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center">
+                    <IconPaperclip size={12} className="mr-1" />
+                    Lampiran Diperlukan
+                  </p>
+                  <div className="space-y-2 mt-2">
+                    {template.requirements.map((req: any, idx: number) => (
+                      <div key={idx} className="flex items-center justify-between bg-amber-50/50 dark:bg-amber-900/10 p-2 rounded-lg border border-amber-100/50">
+                        <span className="text-xs font-medium text-slate-700 dark:text-slate-300">{req.label}</span>
+                        {req.required ? (
+                          <Badge className="text-[9px] h-4 bg-rose-500 hover:bg-rose-500 px-1">WAJIB</Badge>
+                        ) : (
+                          <Badge className="text-[9px] h-4 bg-slate-400 hover:bg-slate-400 px-1 text-white">OPSIONAL</Badge>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </CardContent>
             <CardFooter className="bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 p-4">
                 <Button variant="ghost" size="sm" className="w-full text-xs text-indigo-600" asChild>
@@ -263,6 +281,53 @@ export default function TestTemplatePage() {
                     <p>Testing dilakukan secara lokal di browser Anda. Tidak ada data yang disimpan ke database selama sesi uji coba ini.</p>
                 </CardFooter>
             </Card>
+
+            {/* Simulated Attachment Uploads */}
+            {template.requirements && template.requirements.length > 0 && (
+              <Card className="border-none shadow-xl bg-white dark:bg-slate-900 overflow-hidden">
+                <div className="h-2 bg-amber-500 w-full" />
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-xl flex items-center text-amber-600">
+                        <IconCloudUpload className="mr-2" />
+                        Pratinjau Upload Lampiran
+                      </CardTitle>
+                      <CardDescription>Daftar dokumen yang harus diunggah oleh mahasiswa.</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {template.requirements.map((req: any, idx: number) => (
+                      <div key={idx} className="p-4 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-950/20 flex flex-col items-center justify-center text-center space-y-2 group hover:bg-slate-50 transition-colors">
+                        <div className="w-10 h-10 bg-white dark:bg-slate-800 rounded-full shadow-sm flex items-center justify-center text-slate-400 group-hover:text-amber-500 transition-colors">
+                          <IconCloudUpload size={20} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                            {req.label}
+                            {req.required && <span className="text-rose-500 ml-1">*</span>}
+                          </p>
+                          {req.description && (
+                            <p className="text-[11px] text-slate-500 mt-1 italic">{req.description}</p>
+                          )}
+                        </div>
+                        <div className="pt-2">
+                           <Button size="sm" variant="outline" className="h-7 text-[10px] bg-white dark:bg-slate-800">Pilih Berkas</Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+                <CardFooter className="bg-amber-50/30 dark:bg-amber-900/10 p-4 border-t border-amber-100/50 flex items-center space-x-2">
+                  <IconVariable size={14} className="text-amber-600" />
+                  <p className="text-[11px] text-amber-700 dark:text-amber-500">
+                    Mahasiswa akan melihat {template.requirements.length} field upload dokumen berdasarkan konfigurasi ini.
+                  </p>
+                </CardFooter>
+              </Card>
+            )}
 
             {/* Preview Document */}
             {previewHtml && (
