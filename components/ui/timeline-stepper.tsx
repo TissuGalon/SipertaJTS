@@ -1,7 +1,7 @@
 import React from 'react';
 import { RequestStatus } from '@/types';
 import { cn } from '@/lib/utils';
-import { IconCheck } from '@tabler/icons-react';
+import { IconCheck, IconX } from '@tabler/icons-react';
 
 interface TimelineStepperProps {
   currentStatus: RequestStatus;
