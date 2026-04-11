@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import React, { useState } from 'react';
 import { cn } from "@/lib/utils";
 import { useParams, useRouter } from 'next/navigation';
@@ -77,7 +79,7 @@ export default function DocumentVerifierPage() {
         .order('created_at', { ascending: false });
 
       if (allIds) {
-        const curIdx = allIds.findIndex(r => r.id === id);
+        const curIdx = allIds.findIndex((r: any) => r.id === id);
         setAdjacentIds({
           prev: curIdx > 0 ? allIds[curIdx - 1].id : null,
           next: curIdx < allIds.length - 1 ? allIds[curIdx + 1].id : null

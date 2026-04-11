@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import React, { useState, useEffect } from 'react';
 import { 
   Card, 
@@ -69,7 +71,7 @@ export default function DataDosenPage() {
     }
   };
 
-  const filteredLecturers = lecturers.filter(lecturer => 
+  const filteredLecturers = lecturers.filter((lecturer: any) => 
     lecturer.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
     (lecturer.email && lecturer.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
     lecturer.nip?.includes(searchQuery)

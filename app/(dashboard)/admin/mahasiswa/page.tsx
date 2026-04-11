@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import React, { useState, useEffect } from 'react';
 import { 
   Card, 
@@ -68,7 +70,7 @@ export default function DataMahasiswaPage() {
     }
   };
 
-  const filteredStudents = students.filter(student => 
+  const filteredStudents = students.filter((student: any) => 
     student.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
     student.nim?.includes(searchQuery) ||
     (student.email && student.email.toLowerCase().includes(searchQuery.toLowerCase()))

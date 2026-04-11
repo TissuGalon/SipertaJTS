@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import React, { useState, useEffect } from 'react';
 import { 
   Card, 
@@ -81,7 +83,7 @@ export default function ManajemenSuratPage() {
 
       if (error) throw error;
 
-      setTemplates(templates.map(t => 
+      setTemplates(templates.map((t: any) => 
         t.id === id ? { ...t, is_active: !currentStatus } : t
       ));
 
@@ -121,7 +123,7 @@ export default function ManajemenSuratPage() {
       }
 
       toast.success("Template Berhasil Dihapus");
-      setTemplates(templates.filter(t => t.id !== id));
+      setTemplates(templates.filter((t: any) => t.id !== id));
     } catch (error: any) {
       console.error("Error deleting template:", error);
       toast.error("Gagal Menghapus", {
@@ -153,7 +155,7 @@ export default function ManajemenSuratPage() {
     }
   };
 
-  const filteredTemplates = templates.filter(template => 
+  const filteredTemplates = templates.filter((template: any) => 
     template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     template.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
