@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Card, 
   CardContent, 
@@ -8,7 +8,7 @@ import {
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
-import { mockLecturers } from '@/lib/mock-data';
+import { supabase } from '@/lib/supabase';
 import { 
   IconUsers, 
   IconPlus,
@@ -42,50 +42,151 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function DataDosenPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [lecturers, setLecturers] = useState(mockLecturers);
+  const [lecturers, setLecturers] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingLecturer, setEditingLecturer] = useState<any>(null);
+
+  useEffect(() => {
+    fetchLecturers();
+  }, []);
+
+  const fetchLecturers = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('dosen')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setLecturers(data || []);
+    } catch (error: any) {
+      toast.error("Gagal mengambil data dosen", { description: error.message });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const filteredLecturers = lecturers.filter(lecturer => 
     lecturer.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    lecturer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    lecturer.id.includes(searchQuery)
+    (lecturer.email && lecturer.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    lecturer.nip?.includes(searchQuery)
   );
 
-  const handleAddLecturer = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleAddLecturer = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsSubmitting(true);
     const formData = new FormData(e.currentTarget);
-    const newLecturer = {
-      id: `l${lecturers.length + 1}`,
-      name: formData.get('name') as string,
-      email: formData.get('email') as string,
-      role: 'dosen' as const,
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${formData.get('name')}`,
-    };
-    
-    setLecturers([newLecturer, ...lecturers]);
-    setIsAddDialogOpen(false);
-    toast.success("Data dosen berhasil ditambahkan");
+    const name = formData.get('name') as string;
+    const nip = formData.get('nip') as string;
+    const email = formData.get('email') as string;
+
+    try {
+      const { error } = await supabase
+        .from('dosen')
+        .insert([{ name, nip, email }]);
+
+      if (error) throw error;
+
+      toast.success("Dosen berhasil ditambahkan", {
+        description: `Data dosen "${name}" telah disimpan.`
+      });
+      setIsAddDialogOpen(false);
+      fetchLecturers();
+    } catch (error: any) {
+      toast.error("Gagal menambahkan dosen", { 
+        description: error.message.includes('unique') 
+          ? "NIP sudah terdaftar" 
+          : error.message 
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleEditLecturer = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleEditLecturer = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsSubmitting(true);
     const formData = new FormData(e.currentTarget);
-    const updatedLecturer = {
-      ...editingLecturer,
-      name: formData.get('name') as string,
-      email: formData.get('email') as string,
-    };
+    const name = formData.get('name') as string;
+    const email = formData.get('email') as string;
+    const nip = formData.get('nip') as string;
     
-    setLecturers(prev => prev.map(l => l.id === editingLecturer.id ? updatedLecturer : l));
-    setEditingLecturer(null);
-    toast.success("Data dosen berhasil diperbarui");
+    try {
+      const { error } = await supabase
+        .from('dosen')
+        .update({ name, email, nip })
+        .eq('id', editingLecturer.id);
+
+      if (error) throw error;
+
+      toast.success("Data dosen berhasil diperbarui");
+      setEditingLecturer(null);
+      fetchLecturers();
+    } catch (error: any) {
+      toast.error("Gagal memperbarui data", { description: error.message });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleDeleteLecturer = (id: string) => {
-    if (confirm("Apakah Anda yakin ingin menghapus data ini?")) {
-      setLecturers(prev => prev.filter(l => l.id !== id));
-      toast.success("Data dosen berhasil dihapus");
+  const handleDeleteLecturer = async (id: string, name: string) => {
+    if (confirm(`Apakah Anda yakin ingin menghapus data dosen "${name}"?`)) {
+      try {
+        const { error } = await supabase
+          .from('dosen')
+          .delete()
+          .eq('id', id);
+
+        if (error) throw error;
+
+        toast.success("Data dosen berhasil dihapus");
+        fetchLecturers();
+      } catch (error: any) {
+        toast.error("Gagal menghapus data", { description: error.message });
+      }
+    }
+  };
+
+  const handleActivateAccount = async (lecturer: any) => {
+    if (!confirm(`Aktifkan akun login untuk ${lecturer.name}?`)) return;
+    
+    setIsLoading(true);
+    try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session?.access_token) {
+        throw new Error("Sesi tidak valid atau telah berakhir. Silakan login kembali.");
+      }
+
+      const { data, error } = await supabase.functions.invoke('manage-users', {
+        body: {
+          mode: 'create',
+          userData: {
+            name: lecturer.name,
+            identifier: lecturer.nip,
+            email: lecturer.email || `${lecturer.nip}@siperta.local`,
+            role: 'dosen'
+          }
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+
+      toast.success("Akun berhasil diaktifkan", {
+        description: `Dosen sekarang bisa login menggunakan NIP dan Password default: ${lecturer.nip}`
+      });
+      fetchLecturers();
+    } catch (error: any) {
+      toast.error("Gagal mengaktifkan akun", { description: error.message });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -94,7 +195,7 @@ export default function DataDosenPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Data Dosen</h2>
-          <p className="text-slate-500">Kelola informasi dan akun dosen pendidik.</p>
+          <p className="text-slate-500">Kelola informasi profil dosen pendidik.</p>
         </div>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
@@ -108,7 +209,7 @@ export default function DataDosenPage() {
               <DialogHeader>
                 <DialogTitle>Tambah Dosen Baru</DialogTitle>
                 <DialogDescription>
-                  Masukkan detail dosen baru di bawah ini. Klik simpan setelah selesai.
+                  Masukkan detail dosen baru. Data ini disimpan sebagai profil, bukan akun login.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
@@ -117,13 +218,19 @@ export default function DataDosenPage() {
                   <Input id="name" name="name" placeholder="Nama Lengkap & Gelar" className="col-span-3" required />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="nip" className="text-right font-medium">NIP</Label>
+                  <Input id="nip" name="nip" placeholder="NIP / ID Dosen" className="col-span-3" required />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="email" className="text-right font-medium">Email</Label>
-                  <Input id="email" name="email" type="email" placeholder="nama@pnl.ac.id" className="col-span-3" required />
+                  <Input id="email" name="email" type="email" placeholder="Optional" className="col-span-3" />
                 </div>
               </div>
               <DialogFooter>
-                <Button type="button" variant="ghost" onClick={() => setIsAddDialogOpen(false)}>Batal</Button>
-                <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700">Simpan</Button>
+                <Button type="button" variant="ghost" onClick={() => setIsAddDialogOpen(false)} disabled={isSubmitting}>Batal</Button>
+                <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700 font-semibold" disabled={isSubmitting}>
+                  {isSubmitting ? "Menyimpan..." : "Simpan Data"}
+                </Button>
               </DialogFooter>
             </form>
           </DialogContent>
@@ -140,7 +247,7 @@ export default function DataDosenPage() {
             <div className="relative w-full md:w-72">
               <IconSearch className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
               <Input 
-                placeholder="Cari Nama atau Email..." 
+                placeholder="Cari Nama atau NIP..." 
                 className="pl-10 h-10 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus-visible:ring-emerald-500" 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -154,18 +261,27 @@ export default function DataDosenPage() {
               <thead className="bg-slate-50/80 dark:bg-slate-800/80 border-b text-slate-500 font-medium">
                 <tr>
                   <th className="h-12 px-6 text-left">Dosen</th>
-                  <th className="h-12 px-6 text-left">ID / NIP</th>
-                  <th className="h-12 px-6 text-left">Email</th>
+                  <th className="h-12 px-6 text-left">NIP</th>
+                  <th className="h-12 px-6 text-left">Status Akun</th>
                   <th className="h-12 px-6 text-right">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {filteredLecturers.map((lecturer) => (
+                {isLoading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <tr key={i} className="animate-pulse">
+                      <td className="px-6 py-4"><div className="h-10 w-40 bg-slate-200 dark:bg-slate-700 rounded"></div></td>
+                      <td className="px-6 py-4"><div className="h-6 w-20 bg-slate-100 dark:bg-slate-800 rounded"></div></td>
+                      <td className="px-6 py-4"><div className="h-6 w-24 bg-slate-100 dark:bg-slate-800 rounded"></div></td>
+                      <td className="px-6 py-4"><div className="h-8 w-20 bg-slate-100 dark:bg-slate-800 rounded ml-auto"></div></td>
+                    </tr>
+                  ))
+                ) : filteredLecturers.map((lecturer) => (
                   <tr key={lecturer.id} className="group hover:bg-slate-50/80 dark:hover:bg-slate-800/80 transition-all duration-200">
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-3">
                         <Avatar className="h-10 w-10 ring-2 ring-transparent group-hover:ring-emerald-100 dark:group-hover:ring-emerald-900 transition-all">
-                          <AvatarImage src={lecturer.avatar} alt={lecturer.name} />
+                          <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${lecturer.name}`} alt={lecturer.name} />
                           <AvatarFallback className="bg-emerald-100 text-emerald-700 text-xs">
                             {lecturer.name.substring(0, 2).toUpperCase()}
                           </AvatarFallback>
@@ -175,14 +291,32 @@ export default function DataDosenPage() {
                     </td>
                     <td className="px-6 py-4 text-slate-600 dark:text-slate-400">
                       <code className="text-xs font-mono px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded">
-                        {lecturer.id}
+                        {lecturer.nip}
                       </code>
                     </td>
-                    <td className="px-6 py-4 text-slate-600 dark:text-slate-400">
-                      {lecturer.email}
+                    <td className="px-6 py-4">
+                      {lecturer.user_id ? (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                          Aktif
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                          Belum Aktif
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end items-center space-x-2">
+                        {!lecturer.user_id && (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-8 text-xs bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-600 hover:text-white transition-colors"
+                            onClick={() => handleActivateAccount(lecturer)}
+                          >
+                            Aktifkan Akun
+                          </Button>
+                        )}
                         <Button 
                           variant="ghost" 
                           size="icon" 
@@ -195,27 +329,15 @@ export default function DataDosenPage() {
                           variant="ghost" 
                           size="icon" 
                           className="h-8 w-8 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30"
-                          onClick={() => handleDeleteLecturer(lecturer.id)}
+                          onClick={() => handleDeleteLecturer(lecturer.id, lecturer.name)}
                         >
                           <IconTrash size={18} />
                         </Button>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <IconDotsVertical size={18} />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem>Jadwal Bimbingan</DropdownMenuItem>
-                            <DropdownMenuItem>Verifikasi Berkas</DropdownMenuItem>
-                            <DropdownMenuItem className="text-rose-500">Nonaktifkan</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
                       </div>
                     </td>
                   </tr>
                 ))}
-                {filteredLecturers.length === 0 && (
+                {!isLoading && filteredLecturers.length === 0 && (
                   <tr>
                     <td colSpan={4} className="p-12 text-center text-slate-500">
                       <div className="flex flex-col items-center justify-center space-y-3">
@@ -248,13 +370,19 @@ export default function DataDosenPage() {
                   <Input id="edit-name" name="name" defaultValue={editingLecturer.name} className="col-span-3" required />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-nip" className="text-right font-medium">NIP</Label>
+                  <Input id="edit-nip" name="nip" defaultValue={editingLecturer.nip ?? ''} className="col-span-3" required />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="edit-email" className="text-right font-medium">Email</Label>
-                  <Input id="edit-email" name="email" type="email" defaultValue={editingLecturer.email} className="col-span-3" required />
+                  <Input id="edit-email" name="email" type="email" defaultValue={editingLecturer.email ?? ''} className="col-span-3" required />
                 </div>
               </div>
               <DialogFooter>
-                <Button type="button" variant="ghost" onClick={() => setEditingLecturer(null)}>Batal</Button>
-                <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700">Simpan Perubahan</Button>
+                <Button type="button" variant="ghost" onClick={() => setEditingLecturer(null)} disabled={isSubmitting}>Batal</Button>
+                <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700" disabled={isSubmitting}>
+                  {isSubmitting ? "Menyimpan..." : "Simpan Perubahan"}
+                </Button>
               </DialogFooter>
             </form>
           )}

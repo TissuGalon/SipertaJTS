@@ -41,7 +41,7 @@ export default function RegisterPage() {
     nim: "",
     email: "",
     password: "",
-    role: "student" as "student" | "dosen" | "admin"
+    role: "mahasiswa" as "mahasiswa" | "dosen" | "admin"
   })
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -49,6 +49,19 @@ export default function RegisterPage() {
     setIsLoading(true)
 
     try {
+      // Check if NIM/NIP exists in our tables
+      if (formData.role === 'mahasiswa') {
+        const { data } = await supabase.from('mahasiswa').select('name').eq('nim', formData.nim).single();
+        if (!data) {
+          throw new Error("NIM tidak ditemukan. Pastikan Anda sudah terdaftar di sistem oleh admin.");
+        }
+      } else if (formData.role === 'dosen') {
+        const { data } = await supabase.from('dosen').select('name').eq('nip', formData.nim).single();
+        if (!data) {
+          throw new Error("NIP tidak ditemukan. Pastikan Anda sudah terdaftar di sistem oleh admin.");
+        }
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -67,7 +80,8 @@ export default function RegisterPage() {
         description: "Akun Anda telah dibuat. Silakan login."
       })
       
-      router.push("/login")
+      window.location.href = "/login"
+
     } catch (error: any) {
       console.error("Registration error:", error)
       toast.error("Registrasi Gagal", {
@@ -155,36 +169,37 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="role">Daftar sebagai</Label>
-              <Select 
-                value={formData.role} 
-                onValueChange={(v: any) => setFormData({...formData, role: v})}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Pilih Role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="student">
-                    <div className="flex items-center">
-                      <IconSchool className="mr-2 h-4 w-4" />
-                      Mahasiswa
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="dosen">
-                    <div className="flex items-center">
-                      <IconSchool className="mr-2 h-4 w-4" />
-                      Dosen
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="admin">
-                    <div className="flex items-center">
-                      <IconShieldLock className="mr-2 h-4 w-4" />
-                      Administrator
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="role">Daftar sebagai</Label>
+                <Select 
+                  value={formData.role} 
+                  onValueChange={(v: any) => setFormData({...formData, role: v})}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Pilih Role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="mahasiswa">
+                      <div className="flex items-center">
+                        <IconSchool className="mr-2 h-4 w-4" />
+                        Mahasiswa
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="dosen">
+                      <div className="flex items-center">
+                        <IconSchool className="mr-2 h-4 w-4" />
+                        Dosen
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                {formData.role !== "mahasiswa" && (
+                  <p className="text-[10px] text-amber-600 font-medium">
+                    * Peran Dosen memerlukan verifikasi administrator setelah pendaftaran.
+                  </p>
+                )}
+              </div>
             </div>
 
             <Button

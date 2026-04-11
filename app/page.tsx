@@ -49,7 +49,7 @@ import { supabase } from "@/lib/supabase"
 
 export default function LandingPage() {
   const router = useRouter()
-  const [role, setRole] = useState<"admin" | "student" | "dosen">("student")
+  const [role, setRole] = useState<"admin" | "mahasiswa" | "dosen">("mahasiswa")
   const [isLoading, setIsLoading] = useState(false)
   
   // Login form state
@@ -61,7 +61,8 @@ export default function LandingPage() {
     name: "",
     nim: "",
     email: "",
-    password: ""
+    password: "",
+    role: "mahasiswa" as "mahasiswa" | "dosen"
   })
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -69,8 +70,35 @@ export default function LandingPage() {
     setIsLoading(true)
 
     try {
+      let emailToUse = loginEmail;
+
+      // Identity resolution if not an email
+      if (!loginEmail.includes('@')) {
+        const { data: studentData } = await supabase
+          .from('mahasiswa')
+          .select('email')
+          .eq('nim', loginEmail)
+          .single();
+
+        if (studentData?.email) {
+          emailToUse = studentData.email;
+        } else {
+          const { data: lecturerData } = await supabase
+            .from('dosen')
+            .select('email')
+            .eq('nip', loginEmail)
+            .single();
+          
+          if (lecturerData?.email) {
+            emailToUse = lecturerData.email;
+          } else {
+            emailToUse = `${loginEmail}@siperta.local`;
+          }
+        }
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: loginEmail,
+        email: emailToUse,
         password: loginPassword,
       })
 
@@ -85,15 +113,18 @@ export default function LandingPage() {
         .single()
 
       if (profile?.role === "admin") {
-        router.push("/admin/dashboard")
+        window.location.href = "/admin/dashboard"
       } else if (profile?.role === "dosen") {
-        router.push("/dosen/dashboard")
+        window.location.href = "/dosen/dashboard"
       } else {
-        router.push("/mahasiswa/dashboard")
+        window.location.href = "/mahasiswa/dashboard"
       }
-      router.refresh()
     } catch (error: any) {
-      toast.error("Login Gagal", { description: error.message })
+      toast.error("Login Gagal", { 
+        description: error.message === "Invalid login credentials" 
+          ? "Akun tidak ditemukan atau kata sandi salah. Gunakan NIM/NIP atau Email yang terdaftar." 
+          : error.message 
+      })
     } finally {
       setIsLoading(false)
     }
@@ -104,6 +135,19 @@ export default function LandingPage() {
     setIsLoading(true)
 
     try {
+      // Check if NIM/NIP exists in our tables
+      if (signUpData.role === 'mahasiswa') {
+        const { data } = await supabase.from('mahasiswa').select('name').eq('nim', signUpData.nim).single();
+        if (!data) {
+          throw new Error("NIM tidak ditemukan. Pastikan Anda sudah terdaftar di sistem oleh admin.");
+        }
+      } else if (signUpData.role === 'dosen') {
+        const { data } = await supabase.from('dosen').select('name').eq('nip', signUpData.nim).single();
+        if (!data) {
+          throw new Error("NIP tidak ditemukan. Pastikan Anda sudah terdaftar di sistem oleh admin.");
+        }
+      }
+
       const { error } = await supabase.auth.signUp({
         email: signUpData.email,
         password: signUpData.password,
@@ -111,7 +155,7 @@ export default function LandingPage() {
           data: {
             name: signUpData.name,
             nim: signUpData.nim,
-            role: "student" // Default to student from landing page
+            role: signUpData.role
           }
         }
       })
@@ -216,13 +260,13 @@ export default function LandingPage() {
                 <TabsContent value="login" className="p-6">
                   <form onSubmit={handleLogin} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="login-email">Email</Label>
+                      <Label htmlFor="login-email">Email atau NIM/NIP</Label>
                       <div className="relative">
                         <IconMail className="absolute top-2.5 left-3 h-4 w-4 text-slate-400" />
                         <Input
                           id="login-email"
-                          type="email"
-                          placeholder="nim@student.ac.id"
+                          type="text"
+                          placeholder="Email atau NIM/NIP"
                           className="pl-10"
                           value={loginEmail}
                           onChange={(e) => setLoginEmail(e.target.value)}
@@ -266,22 +310,39 @@ export default function LandingPage() {
                         required 
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-nim">NIM</Label>
-                      <Input 
-                        id="signup-nim" 
-                        placeholder="210101xxx" 
-                        value={signUpData.nim}
-                        onChange={(e) => setSignUpData({...signUpData, nim: e.target.value})}
-                        required 
-                      />
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-nim">NIM / NIP</Label>
+                        <Input 
+                          id="signup-nim" 
+                          placeholder="210101xxx" 
+                          value={signUpData.nim}
+                          onChange={(e) => setSignUpData({...signUpData, nim: e.target.value})}
+                          required 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-role">Daftar sebagai</Label>
+                        <Select 
+                          value={signUpData.role || "mahasiswa"} 
+                          onValueChange={(v: any) => setSignUpData({...signUpData, role: v})}
+                        >
+                          <SelectTrigger id="signup-role" className="w-full">
+                            <SelectValue placeholder="Role" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="mahasiswa">Mahasiswa</SelectItem>
+                            <SelectItem value="dosen">Dosen</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="signup-email">Email</Label>
                       <Input 
                         id="signup-email" 
                         type="email" 
-                        placeholder="nim@student.ac.id" 
+                        placeholder="nama@email.com" 
                         value={signUpData.email}
                         onChange={(e) => setSignUpData({...signUpData, email: e.target.value})}
                         required 
@@ -292,6 +353,7 @@ export default function LandingPage() {
                       <Input 
                         id="signup-password" 
                         type="password" 
+                        placeholder="••••••••"
                         value={signUpData.password}
                         onChange={(e) => setSignUpData({...signUpData, password: e.target.value})}
                         required 
@@ -304,6 +366,11 @@ export default function LandingPage() {
                     >
                       {isLoading ? "Memproses..." : "Daftar Akun"}
                     </Button>
+                    {signUpData.role === "dosen" && (
+                      <p className="text-[10px] text-center text-amber-600 font-medium">
+                        * Peran Dosen memerlukan verifikasi administrator.
+                      </p>
+                    )}
                   </form>
                 </TabsContent>
               </Tabs>

@@ -34,9 +34,39 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
+      let emailToUse = email;
+
+      // If it doesn't look like an email, try to find the email in our tables
+      if (!email.includes('@')) {
+        // Search in mahasiswa first
+        const { data: studentData } = await supabase
+          .from('mahasiswa')
+          .select('email')
+          .eq('nim', email)
+          .single();
+
+        if (studentData?.email) {
+          emailToUse = studentData.email;
+        } else {
+          // Search in dosen
+          const { data: lecturerData } = await supabase
+            .from('dosen')
+            .select('email')
+            .eq('nip', email)
+            .single();
+          
+          if (lecturerData?.email) {
+            emailToUse = lecturerData.email;
+          } else {
+            // Fallback to legacy virtual email if not found in profiles but might exist in auth
+            emailToUse = `${email}@siperta.local`;
+          }
+        }
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+        email: emailToUse,
+        password: password,
       })
 
       if (error) throw error
@@ -53,18 +83,18 @@ export default function LoginPage() {
         .single()
 
       if (profile?.role === "admin") {
-        router.push("/admin/dashboard")
+        window.location.href = "/admin/dashboard"
       } else if (profile?.role === "dosen") {
-        router.push("/dosen/dashboard")
+        window.location.href = "/dosen/dashboard"
       } else {
-        router.push("/mahasiswa/dashboard")
+        window.location.href = "/mahasiswa/dashboard"
       }
-      
-      router.refresh()
     } catch (error: any) {
       console.error("Login error:", error)
       toast.error("Login Gagal", {
-        description: error.message || "Email atau password salah."
+        description: error.message === "Invalid login credentials"
+          ? "Akun tidak ditemukan atau kata sandi salah. Gunakan NIM/NIP atau Email yang terdaftar."
+          : error.message
       })
     } finally {
       setIsLoading(false)
@@ -85,19 +115,19 @@ export default function LoginPage() {
             Login Sistem Surat
           </CardTitle>
           <CardDescription>
-            Masukkan kredensial Anda untuk mengakses akun
+            Masukkan NIM / NIP atau Email Anda
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Email atau NIM/NIP</Label>
               <div className="relative">
                 <IconMail className="absolute top-2.5 left-3 h-4 w-4 text-slate-400" />
                 <Input
                   id="email"
-                  type="email"
-                  placeholder="nama@email.com"
+                  type="text"
+                  placeholder="Email, NIM, atau NIP"
                   className="pl-10 h-11"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
