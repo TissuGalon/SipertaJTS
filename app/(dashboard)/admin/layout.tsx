@@ -33,11 +33,12 @@ import {
 } from "@/components/ui/command";
 
 const navItems = [
-  { label: 'Dashboard', href: '/admin/dashboard', icon: IconLayoutDashboard, category: 'Main' },
-  { label: 'Data Dosen', href: '/admin/dosen', icon: IconUsers, category: 'Data' },
-  { label: 'Data Mahasiswa', href: '/admin/mahasiswa', icon: IconUsers, category: 'Data' },
-  { label: 'Permintaan Surat', href: '/admin/permintaan', icon: IconMail, category: 'Surat' },
-  { label: 'Manajemen Surat', href: '/admin/jenis-surat', icon: IconFileUpload, category: 'Surat' },
+  { label: 'Dashboard', href: '/admin/dashboard', icon: IconLayoutDashboard, category: 'Utama' },
+  { label: 'Permintaan Surat', href: '/admin/permintaan', icon: IconMail, category: 'Layanan Surat' },  
+  { label: 'Template Surat', href: '/admin/jenis-surat', icon: IconFileUpload, category: 'Layanan Surat' },
+  { label: 'Data Mahasiswa', href: '/admin/mahasiswa', icon: IconUsers, category: 'Data Master' },
+  { label: 'Data Dosen', href: '/admin/dosen', icon: IconUsers, category: 'Data Master' },
+  { label: 'Import Data', href: '/admin/import', icon: IconFileUpload, category: 'Data Master' },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -104,25 +105,34 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
           </div>
           
-          <nav className="flex-1 space-y-1 p-4">
-            {navItems.map((item) => {
-              const isActive = pathname === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center space-x-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                    isActive 
-                      ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400" 
-                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
-                  )}
-                >
-                  <item.icon size={20} />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
+          <nav className="flex-1 space-y-6 p-4 overflow-y-auto">
+            {['Utama', 'Layanan Surat', 'Data Master'].map((category) => (
+              <div key={category} className="space-y-2">
+                <h3 className="px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  {category}
+                </h3>
+                <div className="space-y-1">
+                  {navItems.filter(item => item.category === category).map((item) => {
+                    const isActive = pathname === item.href;
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={cn(
+                          "flex items-center space-x-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                          isActive 
+                            ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400" 
+                            : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+                        )}
+                      >
+                        <item.icon size={20} />
+                        <span>{item.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </nav>
           
           <div className="p-4 border-t space-y-2">
@@ -161,16 +171,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       <span className="text-lg font-bold tracking-tight">Si Perta</span>
                     </div>
                   </div>
-                  <nav className="space-y-1 p-4">
-                    {navItems.map((item) => (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className="flex items-center space-x-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800"
-                      >
-                        <item.icon size={20} />
-                        <span>{item.label}</span>
-                      </Link>
+                  <nav className="space-y-6 p-4">
+                    {['Utama', 'Layanan Surat', 'Data Master'].map((category) => (
+                      <div key={category} className="space-y-2">
+                        <h3 className="px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                          {category}
+                        </h3>
+                        <div className="space-y-1">
+                          {navItems.filter(item => item.category === category).map((item) => (
+                            <Link
+                              key={item.href}
+                              href={item.href}
+                              className="flex items-center space-x-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800"
+                            >
+                              <item.icon size={20} />
+                              <span>{item.label}</span>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
                     ))}
                   </nav>
                 </SheetContent>
@@ -232,17 +251,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <CommandInput placeholder="Ketik nama fitur untuk mencari..." />
           <CommandList>
             <CommandEmpty>Tidak ada fitur yang ditemukan.</CommandEmpty>
-            <CommandGroup heading="Navigasi Utama">
-              {navItems.filter(item => item.category === "Main").map((item) => (
-                <CommandItem key={item.href} onSelect={() => handleSelect(item.href)}>
-                  <item.icon className="mr-2 h-4 w-4" />
-                  <span>{item.label}</span>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-            <CommandSeparator />
-            <CommandGroup heading="Data Master">
-              {navItems.filter(item => item.category === "Data").map((item) => (
+            <CommandGroup heading="Utama">
+              {navItems.filter(item => item.category === "Utama").map((item) => (
                 <CommandItem key={item.href} onSelect={() => handleSelect(item.href)}>
                   <item.icon className="mr-2 h-4 w-4" />
                   <span>{item.label}</span>
@@ -251,7 +261,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </CommandGroup>
             <CommandSeparator />
             <CommandGroup heading="Layanan Surat">
-              {navItems.filter(item => item.category === "Surat").map((item) => (
+              {navItems.filter(item => item.category === "Layanan Surat").map((item) => (
+                <CommandItem key={item.href} onSelect={() => handleSelect(item.href)}>
+                  <item.icon className="mr-2 h-4 w-4" />
+                  <span>{item.label}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+            <CommandSeparator />
+            <CommandGroup heading="Data Master">
+              {navItems.filter(item => item.category === "Data Master").map((item) => (
                 <CommandItem key={item.href} onSelect={() => handleSelect(item.href)}>
                   <item.icon className="mr-2 h-4 w-4" />
                   <span>{item.label}</span>
