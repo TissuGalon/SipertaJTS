@@ -34,19 +34,47 @@ import Link from "next/link"
 import { LETTER_TYPE_LABELS, RequestStatus } from "@/types"
 import { toast } from "sonner"
 
+import { supabase } from "@/lib/supabase"
+import { useEffect } from "react"
+
 export default function TeacherDashboard() {
   const [filterStatus, setFilterStatus] = useState<RequestStatus | "all">(
     "verifying"
   )
   const [searchQuery, setSearchQuery] = useState("")
-  const [requests, setRequests] = useState(mockRequests)
+  const [requests, setRequests] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  const fetchRequests = async () => {
+    setIsLoading(true)
+    const { data, error } = await supabase
+      .from("letter_requests")
+      .select("*, users!user_id(name, nim)")
+      .order("created_at", { ascending: false })
+
+    if (error) {
+      toast.error("Gagal mengambil data pengajuan")
+    } else {
+      const mappedData = data.map((req: any) => ({
+        ...req,
+        userName: req.users?.name || "Unknown",
+        userNim: req.users?.nim || "-",
+      }))
+      setRequests(mappedData)
+    }
+    setIsLoading(false)
+  }
+
+  useEffect(() => {
+    fetchRequests()
+  }, [])
 
   const filteredRequests = requests.filter((req) => {
     const matchesStatus = filterStatus === "all" || req.status === filterStatus
     const matchesSearch =
       req.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       req.userNim.includes(searchQuery) ||
-      req.id.includes(searchQuery)
+      req.id.toLowerCase().includes(searchQuery.toLowerCase())
     return matchesStatus && matchesSearch
   })
 
@@ -57,22 +85,38 @@ export default function TeacherDashboard() {
     done: requests.filter((r) => r.status === "done").length,
   }
 
-  const handleApprove = (id: string) => {
-    setRequests((prev) =>
-      prev.map((req) =>
-        req.id === id ? { ...req, status: "processing" as RequestStatus } : req
-      )
-    )
-    toast.success("Permintaan disetujui untuk diproses")
+  const handleApprove = async (id: string) => {
+    const { error } = await supabase
+      .from("letter_requests")
+      .update({ 
+        status: "processing",
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", id)
+
+    if (error) {
+      toast.error("Gagal menyetujui permintaan")
+    } else {
+      toast.success("Permintaan disetujui untuk diproses")
+      fetchRequests()
+    }
   }
 
-  const handleReject = (id: string) => {
-    setRequests((prev) =>
-      prev.map((req) =>
-        req.id === id ? { ...req, status: "rejected" as RequestStatus } : req
-      )
-    )
-    toast.error("Permintaan ditolak")
+  const handleReject = async (id: string) => {
+    const { error } = await supabase
+      .from("letter_requests")
+      .update({ 
+        status: "rejected",
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", id)
+
+    if (error) {
+      toast.error("Gagal menolak permintaan")
+    } else {
+      toast.error("Permintaan ditolak")
+      fetchRequests()
+    }
   }
 
   return (
@@ -159,85 +203,101 @@ export default function TeacherDashboard() {
           </div>
 
           <div className="rounded-md border">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                    ID Request
-                  </th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                    Mahasiswa
-                  </th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                    Jenis
-                  </th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                    Status
-                  </th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                    Tgl Dibuat
-                  </th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground" style={{ width: '120px' }}>
-                    Aksi
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredRequests.map((request) => (
-                  <tr key={request.id} className="border-b">
-                    <td className="p-4 align-middle font-medium">
-                      {request.id}
-                    </td>
-                    <td className="p-4 align-middle">
-                      <div>
-                        <div className="font-medium">{request.userName}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {request.userNim}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-4 align-middle">
-                      {LETTER_TYPE_LABELS[request.type]}
-                    </td>
-                    <td className="p-4 align-middle">
-                      <StatusBadge status={request.status} />
-                    </td>
-                    <td className="p-4 align-middle">
-                      {new Date(request.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="p-4 align-middle">
-                      <div className="flex items-center space-x-2">
-                        <Button variant="ghost" size="sm" asChild>
-                          <Link href={`/dosen/verifier/${request.id}`}>
-                            <IconEye className="h-4 w-4" />
-                          </Link>
-                        </Button>
-                        {request.status === "verifying" && (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleApprove(request.id)}
-                              className="text-green-600 hover:text-green-700"
-                            >
-                              <IconCheck className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleReject(request.id)}
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              <IconX className="h-4 w-4" />
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </td>
+            {isLoading ? (
+              <div className="flex h-64 items-center justify-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-600 border-t-transparent"></div>
+              </div>
+            ) : (
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                      ID Request
+                    </th>
+                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                      Mahasiswa
+                    </th>
+                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                      Jenis
+                    </th>
+                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                      Status
+                    </th>
+                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                      Tgl Dibuat
+                    </th>
+                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground" style={{ width: '120px' }}>
+                      Aksi
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {filteredRequests.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="h-24 text-center align-middle text-muted-foreground">
+                        Tidak ada pengajuan ditemukan.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredRequests.map((request) => (
+                      <tr key={request.id} className="border-b">
+                        <td className="p-4 align-middle font-medium truncate max-w-[100px]">
+                          {request.id}
+                        </td>
+                        <td className="p-4 align-middle">
+                          <div>
+                            <div className="font-medium">{request.userName}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {request.userNim}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-4 align-middle">
+                          {LETTER_TYPE_LABELS[request.type as keyof typeof LETTER_TYPE_LABELS] || request.type}
+                        </td>
+                        <td className="p-4 align-middle">
+                          <StatusBadge status={request.status} />
+                        </td>
+                        <td className="p-4 align-middle">
+                          {new Date(request.created_at).toLocaleDateString("id-ID")}
+                        </td>
+                        <td className="p-4 align-middle">
+                          <div className="flex items-center space-x-2">
+                            <Button variant="ghost" size="sm" asChild title="Lihat Detail">
+                              <Link href={`/dosen/verifier/${request.id}`}>
+                                <IconEye className="h-4 w-4" />
+                              </Link>
+                            </Button>
+                            {request.status === "verifying" && (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleApprove(request.id)}
+                                  className="text-green-600 hover:text-green-700"
+                                  title="Setujui"
+                                >
+                                  <IconCheck className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleReject(request.id)}
+                                  className="text-red-600 hover:text-red-700"
+                                  title="Tolak"
+                                >
+                                  <IconX className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            )}
           </div>
         </CardContent>
       </Card>

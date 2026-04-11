@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import {
   Card,
@@ -10,7 +10,6 @@ import {
   CardTitle,
   CardFooter,
 } from "@/components/ui/card"
-import { mockRequests } from "@/lib/mock-data"
 import { StatusBadge } from "@/components/ui/status-badge"
 import {
   IconArrowLeft,
@@ -20,25 +19,56 @@ import {
   IconUser,
   IconInfoCircle,
   IconExternalLink,
-  IconChevronLeft,
-  IconChevronRight,
 } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-
-import Link from "next/link"
-import { LETTER_TYPE_LABELS } from "@/types"
+import { LETTER_TYPE_LABELS, LetterType } from "@/types"
 import { toast } from "sonner"
 import { Textarea } from "@/components/ui/textarea"
+import { supabase } from "@/lib/supabase"
 
 export default function TeacherVerifierPage() {
   const { id } = useParams()
   const router = useRouter()
-  const request = mockRequests.find((r) => r.id === id)
-
+  const [request, setRequest] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
   const [notes, setNotes] = useState("")
   const [isProcessing, setIsProcessing] = useState(false)
+
+  useEffect(() => {
+    const fetchRequest = async () => {
+      setIsLoading(true)
+      const { data, error } = await supabase
+        .from("letter_requests")
+        .select("*, users!user_id(name, nim)")
+        .eq("id", id)
+        .single()
+
+      if (error) {
+        toast.error("Gagal mengambil data pengajuan")
+      } else {
+        setRequest({
+          ...data,
+          userName: data.users?.name || "Unknown",
+          userNim: data.users?.nim || "-",
+        })
+        setNotes(data.admin_notes || "")
+      }
+      setIsLoading(false)
+    }
+
+    if (id) {
+      fetchRequest()
+    }
+  }, [id])
+
+  if (isLoading) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-600 border-t-transparent"></div>
+      </div>
+    )
+  }
 
   if (!request) {
     return (
@@ -53,18 +83,42 @@ export default function TeacherVerifierPage() {
 
   const handleApprove = async () => {
     setIsProcessing(true)
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    toast.success("Pengajuan disetujui dan diteruskan ke admin")
-    router.push("/dosen/dashboard")
+    const { error } = await supabase
+      .from("letter_requests")
+      .update({ 
+        status: "processing",
+        admin_notes: notes,
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", id)
+
+    if (error) {
+      toast.error("Gagal menyetujui pengajuan")
+    } else {
+      toast.success("Pengajuan disetujui dan diteruskan ke admin")
+      router.push("/dosen/dashboard")
+    }
+    setIsProcessing(false)
   }
 
   const handleReject = async () => {
     setIsProcessing(true)
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    toast.error("Pengajuan ditolak")
-    router.push("/dosen/dashboard")
+    const { error } = await supabase
+      .from("letter_requests")
+      .update({ 
+        status: "rejected",
+        admin_notes: notes,
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", id)
+
+    if (error) {
+      toast.error("Gagal menolak pengajuan")
+    } else {
+      toast.error("Pengajuan ditolak")
+      router.push("/dosen/dashboard")
+    }
+    setIsProcessing(false)
   }
 
   return (
@@ -106,7 +160,7 @@ export default function TeacherVerifierPage() {
             <div>
               <Label className="text-xs font-bold uppercase text-slate-400">Jenis Pengajuan</Label>
               <p className="text-sm text-muted-foreground">
-                {LETTER_TYPE_LABELS[request.type]}
+                {LETTER_TYPE_LABELS[request.type as LetterType]}
               </p>
             </div>
             <div>
@@ -129,7 +183,7 @@ export default function TeacherVerifierPage() {
             <div>
               <Label className="text-xs font-bold uppercase text-slate-400">Dibuat Pada</Label>
               <p className="text-sm text-muted-foreground">
-                {new Date(request.createdAt).toLocaleDateString("id-ID", {
+                {new Date(request.created_at).toLocaleDateString("id-ID", {
                   year: "numeric",
                   month: "long",
                   day: "numeric",
@@ -141,7 +195,7 @@ export default function TeacherVerifierPage() {
             <div>
               <Label className="text-xs font-bold uppercase text-slate-400">Terakhir Diperbarui</Label>
               <p className="text-sm text-muted-foreground">
-                {new Date(request.updatedAt).toLocaleDateString("id-ID", {
+                {new Date(request.updated_at).toLocaleDateString("id-ID", {
                   year: "numeric",
                   month: "long",
                   day: "numeric",
@@ -150,19 +204,19 @@ export default function TeacherVerifierPage() {
                 })}
               </p>
             </div>
-            {request.letterNumber && (
+            {request.letter_number && (
               <div>
                 <Label className="text-xs font-bold uppercase text-slate-400">Nomor Surat</Label>
                 <p className="text-sm text-muted-foreground">
-                  {request.letterNumber}
+                  {request.letter_number}
                 </p>
               </div>
             )}
-            {request.academicYear && (
+            {request.academic_year && (
               <div>
                 <Label className="text-xs font-bold uppercase text-slate-400">Tahun Akademik</Label>
                 <p className="text-sm text-muted-foreground">
-                  {request.academicYear}
+                  {request.academic_year}
                 </p>
               </div>
             )}
@@ -193,7 +247,7 @@ export default function TeacherVerifierPage() {
       </Card>
 
       {/* Attached Files */}
-      {request.files.length > 0 && (
+      {Array.isArray(request.files) && request.files.length > 0 && (
         <Card className="border-none shadow-xl">
           <CardHeader>
             <CardTitle>Berkas Terlampir</CardTitle>
@@ -203,7 +257,7 @@ export default function TeacherVerifierPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {request.files.map((file, index) => (
+              {request.files.map((file: any, index: number) => (
                 <div
                   key={index}
                   className="flex items-center justify-between rounded-lg border p-3"
@@ -229,14 +283,14 @@ export default function TeacherVerifierPage() {
       )}
 
       {/* Admin Notes */}
-      {request.adminNotes && (
+      {request.admin_notes && (
         <Card className="border-none shadow-md bg-slate-50">
           <CardHeader>
             <CardTitle className="text-sm font-semibold">Catatan Sebelumnya</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              {request.adminNotes}
+              {request.admin_notes}
             </p>
           </CardContent>
         </Card>
