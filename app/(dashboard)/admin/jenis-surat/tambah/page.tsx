@@ -302,7 +302,7 @@ export default function TambahTemplatePage() {
             </Link>
           </Button>
           <div>
-            <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white underline decoration-indigo-500/30 decoration-4 underline-offset-4">
+            <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white underline decoration-blue-500/30 decoration-4 underline-offset-4">
               Buat Template Surat
             </h2>
             <p className="text-slate-500">Rancang alur data dan formulir untuk jenis surat baru.</p>
@@ -331,7 +331,7 @@ export default function TambahTemplatePage() {
           </div>
           <Button 
             onClick={form.handleSubmit(onSubmit)}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200 dark:shadow-none"
+            className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 dark:shadow-none"
           >
             <IconDeviceFloppy size={18} className="mr-2" />
             Simpan Template
@@ -345,7 +345,7 @@ export default function TambahTemplatePage() {
           <Card className="border-none shadow-xl bg-white dark:bg-slate-900 overflow-hidden">
             <CardHeader className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center space-x-2">
-                <IconTemplate className="text-indigo-600" size={20} />
+                <IconTemplate className="text-blue-600" size={20} />
                 <CardTitle className="text-lg">Informasi Dasar</CardTitle>
               </div>
             </CardHeader>
@@ -360,7 +360,7 @@ export default function TambahTemplatePage() {
                         <FormItem>
                           <FormLabel>Nama Template Surat</FormLabel>
                           <FormControl>
-                            <Input placeholder="Contoh: Surat Keterangan Magang" {...field} className="bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-indigo-500/20" />
+                            <Input placeholder="Contoh: Surat Keterangan Magang" {...field} className="bg-slate-50/50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-blue-500/20" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

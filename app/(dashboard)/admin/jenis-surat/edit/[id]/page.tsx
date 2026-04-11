@@ -341,7 +341,7 @@ export default function EditTemplatePage() {
             </Link>
           </Button>
           <div>
-            <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white underline decoration-indigo-500/30 decoration-4 underline-offset-4">
+            <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white underline decoration-blue-500/30 decoration-4 underline-offset-4">
               Edit Template Surat
             </h2>
             <p className="text-slate-500">Sesuaikan alur data dan formulir untuk {form.getValues("title")}.</p>
@@ -371,7 +371,7 @@ export default function EditTemplatePage() {
           <Button 
             onClick={form.handleSubmit(onSubmit)}
             disabled={isSaving}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200 dark:shadow-none"
+            className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 dark:shadow-none"
           >
             {isSaving ? <IconLoader2 className="mr-2 h-4 w-4 animate-spin" /> : <IconDeviceFloppy size={18} className="mr-2" />}
             Simpan Perubahan
@@ -384,7 +384,7 @@ export default function EditTemplatePage() {
           <Card className="border-none shadow-xl bg-white dark:bg-slate-900 overflow-hidden">
             <CardHeader className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center space-x-2">
-                <IconTemplate className="text-indigo-600" size={20} />
+                <IconTemplate className="text-blue-600" size={20} />
                 <CardTitle className="text-lg">Informasi Dasar</CardTitle>
               </div>
             </CardHeader>

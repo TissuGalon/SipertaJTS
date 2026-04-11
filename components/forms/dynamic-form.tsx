@@ -47,7 +47,20 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
   const schema = useMemo(() => {
     const shape: Record<string, z.ZodTypeAny> = {};
     fields.forEach((field) => {
-      shape[field.name] = field.validation || z.string().min(1, { message: `${field.label} is required` });
+      if (field.validation) {
+        shape[field.name] = field.validation;
+      } else if (field.type === 'file') {
+        if (field.required === false) {
+          shape[field.name] = z.any().optional();
+        } else {
+          shape[field.name] = z.array(z.any()).min(1, { message: `${field.label} wajib diisi` });
+        }
+      } else if (field.required === false) {
+        shape[field.name] = z.any().optional();
+      } else {
+        // Default to required string
+        shape[field.name] = z.string().min(1, { message: `${field.label} wajib diisi` });
+      }
     });
     return z.object(shape);
   }, [fields]);
@@ -113,11 +126,15 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
             }}
           />
         ))}
-        <Button type="submit" className="w-full" disabled={isLoading}>
+        <Button 
+          type="submit" 
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 dark:shadow-none font-bold h-12 rounded-2xl transition-all" 
+          disabled={isLoading}
+        >
           {isLoading ? (
             <>
-              <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />
-              Mengirim...
+              <IconLoader2 className="mr-2 h-5 w-5 animate-spin" />
+              Memproses...
             </>
           ) : submitLabel}
         </Button>

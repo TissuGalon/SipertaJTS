@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { 
   Card, 
@@ -10,7 +10,6 @@ import {
   CardTitle 
 } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { mockRequests } from '@/lib/mock-data';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { TimelineStepper } from '@/components/ui/timeline-stepper';
 import { 
@@ -19,43 +18,126 @@ import {
   IconFileDescription, 
   IconMessageCircle,
   IconCalendarEvent,
-  IconClock
+  IconClock,
+  IconLoader2,
+  IconFileText
 } from '@tabler/icons-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { LETTER_TYPE_LABELS } from '@/types';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 export default function LetterDetailPage() {
   const { id } = useParams();
   const router = useRouter();
-  const request = mockRequests.find(r => r.id === id);
+  const [request, setRequest] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [attachments, setAttachments] = useState<any[]>([]);
 
-  if (!request) {
+  useEffect(() => {
+    if (id) {
+      fetchRequestDetail();
+    }
+  }, [id]);
+
+  const fetchRequestDetail = async () => {
+    try {
+      setIsLoading(true);
+      
+      const { data, error } = await supabase
+        .from('letter_requests')
+        .select(`
+          *,
+          letter_templates(*)
+        `)
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+      setRequest(data);
+
+      // Extract attachments from the request data
+      // Data might contain attachments as an array of objects or paths
+      if (data.attachments && typeof data.attachments === 'object') {
+        const fileList = Object.entries(data.attachments).map(([key, path]) => {
+          const fileName = (path as string).split('/').pop() || key;
+          const { data: { publicUrl } } = supabase.storage
+            .from('letter_attachments')
+            .getPublicUrl(path as string);
+          
+          return {
+            name: key,
+            fileName: fileName,
+            url: publicUrl
+          };
+        });
+        setAttachments(fileList);
+      }
+
+    } catch (error: any) {
+      console.error('Error fetching request detail:', error);
+      toast.error("Gagal memuat detail pengajuan: " + error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
     return (
-      <div className="flex h-[60vh] flex-col items-center justify-center space-y-4">
-        <h2 className="text-xl font-semibold">Pengajuan Tidak Ditemukan</h2>
-        <Button onClick={() => router.push('/mahasiswa/dashboard')}>Kembali ke Dashboard</Button>
+      <div className="flex h-[80vh] items-center justify-center">
+        <div className="flex flex-col items-center space-y-4">
+          <IconLoader2 className="h-10 w-10 animate-spin text-indigo-600" />
+          <p className="text-slate-500 font-medium">Memuat detail pengajuan...</p>
+        </div>
       </div>
     );
   }
 
+  if (!request) {
+    return (
+      <div className="flex h-[60vh] flex-col items-center justify-center space-y-4">
+        <div className="p-4 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400">
+          <IconFileText size={48} />
+        </div>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Pengajuan Tidak Ditemukan</h2>
+        <p className="text-slate-500">ID pengajuan "{id}" tidak dapat ditemukan atau Anda tidak memiliki akses.</p>
+        <Button onClick={() => router.push('/mahasiswa/dashboard')} className="rounded-full">
+          Kembali ke Dashboard
+        </Button>
+      </div>
+    );
+  }
+
+  // Get dynamic fields labels from template
+  const detailEntries = Object.entries(request.details || {}).map(([key, value]) => {
+    const templateField = request.letter_templates?.fields?.find((f: any) => f.name === key);
+    return {
+      label: templateField?.label || key.replace(/([A-Z])/g, ' $1').trim(),
+      value: value as string
+    };
+  });
+
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="mx-auto max-w-4xl space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center space-x-4">
           <Link href="/mahasiswa/dashboard">
-            <Button variant="ghost" size="icon" className="rounded-full">
+            <Button variant="ghost" size="icon" className="rounded-full bg-white dark:bg-slate-900 shadow-sm">
               <IconArrowLeft size={20} />
             </Button>
           </Link>
           <div>
-            <h2 className="text-2xl font-bold tracking-tight">{LETTER_TYPE_LABELS[request.type]}</h2>
-            <p className="text-sm text-slate-500 font-mono tracking-tighter">ID: {request.id}</p>
+            <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+              {request.letter_templates?.name || request.type}
+            </h2>
+            <div className="flex items-center space-x-2 text-[10px] font-mono font-bold uppercase tracking-widest text-slate-400">
+              <span>ID: {request.id.slice(0, 18)}...</span>
+            </div>
           </div>
         </div>
-        <div className="flex items-center space-x-2">
-          {request.status === 'done' && (
-            <Button className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-lg shadow-emerald-500/20">
+        <div className="flex items-center space-x-3">
+          {request.status === 'done' && request.letter_url && (
+            <Button className="rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-lg shadow-emerald-500/20 border-none transition-all hover:scale-105 active:scale-95">
               <IconDownload size={18} className="mr-2" />
               Unduh Surat
             </Button>
@@ -67,55 +149,68 @@ export default function LetterDetailPage() {
       <div className="grid gap-6 md:grid-cols-3">
         <div className="md:col-span-2 space-y-6">
           {/* Status Timeline */}
-          <Card className="border-none shadow-xl">
-            <CardHeader>
-              <CardTitle>Status Pengajuan</CardTitle>
+          <Card className="border-none shadow-2xl bg-white dark:bg-slate-900 rounded-3xl overflow-hidden">
+            <CardHeader className="bg-slate-50/50 dark:bg-slate-800/30 border-b border-slate-100 dark:border-slate-800">
+              <CardTitle className="text-lg">Status Pengajuan</CardTitle>
             </CardHeader>
-            <CardContent className="pt-6">
+            <CardContent className="py-10">
               <TimelineStepper currentStatus={request.status} />
             </CardContent>
           </Card>
 
           {/* Details */}
-          <Card className="border-none shadow-xl">
-            <CardHeader className="flex flex-row items-center space-x-3 border-b border-slate-50 dark:border-slate-800 mb-2">
-              <div className="p-2 rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-900/30">
+          <Card className="border-none shadow-2xl bg-white dark:bg-slate-900 rounded-3xl overflow-hidden">
+            <CardHeader className="flex flex-row items-center space-x-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
+              <div className="p-2 rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30">
                 <IconFileDescription size={20} />
               </div>
-              <CardTitle>Rincian Data</CardTitle>
+              <CardTitle className="text-lg">Rincian Data Pengajuan</CardTitle>
             </CardHeader>
-            <CardContent>
-              <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
-                {Object.entries(request.details).map(([key, value]) => (
-                  <div key={key} className="space-y-1">
-                    <dt className="text-xs font-medium uppercase tracking-wider text-slate-500">{key.replace(/([A-Z])/g, ' $1').trim()}</dt>
-                    <dd className="text-sm font-semibold">{value}</dd>
+            <CardContent className="pt-6">
+              <dl className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2">
+                {detailEntries.length > 0 ? detailEntries.map((entry, idx) => (
+                  <div key={idx} className="space-y-1 group">
+                    <dt className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-indigo-500 transition-colors">
+                      {entry.label}
+                    </dt>
+                    <dd className="text-sm font-bold text-slate-900 dark:text-white">{entry.value || '-'}</dd>
                   </div>
-                ))}
+                )) : (
+                  <div className="col-span-2 py-4 text-center text-slate-400 italic text-sm">
+                    Tidak ada rincian data khusus.
+                  </div>
+                )}
               </dl>
             </CardContent>
           </Card>
 
           {/* Uploaded Files */}
-          <Card className="border-none shadow-xl">
-            <CardHeader>
-              <CardTitle>Berkas Lampiran</CardTitle>
+          <Card className="border-none shadow-2xl bg-white dark:bg-slate-900 rounded-3xl overflow-hidden">
+            <CardHeader className="bg-slate-50/50 dark:bg-slate-800/30 border-b border-slate-100 dark:border-slate-800">
+              <CardTitle className="text-lg">Berkas Lampiran</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               <div className="grid gap-3">
-                {request.files.map((file, i) => (
-                  <div key={i} className="flex items-center justify-between rounded-lg border border-slate-200 p-3 dark:border-slate-800">
-                    <div className="flex items-center space-x-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded bg-slate-100 text-slate-500 dark:bg-slate-800">
-                        <IconFileDescription size={18} />
+                {attachments.length > 0 ? attachments.map((file, i) => (
+                  <div key={i} className="flex items-center justify-between rounded-2xl border border-slate-100 p-4 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-800/20 group hover:border-indigo-200 transition-all">
+                    <div className="flex items-center space-x-4">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white dark:bg-slate-800 text-slate-500 shadow-sm group-hover:text-indigo-600 transition-colors">
+                        <IconFileDescription size={22} />
                       </div>
-                      <span className="text-sm font-medium">{file.name}</span>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-slate-900 dark:text-white">{file.name}</span>
+                        <span className="text-[10px] text-slate-400 font-mono italic">{file.fileName}</span>
+                      </div>
                     </div>
-                    <Button variant="ghost" size="sm" asChild className="text-blue-600 hover:text-blue-700 hover:bg-blue-50">
-                      <a href={file.url}>Pratinjau</a>
+                    <Button variant="ghost" size="sm" asChild className="rounded-full text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 font-bold px-4">
+                      <a href={file.url} target="_blank" rel="noopener noreferrer">Pratinjau</a>
                     </Button>
                   </div>
-                ))}
+                )) : (
+                  <div className="py-10 text-center text-slate-400 italic text-sm">
+                    Tidak ada berkas yang diunggah.
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -123,37 +218,57 @@ export default function LetterDetailPage() {
 
         <div className="space-y-6">
           {/* Info Side Card */}
-          <Card className="border-none shadow-xl bg-gradient-to-br from-indigo-600 to-indigo-700 text-white">
+          <Card className="border-none shadow-2xl bg-gradient-to-br from-indigo-600 to-indigo-800 text-white rounded-3xl overflow-hidden relative">
+            <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+              <IconCalendarEvent size={80} />
+            </div>
             <CardHeader>
               <CardTitle className="text-base text-white/90">Info Pengajuan</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center space-x-3 text-sm">
-                <IconCalendarEvent size={18} className="text-white/60" />
+            <CardContent className="space-y-6 relative">
+              <div className="flex items-center space-x-4">
+                <div className="p-2 rounded-xl bg-white/10">
+                  <IconCalendarEvent size={20} className="text-white/80" />
+                </div>
                 <div>
-                  <p className="text-white/60">Dikirim pada</p>
-                  <p className="font-semibold">{new Date(request.createdAt).toLocaleString('id-ID')}</p>
+                  <p className="text-[10px] uppercase font-bold tracking-widest text-white/60">Dikirim pada</p>
+                  <p className="font-bold text-sm">{new Date(request.created_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}</p>
                 </div>
               </div>
-              <div className="flex items-center space-x-3 text-sm">
-                <IconClock size={18} className="text-white/60" />
+              <div className="flex items-center space-x-4">
+                <div className="p-2 rounded-xl bg-white/10">
+                  <IconClock size={20} className="text-white/80" />
+                </div>
                 <div>
-                  <p className="text-white/60">Update terakhir</p>
-                  <p className="font-semibold">{new Date(request.updatedAt).toLocaleString('id-ID')}</p>
+                  <p className="text-[10px] uppercase font-bold tracking-widest text-white/60">Update terakhir</p>
+                  <p className="font-bold text-sm">{new Date(request.updated_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           {/* Admin Notes */}
-          <Card className={cn("border-none shadow-xl", request.adminNotes ? "bg-amber-50 dark:bg-amber-900/10 ring-1 ring-amber-200 dark:ring-amber-900/50" : "")}>
-            <CardHeader className="flex flex-row items-center space-x-2">
-              <IconMessageCircle className={request.adminNotes ? "text-amber-600" : "text-slate-400"} size={20} />
+          <Card className={cn(
+            "border-none shadow-2xl rounded-3xl overflow-hidden transition-all duration-500", 
+            request.rejection_reason || request.admin_notes ? "bg-amber-50 dark:bg-amber-900/10 ring-2 ring-amber-200/50 dark:ring-amber-900/50" : "bg-white dark:bg-slate-900"
+          )}>
+            <CardHeader className="flex flex-row items-center space-x-3 bg-slate-50/50 dark:bg-slate-800/30 border-b border-slate-100 dark:border-slate-800">
+              <div className={cn("p-2 rounded-xl", request.rejection_reason || request.admin_notes ? "bg-amber-100 text-amber-600" : "bg-slate-100 text-slate-400")}>
+                <IconMessageCircle size={20} />
+              </div>
               <CardTitle className="text-base text-inherit">Catatan Admin</CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-sm text-slate-600 dark:text-slate-300 italic">
-                {request.adminNotes || "Tidak ada catatan dari administrator."}
+            <CardContent className="pt-6">
+              {request.status === 'rejected' && request.rejection_reason && (
+                <div className="mb-4">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-rose-500 mb-1">Alasan Penolakan:</p>
+                  <p className="text-sm font-bold text-rose-600 dark:text-rose-400 leading-relaxed">
+                    {request.rejection_reason}
+                  </p>
+                </div>
+              )}
+              <p className="text-sm text-slate-600 dark:text-slate-300 italic leading-relaxed">
+                {request.admin_notes || (!request.rejection_reason && "Tidak ada catatan dari administrator.")}
               </p>
             </CardContent>
           </Card>
