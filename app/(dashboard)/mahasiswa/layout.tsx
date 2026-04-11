@@ -21,7 +21,7 @@ import { mockStudents } from '@/lib/mock-data';
 const navItems = [
   { label: 'Dashboard', href: '/mahasiswa/dashboard', icon: IconLayoutDashboard },
   { label: 'Ajukan Surat', href: '/mahasiswa/request', icon: IconFilePlus },
-  { label: 'Riwayat Surat', href: '/mahasiswa/dashboard#my-letters', icon: IconFiles },
+  { label: 'Riwayat Surat', href: '/mahasiswa/history', icon: IconFiles },
 ];
 
 export default function MahasiswaLayout({ children }: { children: React.ReactNode }) {

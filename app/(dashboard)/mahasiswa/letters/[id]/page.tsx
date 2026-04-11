@@ -56,9 +56,21 @@ export default function LetterDetailPage() {
       if (error) throw error;
       setRequest(data);
 
-      // Extract attachments from the request data
-      // Data might contain attachments as an array of objects or paths
-      if (data.attachments && typeof data.attachments === 'object') {
+      // Extract files from the new 'files' column (JSONB array)
+      if (data.files && Array.isArray(data.files)) {
+        const fileList = data.files.map((file: any) => {
+          const { data: { publicUrl } } = supabase.storage
+            .from('letter_attachments')
+            .getPublicUrl(file.path);
+          
+          return {
+            ...file,
+            url: publicUrl
+          };
+        });
+        setAttachments(fileList);
+      } else if (data.attachments && typeof data.attachments === 'object') {
+        // Fallback for legacy data structure
         const fileList = Object.entries(data.attachments).map(([key, path]) => {
           const fileName = (path as string).split('/').pop() || key;
           const { data: { publicUrl } } = supabase.storage
@@ -137,9 +149,11 @@ export default function LetterDetailPage() {
         </div>
         <div className="flex items-center space-x-3">
           {request.status === 'done' && request.letter_url && (
-            <Button className="rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-lg shadow-emerald-500/20 border-none transition-all hover:scale-105 active:scale-95">
-              <IconDownload size={18} className="mr-2" />
-              Unduh Surat
+            <Button asChild className="rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-lg shadow-emerald-500/20 border-none transition-all hover:scale-105 active:scale-95">
+              <a href={request.letter_url} target="_blank" rel="noopener noreferrer">
+                <IconDownload size={18} className="mr-2" />
+                Unduh Surat
+              </a>
             </Button>
           )}
           <StatusBadge status={request.status} />
