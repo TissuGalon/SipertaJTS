@@ -43,13 +43,50 @@ export default function RequestLetterPage() {
         return;
       }
 
+      // Handle file uploads
+      const uploadedFiles: any[] = [];
+      const cleanedDetails = { ...data };
+
+      // Look for files in the data object
+      for (const key in data) {
+        const value = data[key];
+        if (Array.isArray(value) && value.length > 0 && value[0] instanceof File) {
+          // It's a file array from FileUpload
+          for (const file of value as File[]) {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+            const filePath = `${user.id}/${fileName}`;
+
+            const { error: uploadError } = await supabase.storage
+              .from('letter_attachments')
+              .upload(filePath, file);
+
+            if (uploadError) {
+              console.error('Upload error:', uploadError);
+              throw new Error(`Gagal mengunggah file: ${file.name}`);
+            }
+
+            uploadedFiles.push({
+              name: file.name,
+              path: filePath,
+              size: file.size,
+              type: file.type,
+              fieldName: key
+            });
+          }
+          // Remove file objects from details to keep it clean
+          delete cleanedDetails[key];
+        }
+      }
+
       // Insert request
       const { error } = await supabase
         .from('letter_requests')
         .insert({
           user_id: user.id,
           type: selectedType,
-          details: data,
+          details: cleanedDetails,
+          files: uploadedFiles,
           status: 'pending',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -62,7 +99,7 @@ export default function RequestLetterPage() {
       router.push('/mahasiswa/dashboard');
     } catch (error: any) {
       console.error('Error submitting request:', error);
-      toast.error("Gagal mengirim pengajuan, silakan coba lagi.");
+      toast.error(error.message || "Gagal mengirim pengajuan, silakan coba lagi.");
     } finally {
       setIsSubmitting(false);
     }

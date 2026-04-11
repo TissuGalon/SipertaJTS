@@ -22,7 +22,9 @@ import {
   IconInfoCircle,
   IconExternalLink,
   IconChevronLeft,
-  IconChevronRight
+  IconChevronRight,
+  IconDownload,
+  IconPaperclip
 } from '@tabler/icons-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,6 +38,7 @@ import { Textarea } from '@/components/ui/textarea';
 import PizZip from 'pizzip';
 import Docxtemplater from 'docxtemplater';
 import { saveAs } from 'file-saver';
+import * as mammoth from 'mammoth';
 
 export default function DocumentVerifierPage() {
   const { id } = useParams();
@@ -48,6 +51,8 @@ export default function DocumentVerifierPage() {
   const [letterNumber, setLetterNumber] = useState("");
   const [academicYear, setAcademicYear] = useState("2023/2024");
   const [notes, setNotes] = useState("");
+  const [previewHtml, setPreviewHtml] = useState<string>("");
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
 
   React.useEffect(() => {
     if (id) {
@@ -55,6 +60,12 @@ export default function DocumentVerifierPage() {
       fetchAdjacentIds();
     }
   }, [id]);
+
+  React.useEffect(() => {
+    if (request?.letter_templates?.file_path) {
+      generatePreview();
+    }
+  }, [request, letterNumber, academicYear]);
 
   const fetchAdjacentIds = async () => {
     try {
@@ -96,6 +107,45 @@ export default function DocumentVerifierPage() {
       toast.error("Gagal mengambil data pengajuan");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const generatePreview = async () => {
+    if (!request?.letter_templates?.file_path) return;
+    
+    try {
+      setIsPreviewLoading(true);
+      const { data, error } = await supabase.storage
+        .from('letter_templates')
+        .download(request.letter_templates.file_path);
+
+      if (error) throw error;
+
+      const arrayBuffer = await data.arrayBuffer();
+      const result = await mammoth.convertToHtml({ arrayBuffer });
+      let html = result.value;
+
+      // Replace placeholders in HTML
+      const templateData = {
+        ...request.details,
+        Nama: request.users?.name,
+        NIM: request.users?.nim,
+        NomorSurat: letterNumber || "..../..../..../....",
+        TahunAkademik: academicYear,
+        Tanggal: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }),
+      };
+
+      // Basic replacement for {{key}}
+      Object.entries(templateData).forEach(([key, value]) => {
+        const regex = new RegExp(`{{${key}}}`, 'g');
+        html = html.replace(regex, String(value || "........"));
+      });
+
+      setPreviewHtml(html);
+    } catch (error) {
+      console.error('Error generating preview:', error);
+    } finally {
+      setIsPreviewLoading(false);
     }
   };
 
@@ -197,7 +247,7 @@ export default function DocumentVerifierPage() {
     <div className="h-full flex flex-col space-y-6 print:space-y-0 print:p-0">
       <div className="flex items-center justify-between print:hidden">
         <div className="flex items-center space-x-4">
-          <Link href="/admin/dashboard">
+          <Link href="/admin/permintaan">
             <Button variant="ghost" size="icon">
               <IconArrowLeft size={20} />
             </Button>
@@ -270,104 +320,43 @@ export default function DocumentVerifierPage() {
           <CardContent className="flex-1 flex items-center justify-center p-0 overflow-hidden print:overflow-visible">
             {/* Dynamic Document Preview */}
             <div className="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center p-4 sm:p-8 overflow-y-auto print:bg-white print:p-0 print:overflow-visible">
-              <div className="w-full max-w-lg min-h-[141%] bg-white dark:bg-slate-950 shadow-2xl rounded p-6 sm:p-12 space-y-6 sm:space-y-8 animate-in zoom-in-95 duration-500 scale-[0.8] sm:scale-100 origin-top print:shadow-none print:scale-100 print:p-0 print:min-h-0 print:animate-none">
-                {/* Letter Header */}
-                <div className="flex flex-col items-center border-b-2 border-slate-900 pb-4 text-center">
-                  <div className="h-16 w-16 bg-slate-100 dark:bg-slate-900 rounded-full mb-4 flex items-center justify-center">
-                    <IconSchool className="text-indigo-600" size={32} />
+              <div className="w-full max-w-2xl min-h-[141%] bg-white dark:bg-slate-950 shadow-2xl rounded p-6 sm:p-12 animate-in zoom-in-95 duration-500 scale-[0.8] sm:scale-100 origin-top print:shadow-none print:scale-100 print:p-0 print:min-h-0 print:animate-none">
+                {isPreviewLoading ? (
+                  <div className="flex flex-col items-center justify-center h-full space-y-4 py-20 text-slate-400">
+                    <div className="h-8 w-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                    <p className="text-sm font-medium">Generating preview...</p>
                   </div>
-                  <h3 className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white leading-tight">
-                    KEMENTERIAN PENDIDIKAN, KEBUDAYAAN,<br />RISET, DAN TEKNOLOGI
-                  </h3>
-                  <p className="text-[9px] sm:text-[10px] font-bold text-slate-900 mt-1 uppercase">
-                    UNIVERSITAS TEKNOLOGI INFORMASI - FAKULTAS TEKNIK
-                  </p>
-                  <p className="text-[8px] text-slate-500 mt-1 italic">
-                    Jl. Teknologi No. 123, Kampus Terpadu, Semarang 50123
-                  </p>
-                </div>
-
-                <div className="space-y-6">
-                  {/* Letter Title & Number */}
-                  <div className="text-center space-y-1">
-                    <h4 className="font-bold underline uppercase decoration-1 underline-offset-4 text-sm sm:text-base">
-                      {request.letter_templates?.name || (LETTER_TYPE_LABELS[request.type as keyof typeof LETTER_TYPE_LABELS] || "SURAT KETERANGAN")}
-                    </h4>
-                    <p className="text-[10px] font-medium">
-                      Nomor: {letterNumber || "..../..../..../...."}
-                    </p>
-                  </div>
-
-                  {/* Letter Body */}
-                  <div className="text-[11px] sm:text-xs text-justify leading-loose space-y-4">
-                    <p>
-                      Yang bertanda tangan di bawah ini, Pimpinan Fakultas Teknik Universitas Teknologi Informasi menerangkan bahwa:
-                    </p>
-                    
-                    <div className="ml-8 space-y-2">
-                      <div className="grid grid-cols-4 gap-2">
-                        <span className="col-span-1">Nama</span>
-                        <span className="col-span-3 font-bold">: {request.users?.name}</span>
-                      </div>
-                      <div className="grid grid-cols-4 gap-2">
-                        <span className="col-span-1">NIM</span>
-                        <span className="col-span-3 font-bold">: {request.users?.nim}</span>
-                      </div>
-                      <div className="grid grid-cols-4 gap-2">
-                        <span className="col-span-1">Prodi</span>
-                        <span className="col-span-3">: {request.details?.JurusanProdi || request.details?.prodi || request.details?.department || "Teknik Sipil"}</span>
-                      </div>
-                      <div className="grid grid-cols-4 gap-2">
-                        <span className="col-span-1">Semester</span>
-                        <span className="col-span-3">: {request.details?.TingkatSemester || request.details?.semester || "-"}</span>
-                      </div>
-                    </div>
-
-                    <p>
-                      Adalah benar mahasiswa yang terdaftar aktif pada Fakultas Teknik Universitas Teknologi Informasi pada Tahun Akademik <b>{academicYear}</b>.
-                    </p>
-
-                    <p>
-                      {request.details?.Keperluan || request.details?.purpose ? (
-                        <>Surat ini diberikan untuk keperluan: <b>{request.details.Keperluan || request.details.purpose}</b>.</>
-                      ) : (
-                        "Demikian surat keterangan ini diberikan untuk dapat dipergunakan sebagaimana mestinya."
-                      )}
-                    </p>
-                  </div>
-
-                  {/* All Other Details Grid */}
-                  {Object.entries(request.details).filter(([k]) => !['Nama', 'NIM', 'JurusanProdi', 'TingkatSemester', 'Keperluan', 'name', 'nim', 'prodi', 'semester', 'purpose'].includes(k)).length > 0 && (
-                    <div className="pt-4 border-t border-dashed border-slate-200">
-                      <p className="text-[9px] font-bold text-slate-400 uppercase mb-2">Informasi Tambahan:</p>
-                      <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-[10px]">
-                        {Object.entries(request.details)
-                          .filter(([k]) => !['Nama', 'NIM', 'JurusanProdi', 'TingkatSemester', 'Keperluan', 'name', 'nim', 'prodi', 'semester', 'purpose'].includes(k))
-                          .map(([key, value]) => (
-                          <div key={key} className="flex justify-between border-b border-slate-50 pb-1">
-                            <span className="text-slate-500">{key.replace(/([A-Z])/g, ' $1').trim()}:</span>
-                            <span className="font-medium text-right">{String(value)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Signature Area */}
-                <div className="pt-8 flex justify-end">
-                  <div className="text-center min-w-[180px]">
-                    <p className="text-[10px] mb-16">
-                      Semarang, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
-                    </p>
-                    <p className="text-[10px] font-bold border-t border-slate-900 pt-1">
-                      Kepala Bagian Administrasi
-                    </p>
-                    <p className="text-[9px] text-slate-500">NIP. 19750812 200003 1 002</p>
-                  </div>
-                </div>
+                ) : (
+                  <div 
+                    className="prose prose-sm prose-slate dark:prose-invert max-w-none prose-p:leading-relaxed prose-p:my-2 prose-strong:text-slate-900 dark:prose-strong:text-white letter-preview-container"
+                    dangerouslySetInnerHTML={{ __html: previewHtml }} 
+                  />
+                )}
               </div>
             </div>
+            <style jsx global>{`
+              .letter-preview-container table {
+                width: 100% !important;
+                border-collapse: collapse;
+                margin: 1rem 0;
+              }
+              .letter-preview-container td {
+                padding: 4px 8px;
+                vertical-align: top;
+              }
+              .letter-preview-container p {
+                text-align: justify;
+                line-height: 1.6;
+              }
+              @media print {
+                .letter-preview-container {
+                  color: black !important;
+                }
+                .letter-preview-container * {
+                  color: black !important;
+                }
+              }
+            `}</style>
           </CardContent>
           <CardFooter className="bg-white dark:bg-slate-900 border-t py-2 justify-center print:hidden">
             <span className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Live Document Preview</span>
@@ -400,6 +389,61 @@ export default function DocumentVerifierPage() {
                   </div>
                 ))}
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Attachments Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center">
+                <IconPaperclip size={18} className="mr-2 text-indigo-600" />
+                Lampiran Dokumen
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {request.files && request.files.length > 0 ? (
+                <div className="space-y-3">
+                  {request.files.map((file: any, idx: number) => {
+                    const { data: { publicUrl } } = supabase.storage
+                      .from('letter_attachments')
+                      .getPublicUrl(file.path);
+                      
+                    return (
+                      <div 
+                        key={idx} 
+                        className="flex items-center justify-between p-3 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 hover:bg-slate-50 transition-colors"
+                      >
+                        <div className="flex items-center space-x-3 overflow-hidden">
+                          <div className="h-8 w-8 rounded bg-white dark:bg-slate-800 border flex items-center justify-center shrink-0">
+                            <IconFileText size={16} className="text-slate-400" />
+                          </div>
+                          <div className="flex flex-col overflow-hidden">
+                            <span className="text-xs font-semibold truncate">{file.name}</span>
+                            <span className="text-[10px] text-slate-400 capitalize">
+                              {file.fieldName ? file.fieldName.replace(/([A-Z])/g, ' $1').trim() : 'Lampiran'} • {(file.size / 1024 / 1024).toFixed(2)} MB
+                            </span>
+                          </div>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          asChild
+                          className="h-8 w-8 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+                        >
+                          <a href={publicUrl} target="_blank" rel="noopener noreferrer" download={file.name}>
+                            <IconDownload size={16} />
+                          </a>
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8 text-center border-2 border-dashed rounded-lg">
+                  <IconPaperclip size={32} className="text-slate-200 mb-2" />
+                  <p className="text-xs text-slate-400">Tidak ada lampiran disertakan</p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
