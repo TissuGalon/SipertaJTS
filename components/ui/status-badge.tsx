@@ -43,8 +43,14 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className }) =
       icon: <IconX size={14} className="mr-1" />
     },
   };
+  
+  const currentConfig = config[status] || {
+    label: status,
+    color: 'bg-slate-50 text-slate-500 border-slate-200',
+    icon: <IconCircleDashed size={14} className="mr-1" />
+  };
 
-  const { label, color, icon } = config[status];
+  const { label, color, icon } = currentConfig;
 
   return (
     <Badge 

@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useState } from 'react';
+import { cn } from "@/lib/utils";
 import { 
   Card, 
   CardContent, 
   CardDescription, 
+  CardFooter, 
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
@@ -19,7 +21,9 @@ import {
   IconFileInvoice,
   IconDownload,
   IconBorderVertical,
-  IconArrowUpRight
+  IconArrowUpRight,
+  IconX,
+  IconFileText
 } from '@tabler/icons-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,6 +42,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { LETTER_TYPE_LABELS, RequestStatus, LetterRequest } from '@/types';
@@ -48,39 +59,134 @@ export default function PermintaanSuratPage() {
   const [filterStatus, setFilterStatus] = useState<RequestStatus | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [requests, setRequests] = useState<any[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
   const [isLoading, setIsLoading] = useState(true);
+  const [showReport, setShowReport] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<any[]>([]);
+  const [isFilesModalOpen, setIsFilesModalOpen] = useState(false);
 
   React.useEffect(() => {
+    setMounted(true);
     fetchRequests();
-  }, []);
+  }, [filterStatus, searchQuery, currentPage]);
 
   const fetchRequests = async () => {
     try {
       setIsLoading(true);
-      const { data, error } = await supabase
+      
+      let selectQuery = '*, users(name, nim)';
+      if (searchQuery) {
+        // Use !inner for robust filtering on joined table
+        selectQuery = '*, users!inner(name, nim)';
+      }
+
+      let query = supabase
         .from('letter_requests')
-        .select('*, users(name, nim)')
-        .order('created_at', { ascending: false });
+        .select(selectQuery, { count: 'exact' });
+
+      // Apply Filters
+      if (filterStatus !== "all") {
+        query = query.eq('status', filterStatus);
+      }
+
+      const from = (currentPage - 1) * itemsPerPage;
+      const to = from + itemsPerPage - 1;
+
+      if (searchQuery) {
+        // Search in users table columns (Nama & NIM) or local academic_year
+        // Note: PostgREST doesn't easily OR across tables in one .or() 
+        // So we filter on the joined users table specifically
+        query = query.or(`name.ilike.%${searchQuery}%,nim.ilike.%${searchQuery}%`, { foreignTable: 'users' });
+      }
+
+      const { data, error, count } = await query
+        .order('is_priority', { ascending: false })
+        .order('created_at', { ascending: false })
+        .range(from, to);
 
       if (error) throw error;
       setRequests(data || []);
+      setTotalCount(count || 0);
     } catch (error: any) {
-      console.error('Error fetching requests:', error);
-      toast.error("Gagal mengambil data pengajuan");
+      console.error('Error fetching requests:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
+      toast.error("Gagal mengambil data pengajuan: " + (error.message || "Unknown error"));
     } finally {
       setIsLoading(false);
     }
   };
 
-  const filteredRequests = requests.filter(req => {
-    const matchesStatus = filterStatus === "all" || req.status === filterStatus;
-    const userName = req.users?.name || "";
-    const userNim = req.users?.nim || "";
-    const matchesSearch = userName.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          userNim.includes(searchQuery) ||
-                          req.id.includes(searchQuery);
-    return matchesStatus && matchesSearch;
-  });
+  const handleExport = () => {
+    try {
+      if (requests.length === 0) {
+        toast.error("Tidak ada data untuk diekspor");
+        return;
+      }
+
+      const headers = ["ID", "Nama Mahasiswa", "NIM", "Jenis Surat", "Status", "Tanggal Masuk", "Tahun Akademik"];
+      const csvData = requests.map(req => [
+        req.id,
+        req.users?.name || "Unknown",
+        req.users?.nim || "-",
+        LETTER_TYPE_LABELS[req.type as keyof typeof LETTER_TYPE_LABELS] || req.type,
+        req.status,
+        new Date(req.created_at).toLocaleDateString('id-ID'),
+        req.academic_year || "-"
+      ]);
+
+      const csvContent = [
+        headers.join(","),
+        ...csvData.map(row => row.join(","))
+      ].join("\n");
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `Data_Permintaan_Surat_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success("Data berhasil diekspor ke CSV");
+    } catch (error) {
+      toast.error("Gagal mengekspor data");
+    }
+  };
+
+  const handleQuickAction = async (id: string, action: 'prioritize' | 'cancel') => {
+    try {
+      let updateData = {};
+      if (action === 'prioritize') {
+        const req = requests.find(r => r.id === id);
+        updateData = { is_priority: !req.is_priority };
+      } else if (action === 'cancel') {
+        updateData = { status: 'rejected', admin_notes: 'Dibatalkan oleh admin via tindakan cepat.' };
+      }
+
+      const { error } = await supabase
+        .from('letter_requests')
+        .update(updateData)
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      toast.success(action === 'prioritize' ? "Status prioritas diperbarui" : "Pengajuan dibatalkan");
+      fetchRequests();
+    } catch (error) {
+      toast.error("Gagal melakukan tindakan");
+    }
+  };
+
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
+
+  const filteredRequests = requests; // Now handled by server-side query
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -90,10 +196,20 @@ export default function PermintaanSuratPage() {
           <p className="text-slate-500">Manajemen dan verifikasi seluruh pengajuan surat dari mahasiswa.</p>
         </div>
         <div className="flex items-center space-x-2 bg-white dark:bg-slate-900 p-1.5 rounded-xl shadow-sm border">
-          <Button variant="ghost" size="sm" className="h-8 rounded-lg px-3 hover:bg-slate-100 dark:hover:bg-slate-800">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-8 rounded-lg px-3 hover:bg-slate-100 dark:hover:bg-slate-800"
+            onClick={handleExport}
+          >
             Export Excel
           </Button>
-          <Button variant="ghost" size="sm" className="h-8 rounded-lg px-3 hover:bg-slate-100 dark:hover:bg-slate-800">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-8 rounded-lg px-3 hover:bg-slate-100 dark:hover:bg-slate-800"
+            onClick={() => setShowReport(true)}
+          >
             Laporan Bulanan
           </Button>
         </div>
@@ -113,20 +229,24 @@ export default function PermintaanSuratPage() {
               />
             </div>
             <div className="flex gap-2">
-              <Select value={filterStatus} onValueChange={(v: any) => setFilterStatus(v)}>
-                <SelectTrigger className="w-[180px] h-11 border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50">
-                  <IconFilter className="mr-2 h-4 w-4 text-slate-400" />
-                  <SelectValue placeholder="Semua Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Semua Status</SelectItem>
-                  <SelectItem value="pending">Tertunda</SelectItem>
-                  <SelectItem value="verifying">Verifikasi</SelectItem>
-                  <SelectItem value="processing">Proses</SelectItem>
-                  <SelectItem value="done">Selesai</SelectItem>
-                  <SelectItem value="rejected">Ditolak</SelectItem>
-                </SelectContent>
-              </Select>
+              {mounted ? (
+                <Select value={filterStatus} onValueChange={(v: any) => setFilterStatus(v)}>
+                  <SelectTrigger className="w-[180px] h-11 border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50">
+                    <IconFilter className="mr-2 h-4 w-4 text-slate-400" />
+                    <SelectValue placeholder="Semua Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Semua Status</SelectItem>
+                    <SelectItem value="pending">Tertunda</SelectItem>
+                    <SelectItem value="verifying">Verifikasi</SelectItem>
+                    <SelectItem value="processing">Proses</SelectItem>
+                    <SelectItem value="done">Selesai</SelectItem>
+                    <SelectItem value="rejected">Ditolak</SelectItem>
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="w-[180px] h-11 border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50 rounded-lg animate-pulse" />
+              )}
               <Button variant="outline" size="icon" className="h-11 w-11 shrink-0 border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50">
                 <IconCalendarEvent size={20} className="text-slate-500" />
               </Button>
@@ -239,16 +359,26 @@ export default function PermintaanSuratPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-56 border-none shadow-2xl backdrop-blur-xl">
                             <DropdownMenuLabel>Tindakan Cepat</DropdownMenuLabel>
-                            <DropdownMenuItem className="py-2.5">
-                              <IconArrowUpRight size={16} className="mr-2 text-indigo-500" />
-                              Prioritaskan Pengajuan
+                            <DropdownMenuItem className="py-2.5" onClick={() => handleQuickAction(request.id, 'prioritize')}>
+                              <IconArrowUpRight size={16} className={cn("mr-2", request.is_priority ? "text-amber-500" : "text-indigo-500")} />
+                              {request.is_priority ? "Hapus Prioritas" : "Prioritaskan Pengajuan"}
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="py-2.5">
-                              <IconDownload size={16} className="mr-2 text-emerald-500" />
-                              Unduh Lampiran
+                            <DropdownMenuItem className="py-2.5" onClick={() => {
+                              if (request.files && request.files.length > 0) {
+                                setSelectedFiles(request.files);
+                                setIsFilesModalOpen(true);
+                              } else {
+                                toast.info("Tidak ada lampiran");
+                              }
+                            }}>
+                              <IconEye size={16} className="mr-2 text-emerald-500" />
+                              Lihat Lampiran
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="py-2.5 text-rose-500 focus:text-rose-500 focus:bg-rose-50 dark:focus:bg-rose-900/20">
+                            <DropdownMenuItem 
+                              className="py-2.5 text-rose-500 focus:text-rose-500 focus:bg-rose-50 dark:focus:bg-rose-900/20"
+                              onClick={() => handleQuickAction(request.id, 'cancel')}
+                            >
                               Batalkan Pengajuan
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -276,19 +406,151 @@ export default function PermintaanSuratPage() {
         </CardContent>
       </Card>
       
-      {/* Footer Info */}
+      {/* Footer Info & Pagination */}
       <div className="flex flex-col md:flex-row items-center justify-between text-xs text-slate-400 font-medium px-4">
-        <span>Menampilkan {filteredRequests.length} dari {requests.length} pengajuan surat</span>
+        <span>Menampilkan {requests.length} dari {totalCount} pengajuan surat</span>
         <div className="flex items-center space-x-2 mt-4 md:mt-0">
-          <Button variant="outline" size="sm" className="h-8 shadow-sm" disabled>Sebelumnya</Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="h-8 shadow-sm" 
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+          >
+            Sebelumnya
+          </Button>
           <div className="flex items-center space-x-1">
-            <Button size="sm" className="h-8 w-8 p-0 bg-indigo-600">1</Button>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">2</Button>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">3</Button>
+            {Array.from({ length: Math.min(5, totalPages) }).map((_, i) => {
+              const pageNum = i + 1;
+              return (
+                <Button 
+                  key={pageNum}
+                  size="sm" 
+                  className={cn("h-8 w-8 p-0", currentPage === pageNum ? "bg-indigo-600" : "bg-transparent text-slate-600 hover:bg-slate-100")}
+                  onClick={() => setCurrentPage(pageNum)}
+                >
+                  {pageNum}
+                </Button>
+              );
+            })}
+            {totalPages > 5 && <span>...</span>}
           </div>
-          <Button variant="outline" size="sm" className="h-8 shadow-sm">Berikutnya</Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="h-8 shadow-sm"
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+          >
+            Berikutnya
+          </Button>
         </div>
       </div>
+
+      {/* Monthly Report Modal (Mock) */}
+      {showReport && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
+           <Card className="w-full max-w-xl shadow-2xl border-none">
+             <CardHeader className="border-b">
+               <div className="flex items-center justify-between">
+                 <CardTitle>Ringkasan Laporan Bulanan</CardTitle>
+                 <Button variant="ghost" size="icon" onClick={() => setShowReport(false)}>
+                   <IconX size={20} />
+                 </Button>
+               </div>
+               <CardDescription>Statistik pengajuan surat untuk bulan {new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}</CardDescription>
+             </CardHeader>
+             <CardContent className="p-6 space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl">
+                    <p className="text-xs text-indigo-600 dark:text-indigo-400 font-bold uppercase tracking-wider mb-1">Total Pengajuan</p>
+                    <p className="text-3xl font-black text-slate-900 dark:text-white">{totalCount}</p>
+                  </div>
+                  <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl">
+                    <p className="text-xs text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider mb-1">Disetujui</p>
+                    <p className="text-3xl font-black text-slate-900 dark:text-white">
+                      {requests.filter(r => r.status === 'done').length}
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-tight">Distribusi Status</h4>
+                  <div className="w-full h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex">
+                    <div className="h-full bg-indigo-500" style={{ width: '40%' }}></div>
+                    <div className="h-full bg-amber-500" style={{ width: '25%' }}></div>
+                    <div className="h-full bg-emerald-500" style={{ width: '20%' }}></div>
+                    <div className="h-full bg-rose-500" style={{ width: '15%' }}></div>
+                  </div>
+                  <div className="flex flex-wrap gap-x-4 gap-y-2">
+                    <div className="flex items-center text-xs font-medium text-slate-500">
+                      <div className="h-2 w-2 rounded-full bg-indigo-500 mr-2"></div> Pending
+                    </div>
+                    <div className="flex items-center text-xs font-medium text-slate-500">
+                      <div className="h-2 w-2 rounded-full bg-amber-500 mr-2"></div> Verifikasi
+                    </div>
+                    <div className="flex items-center text-xs font-medium text-slate-500">
+                      <div className="h-2 w-2 rounded-full bg-emerald-500 mr-2"></div> Selesai
+                    </div>
+                    <div className="flex items-center text-xs font-medium text-slate-500">
+                      <div className="h-2 w-2 rounded-full bg-rose-500 mr-2"></div> Ditolak
+                    </div>
+                  </div>
+                </div>
+             </CardContent>
+             <CardFooter className="bg-slate-50 dark:bg-slate-800/50 p-4 flex justify-end">
+               <Button className="bg-indigo-600 hover:bg-indigo-700" onClick={handleExport}>Download Detail CSV</Button>
+             </CardFooter>
+           </Card>
+        </div>
+      )}
+
+      {/* Attachment Viewer Modal */}
+      <Dialog open={isFilesModalOpen} onOpenChange={setIsFilesModalOpen}>
+        <DialogContent className="sm:max-w-md border-none shadow-2xl backdrop-blur-xl bg-white/90 dark:bg-slate-900/90">
+          <DialogHeader>
+            <DialogTitle className="flex items-center">
+              <IconFileInvoice className="mr-2 text-indigo-600" size={20} />
+              Lampiran Pengajuan
+            </DialogTitle>
+            <DialogDescription>
+              Terdapat {selectedFiles.length} file yang dilampirkan dalam pengajuan ini.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-y-auto space-y-3 py-4 pr-2">
+            {selectedFiles.map((file, idx) => (
+              <div 
+                key={idx} 
+                className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 group hover:border-indigo-200 dark:hover:border-indigo-900/30 transition-all"
+              >
+                <div className="flex items-center space-x-3 overflow-hidden">
+                  <div className="p-2 bg-white dark:bg-slate-900 rounded-lg shadow-sm group-hover:text-indigo-600 transition-colors">
+                    <IconFileText size={18} />
+                  </div>
+                  <div className="flex flex-col overflow-hidden">
+                    <span className="text-sm font-semibold truncate max-w-[200px] text-slate-900 dark:text-white">
+                      {file.name || `Lampiran_${idx + 1}`}
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">
+                      {file.type || 'Document'}
+                    </span>
+                  </div>
+                </div>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="h-9 w-9 p-0 rounded-full hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-900/20"
+                  onClick={() => window.open(file.url, '_blank')}
+                >
+                  <IconDownload size={18} />
+                </Button>
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-end pt-2">
+            <Button variant="outline" onClick={() => setIsFilesModalOpen(false)}>Tutup</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

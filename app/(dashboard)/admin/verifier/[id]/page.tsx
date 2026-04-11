@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import { cn } from "@/lib/utils";
 import { useParams, useRouter } from 'next/navigation';
 import { 
   Card, 
@@ -37,6 +38,7 @@ export default function DocumentVerifierPage() {
   const { id } = useParams();
   const router = useRouter();
   const [request, setRequest] = useState<any>(null);
+  const [adjacentIds, setAdjacentIds] = useState<{ prev: string | null; next: string | null }>({ prev: null, next: null });
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   
@@ -45,8 +47,32 @@ export default function DocumentVerifierPage() {
   const [notes, setNotes] = useState("");
 
   React.useEffect(() => {
-    if (id) fetchRequest();
+    if (id) {
+      fetchRequest();
+      fetchAdjacentIds();
+    }
   }, [id]);
+
+  const fetchAdjacentIds = async () => {
+    try {
+      // Simplistic way to get prev/next: order by created_at
+      const { data: allIds } = await supabase
+        .from('letter_requests')
+        .select('id')
+        .order('is_priority', { ascending: false })
+        .order('created_at', { ascending: false });
+
+      if (allIds) {
+        const curIdx = allIds.findIndex(r => r.id === id);
+        setAdjacentIds({
+          prev: curIdx > 0 ? allIds[curIdx - 1].id : null,
+          next: curIdx < allIds.length - 1 ? allIds[curIdx + 1].id : null
+        });
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const fetchRequest = async () => {
     try {
@@ -129,11 +155,23 @@ export default function DocumentVerifierPage() {
           </div>
         </div>
         <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" className="hidden sm:flex">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="hidden sm:flex"
+            disabled={!adjacentIds.prev}
+            onClick={() => router.push(`/admin/verifier/${adjacentIds.prev}`)}
+          >
             <IconChevronLeft size={16} className="mr-1" />
             Sebelumnya
           </Button>
-          <Button variant="outline" size="sm" className="hidden sm:flex">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="hidden sm:flex"
+            disabled={!adjacentIds.next}
+            onClick={() => router.push(`/admin/verifier/${adjacentIds.next}`)}
+          >
             Selanjutnya
             <IconChevronRight size={16} className="ml-1" />
           </Button>
@@ -148,9 +186,19 @@ export default function DocumentVerifierPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <IconFileText size={18} className="text-blue-600" />
-                <span className="text-sm font-semibold">Lampiran: {request.files[0]?.name || 'Document.pdf'}</span>
+                <span className="text-sm font-semibold truncate max-w-[200px]">
+                  Lampiran: {request.files?.[0]?.name || 'Document.pdf'}
+                </span>
               </div>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8"
+                onClick={() => {
+                  if (request.files?.[0]?.url) window.open(request.files[0].url, '_blank');
+                  else toast.info("Tidak ada file untuk dibuka");
+                }}
+              >
                 <IconExternalLink size={16} />
               </Button>
             </div>
@@ -159,33 +207,36 @@ export default function DocumentVerifierPage() {
             {/* Mock PDF Viewer */}
             <div className="w-full h-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center p-8">
               <div className="w-full max-w-lg aspect-[1/1.4] bg-white dark:bg-slate-950 shadow-2xl rounded p-12 space-y-8 animate-in zoom-in-95 duration-500">
-                <div className="flex flex-col items-center border-b pb-8">
+                <div className="flex flex-col items-center border-b pb-8 text-center">
                   <div className="h-16 w-16 bg-slate-100 dark:bg-slate-900 rounded-full mb-4 flex items-center justify-center">
-                    <IconSchool className="text-slate-400" size={32} />
+                    <IconSchool className="text-indigo-600" size={32} />
                   </div>
-                  <div className="h-4 w-48 bg-slate-100 dark:bg-slate-800 rounded"></div>
-                  <div className="h-3 w-32 bg-slate-50 dark:bg-slate-900 rounded mt-2"></div>
+                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">KEMENTERIAN PENDIDIKAN DAN KEBUDAYAAN</h3>
+                  <p className="text-[10px] font-bold text-slate-600">UNIVERSITAS TEKNOLOGI INFORMASI</p>
                 </div>
                 <div className="space-y-4">
-                  <div className="h-4 w-full bg-slate-50 dark:bg-slate-900 rounded"></div>
-                  <div className="h-4 w-full bg-slate-50 dark:bg-slate-900 rounded"></div>
-                  <div className="h-4 w-3/4 bg-slate-50 dark:bg-slate-900 rounded"></div>
-                </div>
-                <div className="grid grid-cols-2 gap-8 pt-8">
-                  <div className="space-y-3">
-                    <div className="h-3 w-16 bg-slate-100 dark:bg-slate-900 rounded"></div>
-                    <div className="h-8 w-full bg-slate-50 dark:bg-slate-800 rounded"></div>
+                  <h4 className="text-center font-bold underline uppercase decoration-slate-300">
+                    {LETTER_TYPE_LABELS[request.type as keyof typeof LETTER_TYPE_LABELS] || "SURAT KETERANGAN"}
+                  </h4>
+                  <p className="text-[11px] text-justify leading-relaxed">
+                    Yang bertanda tangan di bawah ini menerangkan bahwa mahasiswa dengan nama <b>{request.users?.name}</b>, 
+                    NIM <b>{request.users?.nim}</b>, adalah benar terdaftar sebagai mahasiswa aktif pada semester ini 
+                    Tahun Akademik <b>{academicYear}</b>.
+                  </p>
+                  <div className="grid grid-cols-2 gap-4 text-[10px]">
+                    {Object.entries(request.details).slice(0, 4).map(([key, value]) => (
+                      <div key={key} className="border-b border-slate-100 pb-1">
+                        <span className="text-slate-400 uppercase font-black">{key}:</span>
+                        <span className="ml-2 font-medium">{String(value)}</span>
+                      </div>
+                    ))}
                   </div>
-                  <div className="space-y-3">
-                    <div className="h-3 w-16 bg-slate-100 dark:bg-slate-900 rounded"></div>
-                    <div className="h-8 w-full bg-slate-50 dark:bg-slate-800 rounded"></div>
-                  </div>
                 </div>
-                <div className="pt-20 flex justify-end">
+                <div className="pt-12 flex justify-end">
                   <div className="text-right">
-                    <div className="h-3 w-32 bg-slate-100 dark:bg-slate-900 rounded mb-12"></div>
-                    <div className="h-4 w-40 bg-slate-100 dark:bg-slate-900 rounded"></div>
-                    <div className="h-3 w-24 bg-slate-50 dark:bg-slate-900 rounded mt-2 ml-auto"></div>
+                    <p className="text-[10px] mb-12">Semarang, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                    <div className="h-0.5 w-40 bg-slate-200 mb-1 ml-auto"></div>
+                    <p className="text-[10px] font-bold">Kepala Bagian Administrasi</p>
                   </div>
                 </div>
               </div>
