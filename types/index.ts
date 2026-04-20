@@ -17,6 +17,9 @@ export type RequestStatus =
   | "processing"
   | "done"
   | "rejected"
+  | "menunggu_admin"
+  | "disetujui_koordinator"
+  | "ditolak_koordinator"
 
 export interface User {
   id: string

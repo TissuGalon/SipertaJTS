@@ -213,7 +213,7 @@ function RequestLetterContent() {
           type: selectedTemplate.id, // Better to use ID or a slug if available
           details: details,
           files: uploadedFiles,
-          status: selectedTemplate.requires_coordinator ? 'verifying' : 'pending',
+          status: selectedTemplate.requires_coordinator ? 'verifying' : 'menunggu_admin',
           prodi: currentUser.prodi // Save prodi directly for filtering
         });
 

@@ -42,7 +42,7 @@ import { toast } from "sonner"
 import { supabase } from "@/lib/supabase"
 import { useEffect } from "react"
 
-export default function TeacherDashboard() {
+export default function KoordinatorDashboard() {
   const [filterStatus, setFilterStatus] = useState<RequestStatus | "all">(
     "verifying"
   )
@@ -95,7 +95,12 @@ export default function TeacherDashboard() {
       }
       if (settings.visible_letter_types && settings.visible_letter_types.length > 0) {
         query = query.in('type', settings.visible_letter_types);
+      } else {
+        // Milestone 1 Filter: Hanya menampilkan magang, sidang, seminar. Sembunyikan aktif kuliah dan izin penelitian.
+        query = query.in('type', ['surat_sidang', 'surat_undangan_seminar', 'surat_undangan_sidang', 'surat_magang', 'surat_permohonan_magang', 'surat_tugas_magang']);
       }
+    } else {
+      query = query.in('type', ['surat_sidang', 'surat_undangan_seminar', 'surat_undangan_sidang', 'surat_magang', 'surat_permohonan_magang', 'surat_tugas_magang']);
     }
 
     const { data, error } = await query;
@@ -355,7 +360,7 @@ export default function TeacherDashboard() {
                         <td className="p-4 align-middle">
                           <div className="flex items-center space-x-2">
                             <Button variant="ghost" size="sm" asChild title="Lihat Detail">
-                              <Link href={`/dosen/verifier/${request.id}`}>
+                              <Link href={`/koordinator/verifier/${request.id}`}>
                                 <IconEye className="h-4 w-4" />
                               </Link>
                             </Button>

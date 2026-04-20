@@ -11,13 +11,13 @@ import { DashboardLayout } from '@/components/dashboard/layout';
 import { NavItem } from '@/components/dashboard/types';
 
 const navItems: NavItem[] = [
-  { label: 'Dashboard', href: '/dosen/dashboard', icon: IconLayoutDashboard, category: 'Utama' },
-  { label: 'Verifikasi Surat', href: '/dosen/verifier', icon: IconChecklist, category: 'Layanan Surat' },
+  { label: 'Dashboard', href: '/koordinator/dashboard', icon: IconLayoutDashboard, category: 'Utama' },
+  { label: 'Verifikasi Surat', href: '/koordinator/verifier', icon: IconChecklist, category: 'Layanan Surat' },
 ];
 
 const categories = ['Utama', 'Layanan Surat'];
 
-export default function DosenLayout({ children }: { children: React.ReactNode }) {
+export default function KoordinatorLayout({ children }: { children: React.ReactNode }) {
   const [navCounts, setNavCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
@@ -34,7 +34,7 @@ export default function DosenLayout({ children }: { children: React.ReactNode })
         .eq('status', 'pending'); // Or whatever the status is for 'needs verification'
       
       setNavCounts({
-        '/dosen/verifier': count || 0,
+        '/koordinator/verifier': count || 0,
       });
     };
     fetchCounts();
