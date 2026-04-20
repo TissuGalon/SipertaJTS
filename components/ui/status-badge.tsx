@@ -42,6 +42,21 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className }) =
       color: 'bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border-rose-100 dark:border-rose-800',
       icon: <IconX size={14} className="mr-1" />
     },
+    menunggu_admin: {
+      label: 'Menunggu Admin',
+      color: 'bg-sky-50 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400 border-sky-100 dark:border-sky-800',
+      icon: <IconLoader2 size={14} className="mr-1 animate-spin" />
+    },
+    disetujui_koordinator: {
+      label: 'Disetujui Koordinator',
+      color: 'bg-teal-50 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400 border-teal-100 dark:border-teal-800',
+      icon: <IconCheck size={14} className="mr-1" />
+    },
+    ditolak_koordinator: {
+      label: 'Ditolak Koordinator',
+      color: 'bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border-rose-100 dark:border-rose-800',
+      icon: <IconX size={14} className="mr-1" />
+    },
   };
   
   const currentConfig = config[status] || {
