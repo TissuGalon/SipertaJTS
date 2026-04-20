@@ -41,6 +41,7 @@ import { toast } from 'sonner';
 
 export default function AdminDashboard() {
   const [filterStatus, setFilterStatus] = useState<RequestStatus | "all">("all");
+  const [filterProdi, setFilterProdi] = useState<string | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [requests, setRequests] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -97,12 +98,13 @@ export default function AdminDashboard() {
 
   const filteredRequests = requests.filter(req => {
     const matchesStatus = filterStatus === "all" || req.status === filterStatus;
+    const matchesProdi = filterProdi === "all" || req.users?.prodi === filterProdi;
     const userName = req.users?.name || "";
     const userNim = req.users?.nim || "";
     const matchesSearch = userName.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           userNim.includes(searchQuery) ||
                           req.id.includes(searchQuery);
-    return matchesStatus && matchesSearch;
+    return matchesStatus && matchesProdi && matchesSearch;
   });
 
   const handleAction = async (id: string, newStatus: RequestStatus) => {
@@ -188,9 +190,22 @@ export default function AdminDashboard() {
                 />
               </div>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 flex-wrap gap-y-2">
+              <Select value={filterProdi} onValueChange={(v: string) => setFilterProdi(v)}>
+                <SelectTrigger className="w-[160px] h-10 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
+                  <IconFilter className="mr-2 h-4 w-4 text-slate-400" />
+                  <SelectValue placeholder="Program Studi" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Prodi</SelectItem>
+                  <SelectItem value="D-III TKJJ">D-III TKJJ</SelectItem>
+                  <SelectItem value="D-III TKBA">D-III TKBA</SelectItem>
+                  <SelectItem value="D-IV TRKJJ">D-IV TRKJJ</SelectItem>
+                  <SelectItem value="D-IV TRKBG">D-IV TRKBG</SelectItem>
+                </SelectContent>
+              </Select>
               <Select value={filterStatus} onValueChange={(v: any) => setFilterStatus(v)}>
-                <SelectTrigger className="w-[180px] h-10 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
+                <SelectTrigger className="w-[160px] h-10 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800">
                   <IconFilter className="mr-2 h-4 w-4 text-slate-400" />
                   <SelectValue placeholder="Semua Status" />
                 </SelectTrigger>

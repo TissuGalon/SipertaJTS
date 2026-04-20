@@ -102,6 +102,34 @@ export default function ManajemenSuratPage() {
     }
   };
 
+  const handleToggleRequiresCoordinator = async (id: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('letter_templates')
+        .update({ requires_coordinator: !currentStatus })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setTemplates(templates.map((t: any) =>
+        t.id === id ? { ...t, requires_coordinator: !currentStatus } : t
+      ));
+
+      if (selectedTemplate?.id === id) {
+        setSelectedTemplate({ ...selectedTemplate, requires_coordinator: !currentStatus });
+      }
+
+      toast.success("Akses Koordinator Diperbarui", {
+        description: `Verifikasi oleh koordinator sekarang ${!currentStatus ? 'Diperlukan' : 'Tidak Diperlukan'}.`
+      });
+    } catch (error: any) {
+      console.error("Error toggling coordinator access:", error);
+      toast.error("Gagal memperbarui akses", {
+        description: error.message || "Terjadi kesalahan saat menyimpan pengaturan."
+      });
+    }
+  };
+
   const handleDelete = async (id: string, filePath: string) => {
     if (!confirm("Apakah Anda yakin ingin menghapus template ini?")) return;
 
@@ -355,18 +383,34 @@ export default function ManajemenSuratPage() {
                 </table>
               </div>
 
-              <div className="flex items-center justify-between p-4 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-xl border border-indigo-100 dark:border-indigo-900/30">
-                <div className="flex items-center space-x-3">
-                  <IconSettings className="text-indigo-600" size={20} />
-                  <div className="flex flex-col">
-                    <span className="text-sm font-bold text-slate-900 dark:text-white">Status Layanan</span>
-                    <span className="text-xs text-slate-500 italic text-indigo-600 dark:text-indigo-400 ">Dapat diakses oleh mahasiswa</span>
+              <div className="flex flex-col space-y-3">
+                <div className="flex items-center justify-between p-4 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-xl border border-indigo-100 dark:border-indigo-900/30">
+                  <div className="flex items-center space-x-3">
+                    <IconSettings className="text-indigo-600" size={20} />
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-slate-900 dark:text-white">Status Layanan</span>
+                      <span className="text-xs text-slate-500 italic text-indigo-600 dark:text-indigo-400 ">Dapat diakses oleh mahasiswa</span>
+                    </div>
                   </div>
+                  <Switch
+                    checked={selectedTemplate.is_active ?? true}
+                    onCheckedChange={() => handleToggleStatus(selectedTemplate.id, selectedTemplate.is_active ?? true)}
+                  />
                 </div>
-                <Switch 
-                  checked={selectedTemplate.is_active ?? true} 
-                  onCheckedChange={() => handleToggleStatus(selectedTemplate.id, selectedTemplate.is_active ?? true)}
-                />
+
+                <div className="flex items-center justify-between p-4 bg-amber-50/50 dark:bg-amber-900/10 rounded-xl border border-amber-100 dark:border-amber-900/30">
+                  <div className="flex items-center space-x-3">
+                    <IconSettings className="text-amber-600" size={20} />
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-slate-900 dark:text-white">Akses Koordinator</span>
+                      <span className="text-xs text-slate-500 italic text-amber-600 dark:text-amber-400 ">Perlu verifikasi Dosen Koordinator</span>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={selectedTemplate.requires_coordinator ?? false}
+                    onCheckedChange={() => handleToggleRequiresCoordinator(selectedTemplate.id, selectedTemplate.requires_coordinator ?? false)}
+                  />
+                </div>
               </div>
 
               <div className="flex justify-end space-x-3 pt-2">

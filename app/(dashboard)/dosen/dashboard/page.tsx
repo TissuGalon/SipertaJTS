@@ -44,6 +44,7 @@ export default function TeacherDashboard() {
   const [filterStatus, setFilterStatus] = useState<RequestStatus | "all">(
     "verifying"
   )
+  const [filterProdi, setFilterProdi] = useState<string | "all">("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [requests, setRequests] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -52,7 +53,8 @@ export default function TeacherDashboard() {
     setIsLoading(true)
     const { data, error } = await supabase
       .from("letter_requests")
-      .select("*, users!user_id(name, nim)")
+      .select("*, users(name, nim, prodi), letter_templates!inner(id, requires_coordinator)")
+      .eq("letter_templates.requires_coordinator", true)
       .order("created_at", { ascending: false })
 
     if (error) {
@@ -74,11 +76,12 @@ export default function TeacherDashboard() {
 
   const filteredRequests = requests.filter((req) => {
     const matchesStatus = filterStatus === "all" || req.status === filterStatus
+    const matchesProdi = filterProdi === "all" || req.users?.prodi === filterProdi
     const matchesSearch =
       req.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       req.userNim.includes(searchQuery) ||
       req.id.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchesStatus && matchesSearch
+    return matchesStatus && matchesProdi && matchesSearch
   })
 
   const stats = {
@@ -185,24 +188,38 @@ export default function TeacherDashboard() {
                 className="pl-8"
               />
             </div>
-            <Select
-              value={filterStatus}
-              onValueChange={(value) =>
-                setFilterStatus(value as RequestStatus | "all")
-              }
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Semua Status</SelectItem>
-                <SelectItem value="pending">Tertunda</SelectItem>
-                <SelectItem value="verifying">Verifikasi</SelectItem>
-                <SelectItem value="processing">Proses</SelectItem>
-                <SelectItem value="done">Selesai</SelectItem>
-                <SelectItem value="rejected">Ditolak</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex items-center space-x-2">
+              <Select value={filterProdi} onValueChange={(v: string) => setFilterProdi(v)}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Program Studi" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Prodi</SelectItem>
+                  <SelectItem value="D-III TKJJ">D-III TKJJ</SelectItem>
+                  <SelectItem value="D-III TKBA">D-III TKBA</SelectItem>
+                  <SelectItem value="D-IV TRKJJ">D-IV TRKJJ</SelectItem>
+                  <SelectItem value="D-IV TRKBG">D-IV TRKBG</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
+                value={filterStatus}
+                onValueChange={(value) =>
+                  setFilterStatus(value as RequestStatus | "all")
+                }
+              >
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Filter status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Status</SelectItem>
+                  <SelectItem value="pending">Tertunda</SelectItem>
+                  <SelectItem value="verifying">Verifikasi</SelectItem>
+                  <SelectItem value="processing">Proses</SelectItem>
+                  <SelectItem value="done">Selesai</SelectItem>
+                  <SelectItem value="rejected">Ditolak</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="rounded-md border">
