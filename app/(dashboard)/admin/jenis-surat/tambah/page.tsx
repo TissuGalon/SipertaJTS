@@ -138,6 +138,14 @@ export default function TambahTemplatePage() {
       if (uploadError) throw uploadError;
 
       // 2. Save metadata to database
+      // Default to true for the specific templates, false for others
+      const titleLower = data.title.toLowerCase();
+      const defaultRequiresCoordinator =
+        titleLower.includes('seminar') ||
+        titleLower.includes('sidang') ||
+        titleLower.includes('permohonan magang') ||
+        titleLower.includes('tugas magang');
+
       const { error: dbError } = await supabase
         .from('letter_templates')
         .insert([{
@@ -146,7 +154,8 @@ export default function TambahTemplatePage() {
           description: data.description,
           fields: data.fields,
           requirements: data.requirements,
-          file_path: uploadData.path
+          file_path: uploadData.path,
+          requires_coordinator: defaultRequiresCoordinator
         }]);
 
       if (dbError) throw dbError;

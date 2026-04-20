@@ -38,6 +38,7 @@ function RequestLetterContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [dosenList, setDosenList] = useState<any[]>([]);
 
   useEffect(() => {
     fetchInitialData();
@@ -73,6 +74,15 @@ function RequestLetterContent() {
       if (templatesError) throw templatesError;
       setTemplates(templatesData || []);
 
+      const { data: dosenData, error: dosenError } = await supabase
+        .from('dosen')
+        .select('name, nip')
+        .order('name');
+
+      if (!dosenError && dosenData) {
+        setDosenList(dosenData);
+      }
+
     } catch (error: any) {
       console.error('Error fetching initial data:', error);
       toast.error("Gagal memuat data: " + error.message);
@@ -94,14 +104,36 @@ function RequestLetterContent() {
 
     if (Array.isArray(selectedTemplate.fields)) {
       selectedTemplate.fields.forEach((field: any) => {
-        fields.push({
-          name: field.name,
-          label: field.label,
-          type: field.type || 'text',
-          placeholder: field.placeholder,
-          description: field.description,
-          required: field.required !== false,
-        });
+        // If field seems to be asking for a Dosen, convert it to a select dropdown
+        const labelLower = field.label.toLowerCase();
+        const nameLower = field.name.toLowerCase();
+        const isDosenField = labelLower.includes('dosen') || labelLower.includes('pembimbing') || nameLower.includes('dosen') || nameLower.includes('pembimbing');
+
+        if (isDosenField && !labelLower.includes('nip')) {
+          const dosenOptions = dosenList.map(d => ({
+            label: `${d.name} (NIP: ${d.nip})`,
+            value: `${d.name}|${d.nip}`
+          }));
+
+          fields.push({
+            name: field.name,
+            label: field.label,
+            type: dosenOptions.length > 0 ? 'select' : 'text',
+            options: dosenOptions.length > 0 ? dosenOptions : undefined,
+            placeholder: dosenOptions.length > 0 ? 'Pilih Dosen...' : field.placeholder,
+            description: field.description,
+            required: field.required !== false,
+          });
+        } else {
+          fields.push({
+            name: field.name,
+            label: field.label,
+            type: field.type || 'text',
+            placeholder: field.placeholder,
+            description: field.description,
+            required: field.required !== false,
+          });
+        }
       });
     }
 
@@ -128,6 +160,10 @@ function RequestLetterContent() {
       
       const uploadedFiles: any[] = [];
       const details: Record<string, any> = {};
+
+      // Inject auto-generated submission date
+      const today = new Date();
+      details['TanggalPengajuan'] = today.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }); // 15/10/2023 format
 
       for (const key in data) {
         if (key.startsWith('req_')) {
@@ -163,9 +199,33 @@ function RequestLetterContent() {
             }
           }
         } else {
-          details[key] = data[key];
+          // If the selected value looks like our Dosen option (Name|NIP), split it
+          if (typeof data[key] === 'string' && data[key].includes('|')) {
+            const parts = data[key].split('|');
+            if (parts.length === 2) {
+              details[key] = parts[0];
+              // Try to find the NIP field name and populate it automatically
+              const nipField = selectedTemplate.fields?.find((f: any) =>
+                f.label.toLowerCase().includes('nip') && f.label.toLowerCase().includes('dosen')
+              );
+              if (nipField) {
+                details[nipField.name] = parts[1];
+              } else {
+                // If there's no explicitly matching NIP field, still inject it as a reasonable guess variable
+                details[`NIP${key}`] = parts[1];
+                details['NIPDosen'] = parts[1];
+              }
+            } else {
+               details[key] = data[key];
+            }
+          } else {
+            details[key] = data[key];
+          }
         }
       }
+
+      // Determine initial status based on coordinator requirement
+      const initialStatus = selectedTemplate.requires_coordinator ? 'verifying' : 'pending';
 
       const { error } = await supabase
         .from('letter_requests')
@@ -175,7 +235,7 @@ function RequestLetterContent() {
           type: selectedTemplate.name,
           details: details,
           files: uploadedFiles,
-          status: 'pending'
+          status: initialStatus
         });
 
       if (error) throw error;

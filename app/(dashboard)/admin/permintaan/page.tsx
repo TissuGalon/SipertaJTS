@@ -66,6 +66,7 @@ import { supabase } from '@/lib/supabase';
 import { LETTER_TYPE_LABELS, RequestStatus, LetterRequest } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import * as XLSX from 'xlsx';
 
 export default function PermintaanSuratPage() {
   const [filterStatus, setFilterStatus] = useState<RequestStatus | "all">("all");
@@ -218,31 +219,37 @@ export default function PermintaanSuratPage() {
         return;
       }
 
-      const headers = ["ID", "Nama Mahasiswa", "NIM", "Jenis Surat", "Status", "Tanggal Masuk", "Tahun Akademik"];
-      const csvData = data.map((req: any) => [
-        req.id,
-        req.users?.name || "Unknown",
-        req.users?.nim || "-",
-        LETTER_TYPE_LABELS[req.type as keyof typeof LETTER_TYPE_LABELS] || req.type,
-        req.status,
-        new Date(req.created_at).toLocaleDateString('id-ID'),
-        req.academic_year || "-"
-      ]);
+      const excelData = data.map((req: any) => ({
+        "ID": req.id,
+        "Nama Mahasiswa": req.users?.name || "Unknown",
+        "NIM": req.users?.nim || "-",
+        "Jenis Surat": LETTER_TYPE_LABELS[req.type as keyof typeof LETTER_TYPE_LABELS] || req.type,
+        "Status": req.status,
+        "Tanggal Masuk": new Date(req.created_at).toLocaleDateString('id-ID'),
+        "Tahun Akademik": req.academic_year || "-"
+      }));
 
-      const csvContent = [
-        headers.join(","),
-        ...csvData.map((row: any) => row.join(","))
-      ].join("\n");
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan Pengajuan");
 
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.setAttribute("href", url);
-      link.setAttribute("download", `Laporan_Permintaan_Surat_${new Date().toISOString().split('T')[0]}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      toast.success("Data berhasil diekspor ke CSV");
+      // Auto-fit columns
+      const wscols = [
+        { wch: 40 }, // ID
+        { wch: 30 }, // Nama
+        { wch: 15 }, // NIM
+        { wch: 25 }, // Jenis Surat
+        { wch: 15 }, // Status
+        { wch: 15 }, // Tanggal
+        { wch: 15 }  // Tahun Akademik
+      ];
+      worksheet['!cols'] = wscols;
+
+      // Generate filename and download
+      const filename = `Laporan_Permintaan_Surat_${new Date().toISOString().split('T')[0]}.xlsx`;
+      XLSX.writeFile(workbook, filename);
+
+      toast.success("Data berhasil diekspor ke Excel");
     } catch (error) {
       toast.error("Gagal mengekspor data");
     } finally {
@@ -294,7 +301,7 @@ export default function PermintaanSuratPage() {
             disabled={isExporting}
           >
             {isExporting ? <IconLoader2 className="mr-2 h-4 w-4 animate-spin" /> : <IconDownload className="mr-2 h-4 w-4" />}
-            Export CSV
+            Export Excel
           </Button>
           <Button 
             variant="ghost" 
@@ -677,7 +684,7 @@ export default function PermintaanSuratPage() {
                  Laporan ini dihitung otomatis berdasarkan data pengajuan sebulan terakhir.
                </p>
                <Button className="bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100 dark:shadow-none font-bold px-6" onClick={handleExport}>
-                 Unduh CSV Lengkap
+                 Unduh Excel Lengkap
                </Button>
              </CardFooter>
            </Card>
