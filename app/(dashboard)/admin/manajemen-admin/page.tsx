@@ -81,14 +81,13 @@ export default function ManajemenAdminPage() {
     const email = formData.get('email') as string;
 
     try {
-      // Ambil session dan kirim token secara eksplisit ke Edge Function
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !sessionData.session?.access_token) {
         throw new Error("Sesi tidak valid atau telah berakhir. Silakan login kembali.");
       }
       const token = sessionData.session.access_token;
 
-      const { data, error } = await supabase.functions.invoke('manage-users', {
+      const { data, error: invokeError } = await supabase.functions.invoke('manage-users', {
         body: {
           mode: 'create',
           userData: {
@@ -101,8 +100,16 @@ export default function ManajemenAdminPage() {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      // Handle custom error from our Edge Function response body (v15+)
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      // Handle generic transport/status error from Supabase client (4xx, 5xx)
+      if (invokeError) {
+        const details = (invokeError as any).context?.message || invokeError.message;
+        throw new Error(details);
+      }
 
       toast.success("Akun Admin berhasil dibuat", {
         description: `Admin "${name}" sekarang bisa login menggunakan ID Admin dan Password default.`
@@ -110,8 +117,16 @@ export default function ManajemenAdminPage() {
       setIsAddDialogOpen(false);
       fetchAdmins();
     } catch (error: any) {
-      toast.error("Gagal membuat akun admin", { 
-        description: error.message 
+      console.error("Add Admin Error Details:", error);
+      
+      // Use the error message as the main toast title if it's a specific validation message
+      const errorMessage = error.message || "Terjadi kesalahan pada server.";
+      const isKnownError = [
+        "terdaftar", "pendek", "karakter", "invalid", "data tidak lengkap", "otorisasi", "akses ditolak"
+      ].some(keyword => errorMessage.toLowerCase().includes(keyword));
+
+      toast.error(isKnownError ? errorMessage : "Gagal membuat akun admin", { 
+        description: isKnownError ? "Silakan periksa kembali data yang Anda masukkan." : errorMessage
       });
     } finally {
       setIsSubmitting(false);
@@ -213,7 +228,10 @@ export default function ManajemenAdminPage() {
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="identifier" className="text-right font-medium">ID Admin</Label>
-                  <Input id="identifier" name="identifier" placeholder="Username / ID" className="col-span-3" required />
+                  <div className="col-span-3 space-y-1">
+                    <Input id="identifier" name="identifier" placeholder="Contoh: admin_pusat atau NIP" className="w-full" required />
+                    <p className="text-[10px] text-slate-500">ID ini akan digunakan untuk Login & Password default. Hindari menggunakan NIM mahasiswa.</p>
+                  </div>
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="email" className="text-right font-medium">Email</Label>
