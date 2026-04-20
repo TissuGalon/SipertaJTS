@@ -86,13 +86,13 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                 <FormItem>
                   <FormLabel>{field.label}</FormLabel>
                   <FormControl>
-                    {field.type === 'select' ? (
+                    {field.type === 'select' || field.type === 'dosen_picker' ? (
                       <Select 
                         onValueChange={fieldProps.onChange} 
                         value={value as string}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder={field.placeholder || "Select an option"} />
+                          <SelectValue placeholder={field.placeholder || (field.type === 'dosen_picker' ? "Pilih Dosen..." : "Select an option")} />
                         </SelectTrigger>
                         <SelectContent>
                           {field.options?.map((option) => (
