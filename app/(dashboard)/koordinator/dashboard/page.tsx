@@ -23,6 +23,8 @@ import {
   IconCheck,
   IconX,
   IconDotsVertical,
+  IconLock,
+  IconInbox
 } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -34,26 +36,74 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import Link from "next/link"
-import { LETTER_TYPE_LABELS, RequestStatus } from "@/types"
+import { LETTER_TYPE_LABELS, PRODI_LABELS, ProdiType, RequestStatus } from "@/types"
 import { toast } from "sonner"
 
 import { supabase } from "@/lib/supabase"
 import { useEffect } from "react"
 
-export default function TeacherDashboard() {
+export default function KoordinatorDashboard() {
   const [filterStatus, setFilterStatus] = useState<RequestStatus | "all">(
-    "verifying"
+    "pending"
   )
+  const [filterProdi, setFilterProdi] = useState<ProdiType | "all">("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [requests, setRequests] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [settings, setSettings] = useState<any>(null)
+  const [isSettingsLoading, setIsSettingsLoading] = useState(true)
+
+  const fetchSettings = async () => {
+    setIsSettingsLoading(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("dosen_dashboard_settings")
+        .select("*")
+        .eq("dosen_user_id", user.id)
+        .single();
+
+      if (error && error.code !== "PGRST116") throw error;
+      setSettings(data || { is_enabled: true, prodi: 'all', visible_letter_types: null });
+    } catch (error) {
+      console.error("Error fetching settings:", error);
+    } finally {
+      setIsSettingsLoading(false);
+    }
+  }
 
   const fetchRequests = async () => {
+    if (settings && !settings.is_enabled) {
+      setRequests([]);
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true)
-    const { data, error } = await supabase
+    
+    let query = supabase
       .from("letter_requests")
-      .select("*, users!user_id(name, nim)")
+      .select("*, users!user_id(name, nim, prodi)")
       .order("created_at", { ascending: false })
+
+    // Apply settings filters
+    if (settings) {
+      if (settings.prodi && settings.prodi !== 'all') {
+        query = query.eq('prodi', settings.prodi);
+      }
+      if (settings.visible_letter_types && settings.visible_letter_types.length > 0) {
+        query = query.in('type', settings.visible_letter_types);
+      } else {
+        // Milestone 1 Filter: Hanya menampilkan magang, sidang, seminar. Sembunyikan aktif kuliah dan izin penelitian.
+        query = query.in('type', ['surat_sidang', 'surat_undangan_seminar', 'surat_undangan_sidang', 'surat_magang', 'surat_permohonan_magang', 'surat_tugas_magang']);
+      }
+    } else {
+      query = query.in('type', ['surat_sidang', 'surat_undangan_seminar', 'surat_undangan_sidang', 'surat_magang', 'surat_permohonan_magang', 'surat_tugas_magang']);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       toast.error("Gagal mengambil data pengajuan")
@@ -69,30 +119,37 @@ export default function TeacherDashboard() {
   }
 
   useEffect(() => {
-    fetchRequests()
+    fetchSettings()
   }, [])
+
+  useEffect(() => {
+    if (!isSettingsLoading) {
+      fetchRequests()
+    }
+  }, [isSettingsLoading, settings])
 
   const filteredRequests = requests.filter((req) => {
     const matchesStatus = filterStatus === "all" || req.status === filterStatus
+    const matchesProdi = filterProdi === "all" || req.prodi === filterProdi || (req.users?.prodi === filterProdi)
     const matchesSearch =
       req.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       req.userNim.includes(searchQuery) ||
       req.id.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchesStatus && matchesSearch
+    return matchesStatus && matchesProdi && matchesSearch
   })
 
   const stats = {
     total: requests.length,
-    verifying: requests.filter((r: any) => r.status === "verifying").length,
     pending: requests.filter((r: any) => r.status === "pending").length,
-    done: requests.filter((r: any) => r.status === "done").length,
+    approved: requests.filter((r: any) => r.status === "disetujui_koordinator").length,
+    rejected: requests.filter((r: any) => r.status === "ditolak_koordinator").length,
   }
 
   const handleApprove = async (id: string) => {
     const { error } = await supabase
       .from("letter_requests")
       .update({ 
-        status: "processing",
+        status: "disetujui_koordinator",
         updated_at: new Date().toISOString()
       })
       .eq("id", id)
@@ -100,7 +157,7 @@ export default function TeacherDashboard() {
     if (error) {
       toast.error("Gagal menyetujui permintaan")
     } else {
-      toast.success("Permintaan disetujui untuk diproses")
+      toast.success("Permintaan disetujui dan diteruskan ke admin")
       fetchRequests()
     }
   }
@@ -109,7 +166,7 @@ export default function TeacherDashboard() {
     const { error } = await supabase
       .from("letter_requests")
       .update({ 
-        status: "rejected",
+        status: "ditolak_koordinator",
         updated_at: new Date().toISOString()
       })
       .eq("id", id)
@@ -117,9 +174,29 @@ export default function TeacherDashboard() {
     if (error) {
       toast.error("Gagal menolak permintaan")
     } else {
-      toast.error("Permintaan ditolak")
+      toast.error("Permintaan ditolak koordinator")
       fetchRequests()
     }
+  }
+
+  if (!isSettingsLoading && settings && !settings.is_enabled) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4 animate-in fade-in duration-500">
+        <div className="p-4 bg-slate-100 dark:bg-slate-800 rounded-full">
+          <IconLock size={48} className="text-slate-400" />
+        </div>
+        <div className="text-center space-y-2">
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Akses Dashboard Ditangguhkan</h2>
+          <p className="text-slate-500 max-w-md">
+            Maaf, akses dashboard Anda sedang dinonaktifkan oleh administrator. 
+            Silakan hubungi bagian administrasi untuk informasi lebih lanjut.
+          </p>
+        </div>
+        <Button variant="outline" onClick={() => window.location.reload()}>
+          Coba Muat Ulang
+        </Button>
+      </div>
+    );
   }
 
   return (
@@ -139,16 +216,7 @@ export default function TeacherDashboard() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Verifikasi</CardTitle>
-            <IconHourglass className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.verifying}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tertunda</CardTitle>
+            <CardTitle className="text-sm font-medium">Menunggu Verifikasi</CardTitle>
             <IconHourglass className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -157,11 +225,20 @@ export default function TeacherDashboard() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Selesai</CardTitle>
-            <IconCircleCheck className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Disetujui</CardTitle>
+            <IconCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.done}</div>
+            <div className="text-2xl font-bold">{stats.approved}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Ditolak</CardTitle>
+            <IconX className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.rejected}</div>
           </CardContent>
         </Card>
       </div>
@@ -175,8 +252,8 @@ export default function TeacherDashboard() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="mb-4 flex items-center space-x-2">
-            <div className="relative flex-1">
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            <div className="relative flex-1 min-w-[300px]">
               <IconSearch className="absolute top-2.5 left-2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Cari berdasarkan nama, NIM, atau ID..."
@@ -185,6 +262,22 @@ export default function TeacherDashboard() {
                 className="pl-8"
               />
             </div>
+            <Select
+              value={filterProdi}
+              onValueChange={(value) =>
+                setFilterProdi(value as ProdiType | "all")
+              }
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Semua Prodi" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua Program Studi</SelectItem>
+                {Object.entries(PRODI_LABELS).map(([value, label]) => (
+                  <SelectItem key={value} value={value}>{label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Select
               value={filterStatus}
               onValueChange={(value) =>
@@ -196,11 +289,9 @@ export default function TeacherDashboard() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Semua Status</SelectItem>
-                <SelectItem value="pending">Tertunda</SelectItem>
-                <SelectItem value="verifying">Verifikasi</SelectItem>
-                <SelectItem value="processing">Proses</SelectItem>
-                <SelectItem value="done">Selesai</SelectItem>
-                <SelectItem value="rejected">Ditolak</SelectItem>
+                <SelectItem value="pending">Menunggu Verifikasi</SelectItem>
+                <SelectItem value="disetujui_koordinator">Sudah Disetujui</SelectItem>
+                <SelectItem value="ditolak_koordinator">Ditolak Koordinator</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -267,11 +358,11 @@ export default function TeacherDashboard() {
                         <td className="p-4 align-middle">
                           <div className="flex items-center space-x-2">
                             <Button variant="ghost" size="sm" asChild title="Lihat Detail">
-                              <Link href={`/dosen/verifier/${request.id}`}>
+                              <Link href={`/koordinator/verifier/${request.id}`}>
                                 <IconEye className="h-4 w-4" />
                               </Link>
                             </Button>
-                            {request.status === "verifying" && (
+                            {request.status === "pending" && (
                               <>
                                 <Button
                                   variant="ghost"

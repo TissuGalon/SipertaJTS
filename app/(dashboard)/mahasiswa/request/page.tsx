@@ -38,6 +38,7 @@ function RequestLetterContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [lecturers, setLecturers] = useState<any[]>([]);
 
   useEffect(() => {
     fetchInitialData();
@@ -62,7 +63,15 @@ function RequestLetterContent() {
         router.push('/login');
         return;
       }
-      setCurrentUser(user);
+      
+      // Fetch profile to get prodi and other details
+      const { data: profile } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+        
+      setCurrentUser(profile || user);
 
       const { data: templatesData, error: templatesError } = await supabase
         .from('letter_templates')
@@ -72,6 +81,14 @@ function RequestLetterContent() {
 
       if (templatesError) throw templatesError;
       setTemplates(templatesData || []);
+
+      // Fetch lecturers for picker
+      const { data: lecturersData } = await supabase
+        .from('dosen')
+        .select('*')
+        .order('name');
+      
+      setLecturers(lecturersData || []);
 
     } catch (error: any) {
       console.error('Error fetching initial data:', error);
@@ -101,6 +118,9 @@ function RequestLetterContent() {
           placeholder: field.placeholder,
           description: field.description,
           required: field.required !== false,
+          options: field.type === 'dosen_picker' 
+            ? lecturers.map(l => ({ label: `${l.name} (NIP: ${l.nip || '-'})`, value: JSON.stringify({ name: l.name, nip: l.nip }) }))
+            : field.options
         });
       });
     }
@@ -163,7 +183,52 @@ function RequestLetterContent() {
             }
           }
         } else {
-          details[key] = data[key];
+          // If it's a dosen_picker value (JSON string), parse it and spread it
+          if (key.includes('dosen') && typeof data[key] === 'string' && data[key].startsWith('{')) {
+            try {
+              const dosenData = JSON.parse(data[key]);
+              details[`nama_${key}`] = dosenData.name;
+              details[`nip_${key}`] = dosenData.nip;
+            } catch (e) {
+              details[key] = data[key];
+            }
+          } else {
+            details[key] = data[key];
+          }
+        }
+      }
+
+      // Add automatic date
+      details['submission_date'] = new Date().toLocaleDateString('id-ID', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+
+      let initialStatus = selectedTemplate.requires_coordinator ? 'verifying' : 'menunggu_admin';
+
+      if (selectedTemplate.requires_coordinator) {
+        // Cek apakah ada koordinator aktif untuk prodi mahasiswa ini
+        const { data: activeKoordinators, error: checkError } = await supabase
+          .from('dosen_dashboard_settings')
+          .select('visible_letter_types')
+          .eq('prodi', currentUser.prodi)
+          .eq('is_enabled', true);
+        
+        let isBypassed = true;
+        if (!checkError && activeKoordinators && activeKoordinators.length > 0) {
+          // Jika ada minimal satu koordinator yang punya akses ke tipe surat ini
+          for (const k of activeKoordinators) {
+             if (k.visible_letter_types && k.visible_letter_types.includes(selectedTemplate.id)) {
+                isBypassed = false;
+                break;
+             }
+          }
+        }
+        
+        // Jika tidak ada koordinator aktif atau tidak ada yang ditugaskan untuk tipe surat ini, maka bypass ke admin.
+        if (isBypassed) {
+           initialStatus = 'menunggu_admin';
         }
       }
 
@@ -172,10 +237,11 @@ function RequestLetterContent() {
         .insert({
           user_id: currentUser.id,
           template_id: selectedTemplate.id,
-          type: selectedTemplate.name,
+          type: selectedTemplate.id, // Better to use ID or a slug if available
           details: details,
           files: uploadedFiles,
-          status: 'pending'
+          status: initialStatus,
+          prodi: currentUser.prodi // Save prodi directly for filtering
         });
 
       if (error) throw error;

@@ -63,12 +63,14 @@ import {
 } from "@/components/ui/dialog";
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { LETTER_TYPE_LABELS, RequestStatus, LetterRequest } from '@/types';
+import { LETTER_TYPE_LABELS, RequestStatus, LetterRequest, PRODI_LABELS, ProdiType } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import * as XLSX from 'xlsx';
 
 export default function PermintaanSuratPage() {
   const [filterStatus, setFilterStatus] = useState<RequestStatus | "all">("all");
+  const [filterProdi, setFilterProdi] = useState<ProdiType | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [date, setDate] = useState<DateRange | undefined>(undefined);
   const [requests, setRequests] = useState<any[]>([]);
@@ -100,10 +102,10 @@ export default function PermintaanSuratPage() {
     try {
       setIsLoading(true);
       
-      let selectQuery = '*, users(name, nim)';
-      if (searchQuery) {
+      let selectQuery = '*, users(name, nim, prodi)';
+      if (searchQuery || filterProdi !== "all") {
         // Use !inner for robust filtering on joined table
-        selectQuery = '*, users!inner(name, nim)';
+        selectQuery = '*, users!inner(name, nim, prodi)';
       }
 
       let query = supabase
@@ -113,6 +115,12 @@ export default function PermintaanSuratPage() {
       // Apply Filters
       if (filterStatus !== "all") {
         query = query.eq('status', filterStatus);
+      }
+
+      if (filterProdi !== "all") {
+        query = query.eq('prodi', filterProdi);
+        // Fallback or additional check on users table if needed:
+        // .or(`prodi.eq.${filterProdi},users.prodi.eq.${filterProdi}`)
       }
 
       if (date?.from) {
@@ -172,9 +180,9 @@ export default function PermintaanSuratPage() {
       const stats = {
         total: data?.length || 0,
         done: (data || []).filter((r: any) => r.status === 'done').length,
-        pending: (data || []).filter((r: any) => r.status === 'pending').length,
-        rejected: (data || []).filter((r: any) => r.status === 'rejected').length,
-        verifying: (data || []).filter((r: any) => r.status === 'verifying' || r.status === 'processing').length
+        pending: (data || []).filter((r: any) => r.status === 'pending' || r.status === 'menunggu_admin').length,
+        rejected: (data || []).filter((r: any) => r.status === 'rejected' || r.status === 'ditolak_koordinator').length,
+        verifying: (data || []).filter((r: any) => r.status === 'verifying' || r.status === 'disetujui_koordinator' || r.status === 'processing').length
       };
 
       setMonthlyStats(stats);
@@ -191,11 +199,12 @@ export default function PermintaanSuratPage() {
       setIsExporting(true);
       
       // Fetch ALL data matching current filters (not just current page)
-      let selectQuery = '*, users(name, nim)';
-      if (searchQuery) selectQuery = '*, users!inner(name, nim)';
+      let selectQuery = '*, users(name, nim, prodi)';
+      if (searchQuery || filterProdi !== "all") selectQuery = '*, users!inner(name, nim, prodi)';
 
       let query = supabase.from('letter_requests').select(selectQuery);
       if (filterStatus !== "all") query = query.eq('status', filterStatus);
+      if (filterProdi !== "all") query = query.eq('prodi', filterProdi);
       
       if (date?.from) {
         query = query.gte('created_at', date.from.toISOString());
@@ -218,31 +227,37 @@ export default function PermintaanSuratPage() {
         return;
       }
 
-      const headers = ["ID", "Nama Mahasiswa", "NIM", "Jenis Surat", "Status", "Tanggal Masuk", "Tahun Akademik"];
-      const csvData = data.map((req: any) => [
-        req.id,
-        req.users?.name || "Unknown",
-        req.users?.nim || "-",
-        LETTER_TYPE_LABELS[req.type as keyof typeof LETTER_TYPE_LABELS] || req.type,
-        req.status,
-        new Date(req.created_at).toLocaleDateString('id-ID'),
-        req.academic_year || "-"
-      ]);
+      const headers = ["ID", "Nama Mahasiswa", "NIM", "Program Studi", "Jenis Surat", "Status", "Tanggal Masuk", "Tahun Akademik"];
+      const exportData = data.map((req: any) => ({
+        "ID": req.id,
+        "Nama Mahasiswa": req.users?.name || "Unknown",
+        "NIM": req.users?.nim || "-",
+        "Program Studi": PRODI_LABELS[req.prodi as keyof typeof PRODI_LABELS] || req.prodi || "-",
+        "Jenis Surat": LETTER_TYPE_LABELS[req.type as keyof typeof LETTER_TYPE_LABELS] || req.type,
+        "Status": req.status,
+        "Tanggal Masuk": new Date(req.created_at).toLocaleDateString('id-ID'),
+        "Tahun Akademik": req.academic_year || "-"
+      }));
 
-      const csvContent = [
-        headers.join(","),
-        ...csvData.map((row: any) => row.join(","))
-      ].join("\n");
-
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      // Create Worksheet
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      
+      // Create Workbook
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Permintaan Surat");
+      
+      // Export to Excel
+      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.setAttribute("href", url);
-      link.setAttribute("download", `Laporan_Permintaan_Surat_${new Date().toISOString().split('T')[0]}.csv`);
+      link.setAttribute("download", `Laporan_Permintaan_Surat_${new Date().toISOString().split('T')[0]}.xlsx`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      toast.success("Data berhasil diekspor ke CSV");
+      toast.success("Data berhasil diekspor ke Excel (.xlsx)");
     } catch (error) {
       toast.error("Gagal mengekspor data");
     } finally {
@@ -294,7 +309,7 @@ export default function PermintaanSuratPage() {
             disabled={isExporting}
           >
             {isExporting ? <IconLoader2 className="mr-2 h-4 w-4 animate-spin" /> : <IconDownload className="mr-2 h-4 w-4" />}
-            Export CSV
+            Export Excel
           </Button>
           <Button 
             variant="ghost" 
@@ -327,22 +342,46 @@ export default function PermintaanSuratPage() {
             </div>
             <div className="flex gap-2">
               {mounted ? (
-                <Select value={filterStatus} onValueChange={(v: any) => setFilterStatus(v)}>
-                  <SelectTrigger className="w-[180px] h-11 border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50">
-                    <IconFilter className="mr-2 h-4 w-4 text-slate-400" />
-                    <SelectValue placeholder="Semua Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Semua Status</SelectItem>
-                    <SelectItem value="pending">Tertunda</SelectItem>
-                    <SelectItem value="verifying">Verifikasi</SelectItem>
-                    <SelectItem value="processing">Proses</SelectItem>
-                    <SelectItem value="done">Selesai</SelectItem>
-                    <SelectItem value="rejected">Ditolak</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex gap-2">
+                  <Select value={filterProdi} onValueChange={(v: any) => {
+                    setFilterProdi(v);
+                    setCurrentPage(1);
+                  }}>
+                    <SelectTrigger className="w-[180px] h-11 border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50">
+                      <IconFilter className="mr-2 h-4 w-4 text-slate-400" />
+                      <SelectValue placeholder="Semua Prodi" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Semua Prodi</SelectItem>
+                      {Object.entries(PRODI_LABELS).map(([value, label]) => (
+                        <SelectItem key={value} value={value}>{label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={filterStatus} onValueChange={(v: any) => setFilterStatus(v)}>
+                    <SelectTrigger className="w-[180px] h-11 border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50">
+                      <IconFilter className="mr-2 h-4 w-4 text-slate-400" />
+                      <SelectValue placeholder="Semua Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Semua Status</SelectItem>
+                      <SelectItem value="pending">Tertunda</SelectItem>
+                      <SelectItem value="menunggu_admin">Menunggu Admin</SelectItem>
+                      <SelectItem value="verifying">Menunggu Koordinator</SelectItem>
+                      <SelectItem value="disetujui_koordinator">Disetujui Koordinator</SelectItem>
+                      <SelectItem value="ditolak_koordinator">Ditolak Koordinator</SelectItem>
+                      <SelectItem value="processing">Diproses Admin</SelectItem>
+                      <SelectItem value="done">Selesai</SelectItem>
+                      <SelectItem value="rejected">Ditolak</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               ) : (
-                <div className="w-[180px] h-11 border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50 rounded-lg animate-pulse" />
+                <div className="flex gap-2">
+                  <div className="w-[180px] h-11 border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50 rounded-lg animate-pulse" />
+                  <div className="w-[180px] h-11 border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-950/50 rounded-lg animate-pulse" />
+                </div>
               )}
               {mounted ? (
                 <Popover>
@@ -676,9 +715,9 @@ export default function PermintaanSuratPage() {
                <p className="text-[10px] text-slate-400 font-medium max-w-[200px]">
                  Laporan ini dihitung otomatis berdasarkan data pengajuan sebulan terakhir.
                </p>
-               <Button className="bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100 dark:shadow-none font-bold px-6" onClick={handleExport}>
-                 Unduh CSV Lengkap
-               </Button>
+                <Button className="bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100 dark:shadow-none font-bold px-6" onClick={handleExport}>
+                  Unduh Laporan Excel
+                </Button>
              </CardFooter>
            </Card>
         </div>

@@ -27,7 +27,7 @@ import { toast } from "sonner"
 import { Textarea } from "@/components/ui/textarea"
 import { supabase } from "@/lib/supabase"
 
-export default function TeacherVerifierPage() {
+export default function KoordinatorVerifierPage() {
   const { id } = useParams()
   const router = useRouter()
   const [request, setRequest] = useState<any>(null)
@@ -74,7 +74,7 @@ export default function TeacherVerifierPage() {
     return (
       <div className="flex h-[60vh] flex-col items-center justify-center space-y-4">
         <h2 className="text-xl font-semibold">Pengajuan Tidak Ditemukan</h2>
-        <Button onClick={() => router.push("/dosen/dashboard")}>
+        <Button onClick={() => router.push("/koordinator/dashboard")}>
           Kembali ke Dashboard
         </Button>
       </div>
@@ -86,8 +86,8 @@ export default function TeacherVerifierPage() {
     const { error } = await supabase
       .from("letter_requests")
       .update({ 
-        status: "processing",
-        admin_notes: notes,
+        status: "disetujui_koordinator",
+        admin_notes: notes ? `[Catatan Koordinator]: ${notes}${request.admin_notes ? `\n\n${request.admin_notes}` : ''}` : request.admin_notes,
         updated_at: new Date().toISOString()
       })
       .eq("id", id)
@@ -96,7 +96,7 @@ export default function TeacherVerifierPage() {
       toast.error("Gagal menyetujui pengajuan")
     } else {
       toast.success("Pengajuan disetujui dan diteruskan ke admin")
-      router.push("/dosen/dashboard")
+      router.push("/koordinator/dashboard")
     }
     setIsProcessing(false)
   }
@@ -106,8 +106,8 @@ export default function TeacherVerifierPage() {
     const { error } = await supabase
       .from("letter_requests")
       .update({ 
-        status: "rejected",
-        admin_notes: notes,
+        status: "ditolak_koordinator",
+        admin_notes: notes ? `[Catatan Koordinator]: ${notes}${request.admin_notes ? `\n\n${request.admin_notes}` : ''}` : request.admin_notes,
         updated_at: new Date().toISOString()
       })
       .eq("id", id)
@@ -116,7 +116,7 @@ export default function TeacherVerifierPage() {
       toast.error("Gagal menolak pengajuan")
     } else {
       toast.error("Pengajuan ditolak")
-      router.push("/dosen/dashboard")
+      router.push("/koordinator/dashboard")
     }
     setIsProcessing(false)
   }

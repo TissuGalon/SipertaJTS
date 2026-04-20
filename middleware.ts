@@ -73,7 +73,7 @@ export async function middleware(request: NextRequest) {
   if (!user && (
     request.nextUrl.pathname.startsWith('/admin') || 
     request.nextUrl.pathname.startsWith('/mahasiswa') || 
-    request.nextUrl.pathname.startsWith('/dosen')
+    request.nextUrl.pathname.startsWith('/koordinator')
   )) {
     return NextResponse.redirect(new URL('/login', request.url))
   }

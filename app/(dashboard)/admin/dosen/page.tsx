@@ -19,7 +19,9 @@ import {
   IconTrash,
   IconDotsVertical,
   IconUserPlus,
-  IconSchool
+  IconSchool,
+  IconSettings,
+  IconEye
 } from '@tabler/icons-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,8 +41,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { LETTER_TYPE_LABELS, PRODI_LABELS, ProdiType } from '@/types';
 
 export default function DataDosenPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -49,6 +61,16 @@ export default function DataDosenPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingLecturer, setEditingLecturer] = useState<any>(null);
+  
+  // Settings State
+  const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
+  const [selectedLecturer, setSelectedLecturer] = useState<any>(null);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [dashboardSettings, setDashboardSettings] = useState<any>({
+    prodi: 'all',
+    visible_letter_types: ['surat_undangan_seminar', 'surat_undangan_sidang', 'surat_permohonan_magang', 'surat_tugas_magang'],
+    is_enabled: true
+  });
 
   useEffect(() => {
     fetchLecturers();
@@ -151,17 +173,96 @@ export default function DataDosenPage() {
       }
     }
   };
+  
+  const handleOpenSettings = async (lecturer: any) => {
+    if (!lecturer.user_id) {
+      toast.warning("Akun dosen belum aktif", { 
+        description: "Aktifkan akun dosen terlebih dahulu untuk mengatur dashboard." 
+      });
+      return;
+    }
+
+    setSelectedLecturer(lecturer);
+    setIsSettingsDialogOpen(true);
+    
+    try {
+      const { data, error } = await supabase
+        .from('dosen_dashboard_settings')
+        .select('*')
+        .eq('dosen_user_id', lecturer.user_id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      
+      if (data) {
+        setDashboardSettings({
+          prodi: data.prodi,
+          visible_letter_types: data.visible_letter_types || [],
+          is_enabled: data.is_enabled
+        });
+      } else {
+        // Default settings if not found
+        setDashboardSettings({
+          prodi: 'all',
+          visible_letter_types: ['surat_undangan_seminar', 'surat_undangan_sidang', 'surat_permohonan_magang', 'surat_tugas_magang'],
+          is_enabled: true
+        });
+      }
+    } catch (error: any) {
+      toast.error("Gagal mengambil pengaturan", { description: error.message });
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    if (!selectedLecturer?.user_id) return;
+    
+    setIsSavingSettings(true);
+    try {
+      const { error } = await supabase
+        .from('dosen_dashboard_settings')
+        .upsert({
+          dosen_user_id: selectedLecturer.user_id,
+          prodi: dashboardSettings.prodi,
+          visible_letter_types: dashboardSettings.visible_letter_types,
+          is_enabled: dashboardSettings.is_enabled,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'dosen_user_id, prodi'
+        });
+
+      if (error) throw error;
+
+      toast.success("Pengaturan dashboard berhasil disimpan");
+      setIsSettingsDialogOpen(false);
+    } catch (error: any) {
+      toast.error("Gagal menyimpan pengaturan", { description: error.message });
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
+
+  const toggleLetterType = (type: string) => {
+    setDashboardSettings((prev: any) => {
+      const current = prev.visible_letter_types;
+      if (current.includes(type)) {
+        return { ...prev, visible_letter_types: current.filter((t: string) => t !== type) };
+      } else {
+        return { ...prev, visible_letter_types: [...current, type] };
+      }
+    });
+  };
 
   const handleActivateAccount = async (lecturer: any) => {
     if (!confirm(`Aktifkan akun login untuk ${lecturer.name}?`)) return;
     
     setIsLoading(true);
     try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session?.access_token) {
+      // Ambil session dan kirim token secara eksplisit ke Edge Function
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !sessionData.session?.access_token) {
         throw new Error("Sesi tidak valid atau telah berakhir. Silakan login kembali.");
       }
+      const token = sessionData.session.access_token;
 
       const { data, error } = await supabase.functions.invoke('manage-users', {
         body: {
@@ -173,13 +274,11 @@ export default function DataDosenPage() {
             role: 'dosen'
           }
         },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
+        headers: { Authorization: `Bearer ${token}` }
       });
 
       if (error) throw error;
-      if (data.error) throw new Error(data.error);
+      if (data?.error) throw new Error(data.error);
 
       toast.success("Akun berhasil diaktifkan", {
         description: `Dosen sekarang bisa login menggunakan NIP dan Password default: ${lecturer.nip}`
@@ -319,6 +418,17 @@ export default function DataDosenPage() {
                             Aktifkan Akun
                           </Button>
                         )}
+                        {lecturer.user_id && (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-8 text-xs flex items-center gap-1"
+                            onClick={() => handleOpenSettings(lecturer)}
+                          >
+                            <IconSettings size={14} />
+                            Atur Tampilan
+                          </Button>
+                        )}
                         <Button 
                           variant="ghost" 
                           size="icon" 
@@ -388,6 +498,87 @@ export default function DataDosenPage() {
               </DialogFooter>
             </form>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Settings Dialog */}
+      <Dialog open={isSettingsDialogOpen} onOpenChange={setIsSettingsDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <IconSettings className="h-5 w-5 text-emerald-600" />
+              Pengaturan Dashboard Dosen
+            </DialogTitle>
+            <DialogDescription>
+              Atur hak akses dan visibilitas dashboard untuk <strong>{selectedLecturer?.name}</strong>.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-6 py-4">
+            <div className="flex items-center justify-between p-3 rounded-lg border bg-slate-50 dark:bg-slate-800/50">
+              <div className="space-y-0.5">
+                <Label className="text-base">Akses Dashboard</Label>
+                <p className="text-sm text-slate-500">Aktifkan atau nonaktifkan seluruh tampilan dashboard dosen.</p>
+              </div>
+              <Switch 
+                checked={dashboardSettings.is_enabled} 
+                onCheckedChange={(checked) => setDashboardSettings({...dashboardSettings, is_enabled: checked})}
+              />
+            </div>
+
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold text-slate-900 dark:text-white">Program Studi Terpilih</Label>
+              <Select 
+                value={dashboardSettings.prodi} 
+                onValueChange={(value) => setDashboardSettings({...dashboardSettings, prodi: value})}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Pilih Program Studi" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Program Studi</SelectItem>
+                  {Object.entries(PRODI_LABELS).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-slate-500 italic px-1">
+                Dosen hanya dapat melihat data pengajuan dari program studi yang dipilih.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold text-slate-900 dark:text-white">Jenis Surat Terlihat</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
+                {Object.entries(LETTER_TYPE_LABELS).map(([value, label]) => (
+                  <div key={value} className="flex items-center space-x-2 p-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                    <Checkbox 
+                      id={`type-${value}`} 
+                      checked={dashboardSettings.visible_letter_types.includes(value)}
+                      onCheckedChange={() => toggleLetterType(value)}
+                    />
+                    <label 
+                      htmlFor={`type-${value}`}
+                      className="text-sm font-medium leading-none cursor-pointer select-none"
+                    >
+                      {label}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setIsSettingsDialogOpen(false)} disabled={isSavingSettings}>Batal</Button>
+            <Button 
+              className="bg-emerald-600 hover:bg-emerald-700" 
+              onClick={handleSaveSettings}
+              disabled={isSavingSettings}
+            >
+              {isSavingSettings ? "Menyimpan..." : "Simpan Pengaturan"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

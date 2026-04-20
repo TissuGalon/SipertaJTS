@@ -2,12 +2,24 @@ import * as z from "zod"
 
 export type Role = "admin" | "mahasiswa" | "dosen"
 
+export type ProdiType = "D3_TKJJ" | "D3_TKBA" | "D4_TRKJJ" | "D4_TRKBG";
+
+export const PRODI_LABELS: Record<ProdiType, string> = {
+  D3_TKJJ: "D-III TKJJ",
+  D3_TKBA: "D-III TKBA",
+  D4_TRKJJ: "D-IV TRKJJ",
+  D4_TRKBG: "D-IV TRKBG",
+};
+
 export type RequestStatus =
   | "pending"
   | "verifying"
   | "processing"
   | "done"
   | "rejected"
+  | "menunggu_admin"
+  | "disetujui_koordinator"
+  | "ditolak_koordinator"
 
 export interface User {
   id: string
@@ -16,6 +28,7 @@ export interface User {
   email: string
   role: Role
   avatar?: string
+  prodi?: ProdiType
 }
 
 export type LetterType =
@@ -24,6 +37,11 @@ export type LetterType =
   | "surat_penelitian"
   | "surat_cuti"
   | "surat_sidang"
+  | "surat_undangan_seminar"
+  | "surat_undangan_sidang"
+  | "surat_permohonan_magang"
+  | "surat_tugas_magang"
+  | "surat_izin_penelitian"
 
 export interface LetterRequest {
   id: string
@@ -39,6 +57,7 @@ export interface LetterRequest {
   adminNotes?: string
   letterNumber?: string
   academicYear?: string
+  prodi?: ProdiType
 }
 
 export interface TimelineEvent {
@@ -49,12 +68,17 @@ export interface TimelineEvent {
   isCurrent: boolean
 }
 
-export const LETTER_TYPE_LABELS: Record<LetterType, string> = {
+export const LETTER_TYPE_LABELS: Record<string, string> = {
   surat_magang: "Surat Magang",
   surat_aktif_kuliah: "Surat Aktif Kuliah",
   surat_penelitian: "Surat Penelitian",
   surat_cuti: "Surat Cuti",
   surat_sidang: "Surat Sidang/Seminar",
+  surat_undangan_seminar: "Surat Undangan Seminar",
+  surat_undangan_sidang: "Surat Undangan Sidang",
+  surat_permohonan_magang: "Surat Permohonan Magang",
+  surat_tugas_magang: "Surat Tugas Magang",
+  surat_izin_penelitian: "Surat Izin Penelitian",
 }
 
 export type FieldType =
@@ -64,6 +88,7 @@ export type FieldType =
   | "select"
   | "textarea"
   | "file"
+  | "dosen_picker"
 
 export interface FormFieldConfig {
   name: string

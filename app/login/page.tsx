@@ -86,7 +86,7 @@ export default function LoginPage() {
       if (profile?.role === "admin") {
         window.location.href = "/admin/dashboard"
       } else if (profile?.role === "dosen") {
-        window.location.href = "/dosen/dashboard"
+        window.location.href = "/koordinator/dashboard"
       } else {
         window.location.href = "/mahasiswa/dashboard"
       }
