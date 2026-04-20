@@ -81,12 +81,12 @@ export default function ManajemenAdminPage() {
     const email = formData.get('email') as string;
 
     try {
-      // Step 1: Create Auth Account via Edge Function
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session?.access_token) {
+      // Ambil session dan kirim token secara eksplisit ke Edge Function
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !sessionData.session?.access_token) {
         throw new Error("Sesi tidak valid atau telah berakhir. Silakan login kembali.");
       }
+      const token = sessionData.session.access_token;
 
       const { data, error } = await supabase.functions.invoke('manage-users', {
         body: {
@@ -98,13 +98,11 @@ export default function ManajemenAdminPage() {
             role: 'admin'
           }
         },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
+        headers: { Authorization: `Bearer ${token}` }
       });
 
       if (error) throw error;
-      if (data.error) throw new Error(data.error);
+      if (data?.error) throw new Error(data.error);
 
       toast.success("Akun Admin berhasil dibuat", {
         description: `Admin "${name}" sekarang bisa login menggunakan ID Admin dan Password default.`
@@ -159,19 +157,21 @@ export default function ManajemenAdminPage() {
         // We'll just delete from public.users. If the edge function handles it, great.
         // Usually, deleting from auth.users via edge function is cleaner.
         
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        const { error } = await supabase.functions.invoke('manage-users', {
+        // Ambil session dan kirim token secara eksplisit
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData.session?.access_token;
+        if (!token) throw new Error("Sesi tidak valid. Silakan login kembali.");
+
+        const { data: deleteData, error } = await supabase.functions.invoke('manage-users', {
           body: {
             mode: 'delete',
-            userId: id
+            userData: { id }  // edge function expects userData.id
           },
-          headers: {
-            Authorization: `Bearer ${session?.access_token}`
-          }
+          headers: { Authorization: `Bearer ${token}` }
         });
 
         if (error) throw error;
+        if (deleteData?.error) throw new Error(deleteData.error);
 
         toast.success("Akses administrator berhasil dihapus");
         fetchAdmins();

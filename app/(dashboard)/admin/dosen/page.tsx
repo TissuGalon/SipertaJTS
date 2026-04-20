@@ -257,11 +257,12 @@ export default function DataDosenPage() {
     
     setIsLoading(true);
     try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session?.access_token) {
+      // Ambil session dan kirim token secara eksplisit ke Edge Function
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !sessionData.session?.access_token) {
         throw new Error("Sesi tidak valid atau telah berakhir. Silakan login kembali.");
       }
+      const token = sessionData.session.access_token;
 
       const { data, error } = await supabase.functions.invoke('manage-users', {
         body: {
@@ -273,13 +274,11 @@ export default function DataDosenPage() {
             role: 'dosen'
           }
         },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
+        headers: { Authorization: `Bearer ${token}` }
       });
 
       if (error) throw error;
-      if (data.error) throw new Error(data.error);
+      if (data?.error) throw new Error(data.error);
 
       toast.success("Akun berhasil diaktifkan", {
         description: `Dosen sekarang bisa login menggunakan NIP dan Password default: ${lecturer.nip}`
