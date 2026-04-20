@@ -13,6 +13,7 @@ import { NavItem } from '@/components/dashboard/types';
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/koordinator/dashboard', icon: IconLayoutDashboard, category: 'Utama' },
   { label: 'Verifikasi Surat', href: '/koordinator/verifier', icon: IconChecklist, category: 'Layanan Surat' },
+  { label: 'Riwayat Verifikasi', href: '/koordinator/riwayat', icon: IconShieldCheck, category: 'Layanan Surat' },
 ];
 
 const categories = ['Utama', 'Layanan Surat'];

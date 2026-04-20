@@ -180,9 +180,9 @@ export default function PermintaanSuratPage() {
       const stats = {
         total: data?.length || 0,
         done: (data || []).filter((r: any) => r.status === 'done').length,
-        pending: (data || []).filter((r: any) => r.status === 'pending').length,
-        rejected: (data || []).filter((r: any) => r.status === 'rejected').length,
-        verifying: (data || []).filter((r: any) => r.status === 'verifying' || r.status === 'processing').length
+        pending: (data || []).filter((r: any) => r.status === 'pending' || r.status === 'menunggu_admin').length,
+        rejected: (data || []).filter((r: any) => r.status === 'rejected' || r.status === 'ditolak_koordinator').length,
+        verifying: (data || []).filter((r: any) => r.status === 'verifying' || r.status === 'disetujui_koordinator' || r.status === 'processing').length
       };
 
       setMonthlyStats(stats);
@@ -367,8 +367,11 @@ export default function PermintaanSuratPage() {
                     <SelectContent>
                       <SelectItem value="all">Semua Status</SelectItem>
                       <SelectItem value="pending">Tertunda</SelectItem>
-                      <SelectItem value="verifying">Verifikasi</SelectItem>
-                      <SelectItem value="processing">Proses</SelectItem>
+                      <SelectItem value="menunggu_admin">Menunggu Admin</SelectItem>
+                      <SelectItem value="verifying">Menunggu Koordinator</SelectItem>
+                      <SelectItem value="disetujui_koordinator">Disetujui Koordinator</SelectItem>
+                      <SelectItem value="ditolak_koordinator">Ditolak Koordinator</SelectItem>
+                      <SelectItem value="processing">Diproses Admin</SelectItem>
                       <SelectItem value="done">Selesai</SelectItem>
                       <SelectItem value="rejected">Ditolak</SelectItem>
                     </SelectContent>

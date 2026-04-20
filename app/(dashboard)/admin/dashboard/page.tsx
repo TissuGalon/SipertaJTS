@@ -67,7 +67,7 @@ export default function AdminDashboard() {
         { count: studentCount }
       ] = await Promise.all([
         supabase.from('letter_requests').select('*', { count: 'exact', head: true }),
-        supabase.from('letter_requests').select('*', { count: 'exact', head: true }).in('status', ['pending', 'menunggu_admin']),
+        supabase.from('letter_requests').select('*', { count: 'exact', head: true }).in('status', ['pending', 'menunggu_admin', 'disetujui_koordinator']),
         supabase.from('letter_requests').select('*', { count: 'exact', head: true }).eq('status', 'done'),
         supabase.from('mahasiswa').select('*', { count: 'exact', head: true })
       ]);
@@ -211,12 +211,13 @@ export default function AdminDashboard() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Semua Status</SelectItem>
-                  <SelectItem value="pending">Tertunda (Pending)</SelectItem>
+                  <SelectItem value="pending">Tertunda (Menunggu Koordinator)</SelectItem>
                   <SelectItem value="menunggu_admin">Menunggu Admin</SelectItem>
-                  <SelectItem value="verifying">Verifikasi</SelectItem>
-                  <SelectItem value="processing">Proses</SelectItem>
+                  <SelectItem value="disetujui_koordinator">Disetujui Koordinator</SelectItem>
+                  <SelectItem value="ditolak_koordinator">Ditolak Koordinator</SelectItem>
+                  <SelectItem value="processing">Sedang Diproses Admin</SelectItem>
                   <SelectItem value="done">Selesai</SelectItem>
-                  <SelectItem value="rejected">Ditolak</SelectItem>
+                  <SelectItem value="rejected">Ditolak Admin</SelectItem>
                 </SelectContent>
               </Select>
             </div>

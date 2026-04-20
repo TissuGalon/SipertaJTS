@@ -2,8 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import {
   Card,
   CardContent,
@@ -11,20 +10,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { mockRequests } from "@/lib/mock-data"
 import { StatusBadge } from "@/components/ui/status-badge"
 import {
-  IconClipboardList,
-  IconHourglass,
-  IconCircleCheck,
   IconSearch,
-  IconFilter,
   IconEye,
-  IconCheck,
-  IconX,
-  IconDotsVertical,
-  IconLock,
-  IconInbox
+  IconHistory,
 } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -38,14 +28,10 @@ import {
 import Link from "next/link"
 import { LETTER_TYPE_LABELS, PRODI_LABELS, ProdiType, RequestStatus } from "@/types"
 import { toast } from "sonner"
-
 import { supabase } from "@/lib/supabase"
-import { useEffect } from "react"
 
-export default function KoordinatorDashboard() {
-  const [filterStatus, setFilterStatus] = useState<RequestStatus | "all">(
-    "pending"
-  )
+export default function KoordinatorRiwayatPage() {
+  const [filterStatus, setFilterStatus] = useState<RequestStatus | "all">("all")
   const [filterProdi, setFilterProdi] = useState<ProdiType | "all">("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [requests, setRequests] = useState<any[]>([])
@@ -86,7 +72,8 @@ export default function KoordinatorDashboard() {
     let query = supabase
       .from("letter_requests")
       .select("*, users!user_id(name, nim, prodi)")
-      .order("created_at", { ascending: false })
+      .in("status", ["disetujui_koordinator", "ditolak_koordinator"]) // Only history
+      .order("updated_at", { ascending: false })
 
     // Apply settings filters
     if (settings) {
@@ -96,7 +83,6 @@ export default function KoordinatorDashboard() {
       if (settings.visible_letter_types && settings.visible_letter_types.length > 0) {
         query = query.in('type', settings.visible_letter_types);
       } else {
-        // Milestone 1 Filter: Hanya menampilkan magang, sidang, seminar. Sembunyikan aktif kuliah dan izin penelitian.
         query = query.in('type', ['surat_sidang', 'surat_undangan_seminar', 'surat_undangan_sidang', 'surat_magang', 'surat_permohonan_magang', 'surat_tugas_magang']);
       }
     } else {
@@ -106,7 +92,7 @@ export default function KoordinatorDashboard() {
     const { data, error } = await query;
 
     if (error) {
-      toast.error("Gagal mengambil data pengajuan")
+      toast.error("Gagal mengambil riwayat pengajuan")
     } else {
       const mappedData = (data || []).map((req: any) => ({
         ...req,
@@ -138,117 +124,16 @@ export default function KoordinatorDashboard() {
     return matchesStatus && matchesProdi && matchesSearch
   })
 
-  const stats = {
-    total: requests.length,
-    pending: requests.filter((r: any) => r.status === "pending").length,
-    approved: requests.filter((r: any) => r.status === "disetujui_koordinator").length,
-    rejected: requests.filter((r: any) => r.status === "ditolak_koordinator").length,
-  }
-
-  const handleApprove = async (id: string) => {
-    const { error } = await supabase
-      .from("letter_requests")
-      .update({ 
-        status: "disetujui_koordinator",
-        updated_at: new Date().toISOString()
-      })
-      .eq("id", id)
-
-    if (error) {
-      toast.error("Gagal menyetujui permintaan")
-    } else {
-      toast.success("Permintaan disetujui dan diteruskan ke admin")
-      fetchRequests()
-    }
-  }
-
-  const handleReject = async (id: string) => {
-    const { error } = await supabase
-      .from("letter_requests")
-      .update({ 
-        status: "ditolak_koordinator",
-        updated_at: new Date().toISOString()
-      })
-      .eq("id", id)
-
-    if (error) {
-      toast.error("Gagal menolak permintaan")
-    } else {
-      toast.error("Permintaan ditolak koordinator")
-      fetchRequests()
-    }
-  }
-
-  if (!isSettingsLoading && settings && !settings.is_enabled) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4 animate-in fade-in duration-500">
-        <div className="p-4 bg-slate-100 dark:bg-slate-800 rounded-full">
-          <IconLock size={48} className="text-slate-400" />
-        </div>
-        <div className="text-center space-y-2">
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Akses Dashboard Ditangguhkan</h2>
-          <p className="text-slate-500 max-w-md">
-            Maaf, akses dashboard Anda sedang dinonaktifkan oleh administrator. 
-            Silakan hubungi bagian administrasi untuk informasi lebih lanjut.
-          </p>
-        </div>
-        <Button variant="outline" onClick={() => window.location.reload()}>
-          Coba Muat Ulang
-        </Button>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Pengajuan
-            </CardTitle>
-            <IconClipboardList className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Menunggu Verifikasi</CardTitle>
-            <IconHourglass className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.pending}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Disetujui</CardTitle>
-            <IconCheck className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.approved}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Ditolak</CardTitle>
-            <IconX className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.rejected}</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Requests Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Daftar Pengajuan Surat</CardTitle>
+          <CardTitle className="flex items-center space-x-2">
+            <IconHistory className="h-6 w-6 text-indigo-600" />
+            <span>Riwayat Verifikasi Koordinator</span>
+          </CardTitle>
           <CardDescription>
-            Kelola dan verifikasi permintaan surat mahasiswa
+            Riwayat semua permintaan surat yang telah disetujui atau ditolak koordinator.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -289,9 +174,8 @@ export default function KoordinatorDashboard() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Semua Status</SelectItem>
-                <SelectItem value="pending">Menunggu Verifikasi</SelectItem>
-                <SelectItem value="disetujui_koordinator">Sudah Disetujui</SelectItem>
-                <SelectItem value="ditolak_koordinator">Ditolak Koordinator</SelectItem>
+                <SelectItem value="disetujui_koordinator">Disetujui</SelectItem>
+                <SelectItem value="ditolak_koordinator">Ditolak</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -299,12 +183,12 @@ export default function KoordinatorDashboard() {
           <div className="rounded-md border">
             {isLoading ? (
               <div className="flex h-64 items-center justify-center">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-green-600 border-t-transparent"></div>
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
               </div>
             ) : (
               <table className="w-full">
                 <thead>
-                  <tr className="border-b">
+                  <tr className="border-b bg-slate-50">
                     <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
                       ID Request
                     </th>
@@ -318,9 +202,9 @@ export default function KoordinatorDashboard() {
                       Status
                     </th>
                     <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                      Tgl Dibuat
+                      Tgl Diproses
                     </th>
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground" style={{ width: '120px' }}>
+                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground" style={{ width: '100px' }}>
                       Aksi
                     </th>
                   </tr>
@@ -329,12 +213,12 @@ export default function KoordinatorDashboard() {
                   {filteredRequests.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="h-24 text-center align-middle text-muted-foreground">
-                        Tidak ada pengajuan ditemukan.
+                        Belum ada riwayat verifikasi.
                       </td>
                     </tr>
                   ) : (
                     filteredRequests.map((request) => (
-                      <tr key={request.id} className="border-b">
+                      <tr key={request.id} className="border-b hover:bg-slate-50/50">
                         <td className="p-4 align-middle font-medium truncate max-w-[100px]">
                           {request.id}
                         </td>
@@ -342,7 +226,7 @@ export default function KoordinatorDashboard() {
                           <div>
                             <div className="font-medium">{request.userName}</div>
                             <div className="text-sm text-muted-foreground">
-                              {request.userNim}
+                               {request.userNim}
                             </div>
                           </div>
                         </td>
@@ -353,38 +237,16 @@ export default function KoordinatorDashboard() {
                           <StatusBadge status={request.status} />
                         </td>
                         <td className="p-4 align-middle">
-                          {new Date(request.created_at).toLocaleDateString("id-ID")}
+                          {new Date(request.updated_at).toLocaleDateString("id-ID", {
+                            year: "numeric", month: "short", day: "numeric"
+                          })}
                         </td>
                         <td className="p-4 align-middle">
-                          <div className="flex items-center space-x-2">
-                            <Button variant="ghost" size="sm" asChild title="Lihat Detail">
-                              <Link href={`/koordinator/verifier/${request.id}`}>
-                                <IconEye className="h-4 w-4" />
-                              </Link>
-                            </Button>
-                            {request.status === "pending" && (
-                              <>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleApprove(request.id)}
-                                  className="text-green-600 hover:text-green-700"
-                                  title="Setujui"
-                                >
-                                  <IconCheck className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleReject(request.id)}
-                                  className="text-red-600 hover:text-red-700"
-                                  title="Tolak"
-                                >
-                                  <IconX className="h-4 w-4" />
-                                </Button>
-                              </>
-                            )}
-                          </div>
+                          <Button variant="ghost" size="sm" asChild title="Lihat Detail">
+                            <Link href={`/koordinator/verifier/${request.id}`}>
+                              <IconEye className="h-4 w-4" />
+                            </Link>
+                          </Button>
                         </td>
                       </tr>
                     ))

@@ -48,6 +48,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { LetterType, LETTER_TYPE_LABELS } from '@/types';
 
 interface DosenWithSettings {
   id: string;
@@ -70,13 +71,13 @@ const PRODI_OPTIONS = [
   { value: 'D-IV TRKBG', label: 'D-IV TRKBG' },
 ];
 
-const LETTER_TYPES = [
-  'Surat Undangan Seminar',
-  'Surat Undangan Sidang',
-  'Surat Permohonan Magang',
-  'Surat Tugas Magang',
-  'Surat Aktif Kuliah',
-  'Surat Izin Penelitian'
+const LETTER_TYPES: LetterType[] = [
+  'surat_undangan_seminar',
+  'surat_undangan_sidang',
+  'surat_permohonan_magang',
+  'surat_tugas_magang',
+  'surat_aktif_kuliah',
+  'surat_izin_penelitian'
 ];
 
 export default function CoordinatorSettingsPage() {
@@ -299,7 +300,7 @@ export default function CoordinatorSettingsPage() {
                         {dosen.settings?.visible_letter_types && dosen.settings.visible_letter_types.length > 0 ? (
                           dosen.settings.visible_letter_types.slice(0, 2).map((type, idx) => (
                             <Badge key={idx} variant="secondary" className="text-[10px] px-1 py-0">
-                              {type}
+                              {LETTER_TYPE_LABELS[type] || type}
                             </Badge>
                           ))
                         ) : (
@@ -386,7 +387,7 @@ export default function CoordinatorSettingsPage() {
                       htmlFor={type}
                       className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
                     >
-                      {type}
+                      {LETTER_TYPE_LABELS[type] || type}
                     </label>
                   </div>
                 ))}

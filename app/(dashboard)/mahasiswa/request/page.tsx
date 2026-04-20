@@ -205,6 +205,33 @@ function RequestLetterContent() {
         year: 'numeric'
       });
 
+      let initialStatus = selectedTemplate.requires_coordinator ? 'verifying' : 'menunggu_admin';
+
+      if (selectedTemplate.requires_coordinator) {
+        // Cek apakah ada koordinator aktif untuk prodi mahasiswa ini
+        const { data: activeKoordinators, error: checkError } = await supabase
+          .from('dosen_dashboard_settings')
+          .select('visible_letter_types')
+          .eq('prodi', currentUser.prodi)
+          .eq('is_enabled', true);
+        
+        let isBypassed = true;
+        if (!checkError && activeKoordinators && activeKoordinators.length > 0) {
+          // Jika ada minimal satu koordinator yang punya akses ke tipe surat ini
+          for (const k of activeKoordinators) {
+             if (k.visible_letter_types && k.visible_letter_types.includes(selectedTemplate.id)) {
+                isBypassed = false;
+                break;
+             }
+          }
+        }
+        
+        // Jika tidak ada koordinator aktif atau tidak ada yang ditugaskan untuk tipe surat ini, maka bypass ke admin.
+        if (isBypassed) {
+           initialStatus = 'menunggu_admin';
+        }
+      }
+
       const { error } = await supabase
         .from('letter_requests')
         .insert({
@@ -213,7 +240,7 @@ function RequestLetterContent() {
           type: selectedTemplate.id, // Better to use ID or a slug if available
           details: details,
           files: uploadedFiles,
-          status: selectedTemplate.requires_coordinator ? 'verifying' : 'menunggu_admin',
+          status: initialStatus,
           prodi: currentUser.prodi // Save prodi directly for filtering
         });
 
