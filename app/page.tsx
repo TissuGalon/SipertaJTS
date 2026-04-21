@@ -474,7 +474,7 @@ export default function LandingPage() {
                   </motion.div>
                 ))}
               </div>
-              <div className="mt-12 flex items-center justify-between border-t border-white/20 pt-8">
+           {/*    <div className="mt-12 flex items-center justify-between border-t border-white/20 pt-8">
                 <div>
                   <p className="text-3xl font-bold">500+</p>
                   <p className="text-sm opacity-80">Surat Terbit/Bulan</p>
@@ -483,7 +483,7 @@ export default function LandingPage() {
                   <p className="text-3xl font-bold">&lt; 24 Jam</p>
                   <p className="text-sm opacity-80">Rata-rata Proses</p>
                 </div>
-              </div>
+              </div> */}
             </motion.div>
           </div>
         </div>

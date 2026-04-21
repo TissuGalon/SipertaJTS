@@ -15,18 +15,24 @@ import {
 import { mockRequests } from '@/lib/mock-data';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { 
-  IconClipboardList, 
-  IconSearch,
-  IconFilter,
-  IconEye,
-  IconCalendarEvent,
-  IconFileInvoice,
-  IconDownload,
-  IconBorderVertical,
+  IconDownload, 
+  IconDotsVertical,
+  IconSearchOff,
   IconArrowUpRight,
   IconX,
   IconFileText,
-  IconLoader2
+  IconLoader2,
+  IconStarFilled,
+  IconClock,
+  IconBuildingSkyscraper,
+  IconBriefcase,
+  IconSchool,
+  IconSignature,
+  IconSearch,
+  IconCalendarEvent,
+  IconEye,
+  IconFileInvoice,
+  IconFilter
 } from '@tabler/icons-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -66,7 +72,20 @@ import { supabase } from '@/lib/supabase';
 import { LETTER_TYPE_LABELS, RequestStatus, LetterRequest, PRODI_LABELS, ProdiType } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+
+
+const STATUS_LABELS: Record<RequestStatus, string> = {
+  pending: 'Menunggu',
+  verifying: 'Verifikasi',
+  processing: 'Diproses',
+  done: 'Selesai',
+  rejected: 'Ditolak',
+  menunggu_admin: 'Menunggu Admin',
+  disetujui_koordinator: 'Disetujui Koordinator',
+  ditolak_koordinator: 'Ditolak Koordinator'
+};
 
 export default function PermintaanSuratPage() {
   const [filterStatus, setFilterStatus] = useState<RequestStatus | "all">("all");
@@ -227,29 +246,125 @@ export default function PermintaanSuratPage() {
         return;
       }
 
-      const headers = ["ID", "Nama Mahasiswa", "NIM", "Program Studi", "Jenis Surat", "Status", "Tanggal Masuk", "Tahun Akademik"];
-      const exportData = data.map((req: any) => ({
-        "ID": req.id,
-        "Nama Mahasiswa": req.users?.name || "Unknown",
-        "NIM": req.users?.nim || "-",
-        "Program Studi": PRODI_LABELS[req.prodi as keyof typeof PRODI_LABELS] || req.prodi || "-",
-        "Jenis Surat": LETTER_TYPE_LABELS[req.type as keyof typeof LETTER_TYPE_LABELS] || req.type,
-        "Status": req.status,
-        "Tanggal Masuk": new Date(req.created_at).toLocaleDateString('id-ID'),
-        "Tahun Akademik": req.academic_year || "-"
-      }));
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('Permintaan Surat');
 
-      // Create Worksheet
-      const worksheet = XLSX.utils.json_to_sheet(exportData);
-      
-      // Create Workbook
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Permintaan Surat");
-      
-      // Export to Excel
-      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-      const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      
+      // 1. Add report header
+      worksheet.mergeCells('A1:J1');
+      const titleCell = worksheet.getCell('A1');
+      titleCell.value = 'LAPORAN PERMINTAAN SURAT - SIPERTA JTS';
+      titleCell.font = { name: 'Arial', size: 16, bold: true, color: { argb: 'FF1E293B' } };
+      titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+
+      worksheet.mergeCells('A2:J2');
+      const dateCell = worksheet.getCell('A2');
+      dateCell.value = `Dicetak pada: ${new Date().toLocaleString('id-ID')} WIB | Filter: ${filterStatus !== 'all' ? filterStatus : 'Semua'} | ${filterProdi !== 'all' ? filterProdi : 'Semua Prodi'}`;
+      dateCell.font = { italic: true, size: 10, color: { argb: 'FF64748B' } };
+      dateCell.alignment = { vertical: 'middle', horizontal: 'center' };
+
+      worksheet.addRow([]); // Gap row
+
+      // 2. Define columns
+      worksheet.columns = [
+        { header: 'NO', key: 'no', width: 6 },
+        { header: 'ID PENGAJUAN', key: 'id', width: 25 },
+        { header: 'NAMA MAHASISWA', key: 'name', width: 35 },
+        { header: 'NIM', key: 'nim', width: 15 },
+        { header: 'PRODI', key: 'prodi', width: 20 },
+        { header: 'JENIS SURAT', key: 'type', width: 30 },
+        { header: 'STATUS', key: 'status', width: 22 },
+        { header: 'TANGGAL MASUK', key: 'date', width: 25 },
+        { header: 'TAHUN AKADEMIK', key: 'academic_year', width: 20 },
+        { header: 'PRIORITAS', key: 'priority', width: 12 }
+      ];
+
+      // 3. Style header row
+      const headerRow = worksheet.getRow(4);
+      headerRow.height = 30;
+      headerRow.eachCell((cell) => {
+        cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF4F46E5' } // Indigo-600
+        };
+        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+        cell.border = {
+          top: { style: 'thin', color: { argb: 'FF312E81' } },
+          left: { style: 'thin', color: { argb: 'FF312E81' } },
+          bottom: { style: 'thin', color: { argb: 'FF312E81' } },
+          right: { style: 'thin', color: { argb: 'FF312E81' } }
+        };
+      });
+
+      // 4. Add data rows
+      data.forEach((req: any, index: number) => {
+        const row = worksheet.addRow({
+          no: index + 1,
+          id: req.id.toUpperCase(),
+          name: req.users?.name || "Tidak Diketahui",
+          nim: req.users?.nim || "-",
+          prodi: PRODI_LABELS[req.prodi as keyof typeof PRODI_LABELS] || req.prodi || "-",
+          type: LETTER_TYPE_LABELS[req.type as keyof typeof LETTER_TYPE_LABELS] || req.type,
+          status: (STATUS_LABELS[req.status as RequestStatus] || req.status).toUpperCase(),
+          date: new Date(req.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }),
+          academic_year: req.academic_year || "-",
+          priority: req.is_priority ? "✓ YA" : "-"
+        });
+
+        row.height = 25;
+
+        // Alternate row coloring (Zebra)
+        if (index % 2 !== 0) {
+          row.eachCell((cell) => {
+            cell.fill = {
+              type: 'pattern',
+              pattern: 'solid',
+              fgColor: { argb: 'FFF8FAFC' } // Slate-50
+            };
+          });
+        }
+
+        // Cell Styling
+        row.eachCell((cell, colNumber) => {
+          cell.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+          cell.border = {
+            top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+            left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+            bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+            right: { style: 'thin', color: { argb: 'FFE2E8F0' } }
+          };
+
+          // Custom alignment for specific columns
+          const colKey = worksheet.columns[colNumber - 1].key;
+          if (['no', 'nim', 'status', 'priority'].includes(colKey as string)) {
+            cell.alignment = { vertical: 'middle', horizontal: 'center' };
+          }
+
+          // Status coloring
+          if (colKey === 'status') {
+            const status = req.status as RequestStatus;
+            let color = 'FF64748B'; // Default slate
+            if (status === 'done') color = 'FF059669'; // Emerald
+            if (status === 'rejected' || status === 'ditolak_koordinator') color = 'FFDC2626'; // Red
+            if (status === 'processing') color = 'FFD97706'; // Amber
+            if (status === 'verifying' || status === 'disetujui_koordinator') color = 'FF4F46E5'; // Indigo
+            
+            cell.font = { bold: true, color: { argb: color }, size: 9 };
+          }
+
+          if (colKey === 'priority' && req.is_priority) {
+            cell.font = { bold: true, color: { argb: 'FFD97706' } };
+          }
+        });
+      });
+
+      // 5. Add AutoFilter
+      worksheet.autoFilter = `A4:${XLSX_utils_encode_col(worksheet.columns.length - 1)}4`;
+
+      // 6. Final Export
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.setAttribute("href", url);
@@ -257,13 +372,52 @@ export default function PermintaanSuratPage() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      toast.success("Data berhasil diekspor ke Excel (.xlsx)");
+      
+      toast.success("Data berhasil diekspor ke Excel dengan format premium");
     } catch (error) {
+      console.error('Export error:', error);
       toast.error("Gagal mengekspor data");
     } finally {
       setIsExporting(false);
     }
   };
+
+  // Helper inside client component context (or just manual if not available)
+  const XLSX_utils_encode_col = (col: number) => {
+    let s = "";
+    while (col >= 0) {
+      s = String.fromCharCode((col % 26) + 65) + s;
+      col = Math.floor(col / 26) - 1;
+    }
+    return s;
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
+
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'magang':
+      case 'kp':
+        return <IconBuildingSkyscraper size={14} />;
+      case 'skripsi':
+      case 'tugas_akhir':
+        return <IconSchool size={14} />;
+      case 'surat_keterangan':
+        return <IconFileText size={14} />;
+      case 'beasiswa':
+        return <IconBriefcase size={14} />;
+      default:
+        return <IconFileText size={14} />;
+    }
+  };
+
 
   const handleQuickAction = async (id: string, action: 'prioritize' | 'cancel') => {
     try {
@@ -464,13 +618,13 @@ export default function PermintaanSuratPage() {
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm border-collapse">
-              <thead className="bg-slate-50/50 dark:bg-slate-800/30 border-b text-slate-500 font-medium">
+              <thead className="bg-slate-50/80 dark:bg-slate-800/50 border-b text-slate-500 font-bold uppercase tracking-widest text-[10px]">
                 <tr>
-                  <th className="h-14 px-6 text-left">Info Pengaju</th>
-                  <th className="h-14 px-6 text-left">Jenis Surat</th>
-                  <th className="h-14 px-6 text-left">Tanggal Masuk</th>
+                  <th className="h-14 px-8 text-left">Info Mahasiswa</th>
+                  <th className="h-14 px-6 text-left">Detail Surat</th>
+                  <th className="h-14 px-6 text-left">Waktu Masuk</th>
                   <th className="h-14 px-6 text-left">Status</th>
-                  <th className="h-14 px-6 text-right">Aksi</th>
+                  <th className="h-14 px-6 text-right">Navigasi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -494,47 +648,77 @@ export default function PermintaanSuratPage() {
                         <div className="h-9 w-20 bg-slate-100 dark:bg-slate-800 rounded ml-auto"></div>
                       </td>
                     </tr>
-                  ))
-                ) : filteredRequests.map((request) => (
-                  <tr key={request.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-all duration-200">
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col">
-                        <span className="font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                          {request.users?.name || 'Unknown'}
-                        </span>
-                        <div className="flex items-center space-x-2 mt-1">
-                          <span className="text-xs text-slate-400 font-mono">ID: {request.id.slice(0, 8)}</span>
-                          <span className="h-1 w-1 bg-slate-300 rounded-full"></span>
-                          <span className="text-sm font-medium text-slate-500">{request.users?.nim || '-'}</span>
+                ))
+                ) : (
+                  filteredRequests.map((request) => (
+                  <tr key={request.id} className="group relative hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-all duration-300">
+                    <td className="px-8 py-5 relative">
+                      {/* Priority Accent Bar - inside first TD for valid HTML */}
+                      <div className={cn(
+                        "absolute left-0 top-0 bottom-0 w-1 transition-all duration-300",
+                        request.is_priority ? "bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]" : "bg-transparent group-hover:bg-indigo-500/30"
+                      )} />
+                      <div className="flex items-center space-x-4">
+                        <Avatar className="h-10 w-10 border-2 border-white dark:border-slate-800 shadow-sm transition-transform group-hover:scale-105">
+                          <AvatarFallback className={cn(
+                            "text-white font-bold text-xs",
+                            request.is_priority ? "bg-amber-500" : "bg-indigo-500"
+                          )}>
+                            {getInitials(request.users?.name || '??')}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col">
+                          <div className="flex items-center space-x-2">
+                            <span className="font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                              {request.users?.name || 'Unknown'}
+                            </span>
+                            {request.is_priority && (
+                              <div className="bg-amber-100 dark:bg-amber-900/30 p-1 rounded-full text-amber-600 dark:text-amber-400 animate-pulse">
+                                <IconStarFilled size={10} />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <span className="text-xs text-slate-400 font-mono">ID: {request.id.slice(0, 8)}</span>
+                            <span className="h-1 w-1 bg-slate-300 rounded-full"></span>
+                            <span className="text-sm font-medium text-slate-500">{request.users?.nim || '-'}</span>
+                          </div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-5">
                       <div className="flex flex-col">
-                        <span className="text-slate-700 dark:text-slate-300 font-medium whitespace-nowrap">
-                          {LETTER_TYPE_LABELS[request.type as keyof typeof LETTER_TYPE_LABELS]}
-                        </span>
-                        {request.details?.companyName && (
-                          <span className="text-[11px] text-slate-400 mt-0.5 truncate max-w-[150px]">
-                            {request.details.companyName}
+                        <div className="flex items-center text-slate-700 dark:text-slate-300 font-semibold mb-1">
+                          <div className="mr-2 text-slate-400">
+                            {getTypeIcon(request.type)}
+                          </div>
+                          <span className="whitespace-nowrap">
+                            {LETTER_TYPE_LABELS[request.type as keyof typeof LETTER_TYPE_LABELS]}
                           </span>
+                        </div>
+                        {request.details?.companyName && (
+                          <div className="flex items-center text-[11px] text-slate-400 ml-5">
+                            <IconBuildingSkyscraper size={10} className="mr-1" />
+                            <span className="truncate max-w-[150px]">{request.details.companyName}</span>
+                          </div>
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col">
-                        <span className="text-slate-600 dark:text-slate-400 font-medium">
-                          {new Date(request.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
-                        </span>
-                        <span className="text-[10px] text-slate-400 mt-0.5">
+                    <td className="px-6 py-5">
+                      <div className="flex flex-col space-y-1">
+                        <div className="flex items-center text-slate-600 dark:text-slate-400 font-medium whitespace-nowrap">
+                          <IconClock size={14} className="mr-2 text-slate-300" />
+                          <span>{new Date(request.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                        </div>
+                        <div className="flex items-center text-[10px] text-slate-400 ml-5">
                           {new Date(request.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB
-                        </span>
+                        </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <StatusBadge status={request.status} />
+                    <td className="px-6 py-5">
+                      <StatusBadge status={request.status} className="shadow-sm" />
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-5 text-right">
                       <div className="flex justify-end items-center space-x-2">
                         <Link href={`/admin/verifier/${request.id}`}>
                           <Button size="sm" variant="outline" className="h-9 px-3 border-indigo-100 hover:bg-indigo-50 hover:text-indigo-600 dark:border-indigo-900/30 dark:hover:bg-indigo-900/20 transition-all group/btn">
@@ -544,8 +728,8 @@ export default function PermintaanSuratPage() {
                         </Link>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
-                              <IconBorderVertical size={18} />
+                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                              <IconDotsVertical size={18} className="text-slate-400" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-56 border-none shadow-2xl backdrop-blur-xl">
@@ -577,16 +761,34 @@ export default function PermintaanSuratPage() {
                       </div>
                     </td>
                   </tr>
-                ))}
+                )))}
                 {filteredRequests.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="p-20 text-center text-slate-500">
-                      <div className="flex flex-col items-center justify-center space-y-4">
-                        <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-full text-slate-400">
-                          <IconClipboardList size={40} />
+                    <td colSpan={5} className="p-24 text-center">
+                      <div className="flex flex-col items-center justify-center space-y-5">
+                        <div className="relative">
+                          <div className="absolute inset-0 bg-indigo-500/20 blur-3xl rounded-full" />
+                          <div className="relative p-6 bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-700 text-slate-400">
+                            <IconSearchOff size={48} stroke={1.5} />
+                          </div>
                         </div>
-                        <p className="text-lg font-medium">Tidak ada pengajuan surat yang ditemukan</p>
-                        <p className="max-w-xs text-sm">Coba atur ulang filter atau kata kunci pencarian Anda untuk melihat pengajuan lainnya.</p>
+                        <div className="space-y-2">
+                          <p className="text-xl font-bold text-slate-900 dark:text-white">Tidak Ada Data</p>
+                          <p className="max-w-xs text-sm text-slate-500 mx-auto">Kami tidak dapat menemukan pengajuan surat dengan kriteria filter tersebut.</p>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="rounded-full shadow-sm hover:bg-indigo-50 hover:text-indigo-600 transition-all"
+                          onClick={() => {
+                            setFilterStatus("all");
+                            setFilterProdi("all");
+                            setSearchQuery("");
+                            setDate(undefined);
+                          }}
+                        >
+                          Reset Semua Filter
+                        </Button>
                       </div>
                     </td>
                   </tr>
@@ -617,7 +819,12 @@ export default function PermintaanSuratPage() {
                 <Button 
                   key={pageNum}
                   size="sm" 
-                  className={cn("h-8 w-8 p-0", currentPage === pageNum ? "bg-indigo-600" : "bg-transparent text-slate-600 hover:bg-slate-100")}
+                  className={cn(
+                    "h-8 w-8 p-0 rounded-lg transition-all duration-200 shadow-sm", 
+                    currentPage === pageNum 
+                      ? "bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200 dark:shadow-indigo-900/20" 
+                      : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border hover:bg-slate-50 dark:hover:bg-slate-700"
+                  )}
                   onClick={() => setCurrentPage(pageNum)}
                 >
                   {pageNum}

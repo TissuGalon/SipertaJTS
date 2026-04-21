@@ -1,0 +1,412 @@
+﻿
+> scratch\document.xml:2:<w:document xmlns:wpc="http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas" 
+xmlns:cx="http://schemas.microsoft.com/office/drawing/2014/chartex" 
+xmlns:cx1="http://schemas.microsoft.com/office/drawing/2015/9/8/chartex" 
+xmlns:cx2="http://schemas.microsoft.com/office/drawing/2015/10/21/chartex" 
+xmlns:cx3="http://schemas.microsoft.com/office/drawing/2016/5/9/chartex" 
+xmlns:cx4="http://schemas.microsoft.com/office/drawing/2016/5/10/chartex" 
+xmlns:cx5="http://schemas.microsoft.com/office/drawing/2016/5/11/chartex" 
+xmlns:cx6="http://schemas.microsoft.com/office/drawing/2016/5/12/chartex" 
+xmlns:cx7="http://schemas.microsoft.com/office/drawing/2016/5/13/chartex" 
+xmlns:cx8="http://schemas.microsoft.com/office/drawing/2016/5/14/chartex" 
+xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+xmlns:aink="http://schemas.microsoft.com/office/drawing/2016/ink" 
+xmlns:am3d="http://schemas.microsoft.com/office/drawing/2017/model3d" 
+xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:oel="http://schemas.microsoft.com/office/2019/extlst" 
+xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" 
+xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math" xmlns:v="urn:schemas-microsoft-com:vml" 
+xmlns:wp14="http://schemas.microsoft.com/office/word/2010/wordprocessingDrawing" 
+xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" 
+xmlns:w10="urn:schemas-microsoft-com:office:word" 
+xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" 
+xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml" 
+xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml" 
+xmlns:w16cex="http://schemas.microsoft.com/office/word/2018/wordml/cex" 
+xmlns:w16cid="http://schemas.microsoft.com/office/word/2016/wordml/cid" 
+xmlns:w16="http://schemas.microsoft.com/office/word/2018/wordml" 
+xmlns:w16du="http://schemas.microsoft.com/office/word/2023/wordml/word16du" 
+xmlns:w16sdtdh="http://schemas.microsoft.com/office/word/2020/wordml/sdtdatahash" 
+xmlns:w16sdtfl="http://schemas.microsoft.com/office/word/2024/wordml/sdtformatlock" 
+xmlns:w16se="http://schemas.microsoft.com/office/word/2015/wordml/symex" 
+xmlns:wpg="http://schemas.microsoft.com/office/word/2010/wordprocessingGroup" 
+xmlns:wpi="http://schemas.microsoft.com/office/word/2010/wordprocessingInk" 
+xmlns:wne="http://schemas.microsoft.com/office/word/2006/wordml" 
+xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape" mc:Ignorable="w14 w15 w16se w16cid w16 
+w16cex w16sdtdh w16sdtfl w16du wp14"><w:body><w:p w14:paraId="56F5F0E7" w14:textId="77777777" w:rsidR="004A1D3F" 
+w:rsidRPr="00B450EB" w:rsidRDefault="004A1D3F" w:rsidP="00F91F01"><w:pPr><w:tabs><w:tab w:val="left" 
+w:pos="1134"/></w:tabs><w:rPr><w:sz w:val="12"/><w:szCs w:val="12"/><w:lang w:val="sv-SE"/></w:rPr></w:pPr></w:p><w:p 
+w14:paraId="3B669547" w14:textId="3903E698" w:rsidR="00E8211A" w:rsidRPr="00E8211A" w:rsidRDefault="00E8211A" 
+w:rsidP="00DE1ADE"><w:pPr><w:tabs><w:tab w:val="left" w:pos="1985"/></w:tabs><w:ind w:left="567" 
+w:right="617"/><w:rPr><w:lang w:val="sv-SE"/></w:rPr></w:pPr><w:r w:rsidRPr="00E8211A"><w:rPr><w:lang 
+w:val="sv-SE"/></w:rPr><w:t xml:space="preserve">Nomor </w:t></w:r><w:r w:rsidR="00F91F01"><w:rPr><w:lang 
+w:val="sv-SE"/></w:rPr><w:tab/></w:r><w:r w:rsidRPr="00E8211A"><w:rPr><w:lang w:val="sv-SE"/></w:rPr><w:t 
+xml:space="preserve">: Istimewa </w:t></w:r><w:r w:rsidR="00F91F01"><w:rPr><w:lang 
+w:val="sv-SE"/></w:rPr><w:tab/></w:r><w:r w:rsidR="00F91F01"><w:rPr><w:lang w:val="sv-SE"/></w:rPr><w:tab/></w:r><w:r 
+w:rsidR="00F91F01"><w:rPr><w:lang w:val="sv-SE"/></w:rPr><w:tab/></w:r><w:r w:rsidR="00F91F01"><w:rPr><w:lang 
+w:val="sv-SE"/></w:rPr><w:tab/></w:r><w:r w:rsidR="0063036A"><w:rPr><w:lang w:val="sv-SE"/></w:rPr><w:t 
+xml:space="preserve">      </w:t></w:r><w:r w:rsidRPr="00E8211A"><w:rPr><w:lang 
+w:val="sv-SE"/></w:rPr><w:t>Lhokseumawe,</w:t></w:r><w:r w:rsidR="00F91F01"><w:rPr><w:lang w:val="sv-SE"/></w:rPr><w:t 
+xml:space="preserve"> </w:t></w:r><w:r w:rsidR="00DE1ADE" w:rsidRPr="00BB5751"><w:rPr><w:color w:val="EE0000"/><w:lang 
+w:val="sv-SE"/></w:rPr><w:t>{{Tanggal}}</w:t></w:r></w:p><w:p w14:paraId="69799BC8" w14:textId="49326CF2" 
+w:rsidR="00E8211A" w:rsidRPr="00E8211A" w:rsidRDefault="00E8211A" w:rsidP="00DE1ADE"><w:pPr><w:tabs><w:tab 
+w:val="left" w:pos="1985"/></w:tabs><w:ind w:left="567"/><w:rPr><w:lang w:val="sv-SE"/></w:rPr></w:pPr><w:r 
+w:rsidRPr="00E8211A"><w:rPr><w:lang w:val="sv-SE"/></w:rPr><w:t xml:space="preserve">Lampiran </w:t></w:r><w:r 
+w:rsidR="00F91F01"><w:rPr><w:lang w:val="sv-SE"/></w:rPr><w:tab/></w:r><w:r w:rsidRPr="00E8211A"><w:rPr><w:lang 
+w:val="sv-SE"/></w:rPr><w:t xml:space="preserve">: 1 (satu) berkas </w:t></w:r></w:p><w:p w14:paraId="795A436F" 
+w14:textId="2E8A5A21" w:rsidR="00E8211A" w:rsidRDefault="00E8211A" w:rsidP="00DE1ADE"><w:pPr><w:tabs><w:tab 
+w:val="left" w:pos="1985"/></w:tabs><w:ind w:left="567"/><w:rPr><w:lang w:val="sv-SE"/></w:rPr></w:pPr><w:r 
+w:rsidRPr="00E8211A"><w:rPr><w:lang w:val="sv-SE"/></w:rPr><w:t xml:space="preserve">Hal </w:t></w:r><w:r 
+w:rsidR="00F91F01"><w:rPr><w:lang w:val="sv-SE"/></w:rPr><w:tab/></w:r><w:r w:rsidRPr="00E8211A"><w:rPr><w:lang 
+w:val="sv-SE"/></w:rPr><w:t xml:space="preserve">: </w:t></w:r><w:r w:rsidRPr="004E4F71"><w:rPr><w:color 
+w:val="EE0000"/><w:lang w:val="sv-SE"/></w:rPr><w:t xml:space="preserve">Undangan Seminar </w:t></w:r></w:p><w:p 
+w14:paraId="681793DC" w14:textId="77777777" w:rsidR="00F91F01" w:rsidRPr="00E8211A" w:rsidRDefault="00F91F01" 
+w:rsidP="00DE1ADE"><w:pPr><w:tabs><w:tab w:val="left" w:pos="1985"/></w:tabs><w:ind w:left="567"/><w:rPr><w:lang 
+w:val="sv-SE"/></w:rPr></w:pPr></w:p><w:p w14:paraId="16D9FC3A" w14:textId="77777777" w:rsidR="00E8211A" 
+w:rsidRPr="00E8211A" w:rsidRDefault="00E8211A" w:rsidP="00DE1ADE"><w:pPr><w:tabs><w:tab w:val="left" 
+w:pos="1985"/></w:tabs><w:ind w:left="567"/><w:rPr><w:lang w:val="sv-SE"/></w:rPr></w:pPr><w:r 
+w:rsidRPr="00E8211A"><w:rPr><w:lang w:val="sv-SE"/></w:rPr><w:t xml:space="preserve">Yth. Bapak/Ibu </w:t></w:r><w:r 
+w:rsidRPr="004E4F71"><w:rPr><w:color w:val="EE0000"/><w:lang w:val="sv-SE"/></w:rPr><w:t 
+xml:space="preserve">Perangkat Seminar </w:t></w:r></w:p><w:p w14:paraId="43ADFD22" w14:textId="77777777" 
+w:rsidR="00E8211A" w:rsidRDefault="00E8211A" w:rsidP="00DE1ADE"><w:pPr><w:tabs><w:tab w:val="left" 
+w:pos="1985"/></w:tabs><w:ind w:left="567"/><w:rPr><w:lang w:val="sv-SE"/></w:rPr></w:pPr><w:r 
+w:rsidRPr="00E8211A"><w:rPr><w:lang w:val="sv-SE"/></w:rPr><w:t xml:space="preserve">di Tempat </w:t></w:r></w:p><w:p 
+w14:paraId="1B28711D" w14:textId="77777777" w:rsidR="00F91F01" w:rsidRPr="00E8211A" w:rsidRDefault="00F91F01" 
+w:rsidP="00DE1ADE"><w:pPr><w:tabs><w:tab w:val="left" w:pos="1985"/></w:tabs><w:ind w:left="567"/><w:rPr><w:lang 
+w:val="sv-SE"/></w:rPr></w:pPr></w:p><w:p w14:paraId="04D4E6CF" w14:textId="77777777" w:rsidR="00E8211A" 
+w:rsidRPr="00E8211A" w:rsidRDefault="00E8211A" w:rsidP="00DE1ADE"><w:pPr><w:tabs><w:tab w:val="left" 
+w:pos="1985"/></w:tabs><w:ind w:left="567"/><w:rPr><w:lang w:val="sv-SE"/></w:rPr></w:pPr><w:r 
+w:rsidRPr="00E8211A"><w:rPr><w:lang w:val="sv-SE"/></w:rPr><w:t xml:space="preserve">Dengan hormat, 
+</w:t></w:r></w:p><w:p w14:paraId="3BE30DC3" w14:textId="1A27ED49" w:rsidR="00EF3B31" w:rsidRDefault="00E8211A" 
+w:rsidP="00DE1ADE"><w:pPr><w:tabs><w:tab w:val="left" w:pos="1985"/></w:tabs><w:ind w:left="567" w:right="617"/><w:jc 
+w:val="both"/><w:rPr><w:lang w:val="sv-SE"/></w:rPr></w:pPr><w:r w:rsidRPr="00E8211A"><w:rPr><w:lang 
+w:val="sv-SE"/></w:rPr><w:t xml:space="preserve">Sehubungan dengan pelaksanaan Seminar Proposal </w:t></w:r><w:r 
+w:rsidR="00BA7300" w:rsidRPr="00BA7300"><w:rPr><w:color w:val="EE0000"/><w:lang w:val="sv-SE"/></w:rPr><w:t>Tugas 
+akhir</w:t></w:r><w:r w:rsidR="00BA7300"><w:rPr><w:lang w:val="sv-SE"/></w:rPr><w:t>/</w:t></w:r><w:r 
+w:rsidRPr="00BA7300"><w:rPr><w:color w:val="EE0000"/><w:lang w:val="sv-SE"/></w:rPr><w:t>Skripsi</w:t></w:r><w:r 
+w:rsidR="00DE1ADE"><w:rPr><w:lang w:val="sv-SE"/></w:rPr><w:t xml:space="preserve"> </w:t></w:r><w:r 
+w:rsidRPr="00E8211A"><w:rPr><w:lang w:val="sv-SE"/></w:rPr><w:t xml:space="preserve">Mahasiswa semester 
+</w:t></w:r><w:r w:rsidR="006C174B" w:rsidRPr="00BA7300"><w:rPr><w:color w:val="EE0000"/><w:lang 
+w:val="sv-SE"/></w:rPr><w:t>V</w:t></w:r><w:r w:rsidR="006C174B"><w:rPr><w:lang 
+w:val="sv-SE"/></w:rPr><w:t>/</w:t></w:r><w:r w:rsidRPr="008C2438"><w:rPr><w:color w:val="EE0000"/><w:lang 
+w:val="sv-SE"/></w:rPr><w:t>VII</w:t></w:r><w:r w:rsidRPr="00E8211A"><w:rPr><w:lang w:val="sv-SE"/></w:rPr><w:t 
+xml:space="preserve"> </w:t></w:r><w:r w:rsidRPr="008C2438"><w:rPr><w:color w:val="EE0000"/><w:lang 
+w:val="sv-SE"/></w:rPr><w:t xml:space="preserve">Program Studi </w:t></w:r><w:r w:rsidR="006C174B"><w:rPr><w:color 
+w:val="EE0000"/><w:lang w:val="sv-SE"/></w:rPr><w:t>D-III/</w:t></w:r><w:r w:rsidR="008C2438" 
+w:rsidRPr="008C2438"><w:rPr><w:color w:val="EE0000"/><w:lang w:val="sv-SE"/></w:rPr><w:t xml:space="preserve">D-IV 
+</w:t></w:r><w:r w:rsidR="00F91F01" w:rsidRPr="008C2438"><w:rPr><w:color w:val="EE0000"/><w:lang 
+w:val="sv-SE"/></w:rPr><w:t xml:space="preserve">Teknologi </w:t></w:r><w:r w:rsidR="006C174B" 
+w:rsidRPr="008C2438"><w:rPr><w:color w:val="EE0000"/><w:lang w:val="sv-SE"/></w:rPr><w:t xml:space="preserve">Rekayasa 
+</w:t></w:r><w:r w:rsidR="00F91F01" w:rsidRPr="008C2438"><w:rPr><w:color w:val="EE0000"/><w:lang 
+w:val="sv-SE"/></w:rPr><w:t>Konstruksi Jalan dan Jembatan</w:t></w:r><w:r w:rsidR="00F91F01"><w:rPr><w:lang 
+w:val="sv-SE"/></w:rPr><w:t xml:space="preserve"> </w:t></w:r><w:r w:rsidRPr="00E8211A"><w:rPr><w:lang 
+w:val="sv-SE"/></w:rPr><w:t xml:space="preserve">Tahun Akademik </w:t></w:r><w:r w:rsidR="00F91F01" 
+w:rsidRPr="008C2438"><w:rPr><w:color w:val="EE0000"/><w:lang 
+w:val="sv-SE"/></w:rPr><w:t>{{TahunAkademik}}</w:t></w:r><w:r w:rsidRPr="008C2438"><w:rPr><w:color 
+w:val="EE0000"/><w:lang w:val="sv-SE"/></w:rPr><w:t xml:space="preserve"> </w:t></w:r><w:r 
+w:rsidRPr="00E8211A"><w:rPr><w:lang w:val="sv-SE"/></w:rPr><w:t xml:space="preserve">maka dengan ini Kepala Program 
+</w:t></w:r><w:r w:rsidR="008C2438" w:rsidRPr="008C2438"><w:rPr><w:color w:val="EE0000"/><w:lang 
+w:val="sv-SE"/></w:rPr><w:t>D-IV Teknologi Konstruksi Rekayasa Jalan dan Jembatan</w:t></w:r><w:r 
+w:rsidRPr="00E8211A"><w:rPr><w:lang w:val="sv-SE"/></w:rPr><w:t xml:space="preserve"> mengundang Bapak/Ibu untuk 
+bersedia hadir pada </w:t></w:r><w:r w:rsidRPr="004E4F71"><w:rPr><w:color w:val="EE0000"/><w:lang 
+w:val="sv-SE"/></w:rPr><w:t xml:space="preserve">Seminar Proposal </w:t></w:r><w:r w:rsidR="004E4F71" 
+w:rsidRPr="004E4F71"><w:rPr><w:color w:val="EE0000"/><w:lang w:val="sv-SE"/></w:rPr><w:t>Tugas Akhir/</w:t></w:r><w:r 
+w:rsidR="00BA6FA8" w:rsidRPr="004E4F71"><w:rPr><w:color w:val="EE0000"/><w:lang 
+w:val="sv-SE"/></w:rPr><w:t>Skripsi</w:t></w:r><w:r w:rsidRPr="004E4F71"><w:rPr><w:color w:val="EE0000"/><w:lang 
+w:val="sv-SE"/></w:rPr><w:t xml:space="preserve"> </w:t></w:r><w:r w:rsidRPr="00E8211A"><w:rPr><w:lang 
+w:val="sv-SE"/></w:rPr><w:t>mahasiswa:</w:t></w:r></w:p><w:p w14:paraId="0AD03CFF" w14:textId="77777777" 
+w:rsidR="00E8211A" w:rsidRDefault="00E8211A" w:rsidP="00DE1ADE"><w:pPr><w:tabs><w:tab w:val="left" 
+w:pos="1985"/></w:tabs><w:ind w:left="567"/><w:rPr><w:lang w:val="sv-SE"/></w:rPr></w:pPr></w:p><w:p 
+w14:paraId="785612F0" w14:textId="2B01B6F3" w:rsidR="00E8211A" w:rsidRPr="00E8211A" w:rsidRDefault="00E8211A" 
+w:rsidP="00DE1ADE"><w:pPr><w:tabs><w:tab w:val="left" w:pos="1418"/><w:tab w:val="left" w:pos="1985"/></w:tabs><w:ind 
+w:left="567"/><w:rPr><w:lang w:val="sv-SE"/></w:rPr></w:pPr><w:r w:rsidRPr="00E8211A"><w:rPr><w:lang 
+w:val="sv-SE"/></w:rPr><w:t xml:space="preserve">Nama </w:t></w:r><w:r w:rsidR="008C2438"><w:rPr><w:lang 
+w:val="sv-SE"/></w:rPr><w:tab/></w:r><w:r w:rsidR="004A1D3F"><w:rPr><w:lang w:val="sv-SE"/></w:rPr><w:tab/></w:r><w:r 
+w:rsidRPr="00E8211A"><w:rPr><w:lang w:val="sv-SE"/></w:rPr><w:t xml:space="preserve">: </w:t></w:r></w:p><w:p 
+w14:paraId="19217C4C" w14:textId="7BD4511B" w:rsidR="00E8211A" w:rsidRPr="00E8211A" w:rsidRDefault="00E8211A" 
+w:rsidP="00DE1ADE"><w:pPr><w:tabs><w:tab w:val="left" w:pos="1418"/><w:tab w:val="left" w:pos="1985"/></w:tabs><w:ind 
+w:left="567"/><w:rPr><w:lang w:val="sv-SE"/></w:rPr></w:pPr><w:r w:rsidRPr="00E8211A"><w:rPr><w:lang 
+w:val="sv-SE"/></w:rPr><w:t xml:space="preserve">NIM </w:t></w:r><w:r w:rsidR="008C2438"><w:rPr><w:lang 
+w:val="sv-SE"/></w:rPr><w:tab/></w:r><w:r w:rsidR="004A1D3F"><w:rPr><w:lang w:val="sv-SE"/></w:rPr><w:tab/></w:r><w:r 
+w:rsidRPr="00E8211A"><w:rPr><w:lang w:val="sv-SE"/></w:rPr><w:t xml:space="preserve">: </w:t></w:r></w:p><w:p 
+w14:paraId="34AA33DF" w14:textId="0A1AB68F" w:rsidR="00E8211A" w:rsidRPr="00E8211A" w:rsidRDefault="00E8211A" 
+w:rsidP="00DE1ADE"><w:pPr><w:tabs><w:tab w:val="left" w:pos="1418"/><w:tab w:val="left" w:pos="1985"/></w:tabs><w:ind 
+w:left="567"/><w:rPr><w:lang w:val="sv-SE"/></w:rPr></w:pPr><w:r w:rsidRPr="00E8211A"><w:rPr><w:lang 
+w:val="sv-SE"/></w:rPr><w:t xml:space="preserve">Hari/Tanggal </w:t></w:r><w:r w:rsidR="008C2438"><w:rPr><w:lang 
+w:val="sv-SE"/></w:rPr><w:tab/></w:r><w:r w:rsidRPr="00E8211A"><w:rPr><w:lang w:val="sv-SE"/></w:rPr><w:t 
+xml:space="preserve">: </w:t></w:r></w:p><w:p w14:paraId="0094B7B3" w14:textId="1B3867EE" w:rsidR="00E8211A" 
+w:rsidRPr="00E8211A" w:rsidRDefault="00E8211A" w:rsidP="00DE1ADE"><w:pPr><w:tabs><w:tab w:val="left" 
+w:pos="1418"/><w:tab w:val="left" w:pos="1985"/></w:tabs><w:ind w:left="567"/><w:rPr><w:lang 
+w:val="sv-SE"/></w:rPr></w:pPr><w:r w:rsidRPr="00E8211A"><w:rPr><w:lang w:val="sv-SE"/></w:rPr><w:t 
+xml:space="preserve">Waktu </w:t></w:r><w:r w:rsidR="008C2438"><w:rPr><w:lang 
+w:val="sv-SE"/></w:rPr><w:tab/></w:r><w:r w:rsidR="004A1D3F"><w:rPr><w:lang w:val="sv-SE"/></w:rPr><w:tab/></w:r><w:r 
+w:rsidRPr="00E8211A"><w:rPr><w:lang w:val="sv-SE"/></w:rPr><w:t xml:space="preserve">: </w:t></w:r></w:p><w:p 
+w14:paraId="6457FEA7" w14:textId="5DF7D752" w:rsidR="00E8211A" w:rsidRPr="004E7024" w:rsidRDefault="00E8211A" 
+w:rsidP="00DE1ADE"><w:pPr><w:tabs><w:tab w:val="left" w:pos="1418"/><w:tab w:val="left" w:pos="1985"/></w:tabs><w:ind 
+w:left="567"/><w:rPr><w:lang w:val="sv-SE"/></w:rPr></w:pPr><w:r w:rsidRPr="004E7024"><w:rPr><w:lang 
+w:val="sv-SE"/></w:rPr><w:t xml:space="preserve">Ruang </w:t></w:r><w:r w:rsidR="008C2438" 
+w:rsidRPr="004E7024"><w:rPr><w:lang w:val="sv-SE"/></w:rPr><w:tab/></w:r><w:r w:rsidR="004A1D3F" 
+w:rsidRPr="004E7024"><w:rPr><w:lang w:val="sv-SE"/></w:rPr><w:tab/></w:r><w:r w:rsidRPr="004E7024"><w:rPr><w:lang 
+w:val="sv-SE"/></w:rPr><w:t xml:space="preserve">: </w:t></w:r></w:p><w:p w14:paraId="1ED14874" w14:textId="080C5808" 
+w:rsidR="00E8211A" w:rsidRPr="004E7024" w:rsidRDefault="00E8211A" w:rsidP="00DE1ADE"><w:pPr><w:tabs><w:tab 
+w:val="left" w:pos="1418"/><w:tab w:val="left" w:pos="1985"/></w:tabs><w:ind w:left="567"/><w:rPr><w:lang 
+w:val="sv-SE"/></w:rPr></w:pPr><w:r w:rsidRPr="004E7024"><w:rPr><w:lang w:val="sv-SE"/></w:rPr><w:t 
+xml:space="preserve">Judul </w:t></w:r><w:r w:rsidR="008C2438" w:rsidRPr="004E7024"><w:rPr><w:lang 
+w:val="sv-SE"/></w:rPr><w:tab/></w:r><w:r w:rsidR="004A1D3F" w:rsidRPr="004E7024"><w:rPr><w:lang 
+w:val="sv-SE"/></w:rPr><w:tab/></w:r><w:r w:rsidRPr="004E7024"><w:rPr><w:lang w:val="sv-SE"/></w:rPr><w:t 
+xml:space="preserve">: </w:t></w:r></w:p><w:p w14:paraId="08F22BC9" w14:textId="77777777" w:rsidR="00E8211A" 
+w:rsidRPr="004E7024" w:rsidRDefault="00E8211A" w:rsidP="00DE1ADE"><w:pPr><w:tabs><w:tab w:val="left" 
+w:pos="1985"/></w:tabs><w:ind w:left="567"/><w:rPr><w:lang w:val="sv-SE"/></w:rPr></w:pPr></w:p><w:p 
+w14:paraId="3C4F2932" w14:textId="43EC258D" w:rsidR="00E8211A" w:rsidRPr="00E8211A" w:rsidRDefault="00E8211A" 
+w:rsidP="00DE1ADE"><w:pPr><w:tabs><w:tab w:val="left" w:pos="1985"/></w:tabs><w:ind w:left="567"/><w:rPr><w:lang 
+w:val="sv-SE"/></w:rPr></w:pPr><w:r w:rsidRPr="00E8211A"><w:rPr><w:lang w:val="sv-SE"/></w:rPr><w:t>Susunan perangkat 
+Seminar adalah sebagai berikut:</w:t></w:r></w:p><w:tbl><w:tblPr><w:tblW w:w="9498" w:type="dxa"/><w:tblInd w:w="675" 
+w:type="dxa"/><w:tblBorders><w:top w:val="single" w:sz="4" w:space="0" w:color="auto"/><w:left w:val="single" w:sz="4" 
+w:space="0" w:color="auto"/><w:bottom w:val="single" w:sz="4" w:space="0" w:color="auto"/><w:right w:val="single" 
+w:sz="4" w:space="0" w:color="auto"/><w:insideH w:val="single" w:sz="4" w:space="0" w:color="auto"/><w:insideV 
+w:val="single" w:sz="4" w:space="0" w:color="auto"/></w:tblBorders><w:tblLayout w:type="fixed"/><w:tblLook 
+w:val="0000" w:firstRow="0" w:lastRow="0" w:firstColumn="0" w:lastColumn="0" w:noHBand="0" 
+w:noVBand="0"/></w:tblPr><w:tblGrid><w:gridCol w:w="534"/><w:gridCol w:w="3861"/><w:gridCol w:w="2268"/><w:gridCol 
+w:w="2835"/></w:tblGrid><w:tr w:rsidR="00E8211A" w:rsidRPr="00DE1ADE" w14:paraId="3EB52F6E" w14:textId="6FDF9F92" 
+w:rsidTr="00DE1ADE"><w:trPr><w:trHeight w:val="89"/></w:trPr><w:tc><w:tcPr><w:tcW w:w="534" w:type="dxa"/><w:shd 
+w:val="clear" w:color="auto" w:fill="FFC000"/></w:tcPr><w:p w14:paraId="5DD54BC7" w14:textId="7D6F6157" 
+w:rsidR="00E8211A" w:rsidRPr="00E8211A" w:rsidRDefault="00E8211A" w:rsidP="00F91F01"><w:pPr><w:jc 
+w:val="center"/><w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang w:val="sv-SE"/></w:rPr></w:pPr><w:r 
+w:rsidRPr="00E8211A"><w:rPr><w:b/><w:bCs/><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang 
+w:val="sv-SE"/></w:rPr><w:t>No</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="3861" w:type="dxa"/><w:shd 
+w:val="clear" w:color="auto" w:fill="FFC000"/></w:tcPr><w:p w14:paraId="5B0C6285" w14:textId="43B940D9" 
+w:rsidR="00E8211A" w:rsidRPr="00DE1ADE" w:rsidRDefault="00E8211A" w:rsidP="00F91F01"><w:pPr><w:jc 
+w:val="center"/><w:rPr><w:b/><w:bCs/><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang w:val="en-ID"/></w:rPr></w:pPr><w:r 
+w:rsidRPr="00E8211A"><w:rPr><w:b/><w:bCs/><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang 
+w:val="en-ID"/></w:rPr><w:t>Nama</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="2268" w:type="dxa"/><w:shd 
+w:val="clear" w:color="auto" w:fill="FFC000"/></w:tcPr><w:p w14:paraId="699DC143" w14:textId="34F6332D" 
+w:rsidR="00E8211A" w:rsidRPr="00E8211A" w:rsidRDefault="00E8211A" w:rsidP="00F91F01"><w:pPr><w:jc 
+w:val="center"/><w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang w:val="en-ID"/></w:rPr></w:pPr><w:r 
+w:rsidRPr="00E8211A"><w:rPr><w:b/><w:bCs/><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang 
+w:val="en-ID"/></w:rPr><w:t>NIP</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="2835" w:type="dxa"/><w:shd 
+w:val="clear" w:color="auto" w:fill="FFC000"/></w:tcPr><w:p w14:paraId="70F994BB" w14:textId="6CC03FA3" 
+w:rsidR="00E8211A" w:rsidRPr="00DE1ADE" w:rsidRDefault="00E8211A" w:rsidP="00F91F01"><w:pPr><w:jc 
+w:val="center"/><w:rPr><w:b/><w:bCs/><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang 
+w:val="en-ID"/></w:rPr></w:pPr><w:proofErr w:type="spellStart"/><w:r w:rsidRPr="00E8211A"><w:rPr><w:b/><w:bCs/><w:sz 
+w:val="22"/><w:szCs w:val="22"/><w:lang w:val="en-ID"/></w:rPr><w:t>Keterangan</w:t></w:r><w:proofErr 
+w:type="spellEnd"/></w:p></w:tc></w:tr><w:tr w:rsidR="00DE1ADE" w:rsidRPr="00DE1ADE" w14:paraId="6204A7D5" 
+w14:textId="31CBAAF8" w:rsidTr="00DE1ADE"><w:trPr><w:trHeight w:val="567"/></w:trPr><w:tc><w:tcPr><w:tcW w:w="534" 
+w:type="dxa"/><w:vAlign w:val="center"/></w:tcPr><w:p w14:paraId="47E96D98" w14:textId="641626D4" w:rsidR="00E8211A" 
+w:rsidRPr="00E8211A" w:rsidRDefault="00E8211A" w:rsidP="004A1D3F"><w:pPr><w:ind w:left="-15"/><w:jc 
+w:val="center"/><w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang w:val="en-ID"/></w:rPr></w:pPr><w:r 
+w:rsidRPr="00E8211A"><w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang 
+w:val="en-ID"/></w:rPr><w:t>1</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="3861" w:type="dxa"/><w:vAlign 
+w:val="center"/></w:tcPr><w:p w14:paraId="12488F82" w14:textId="5626A197" w:rsidR="00E8211A" w:rsidRPr="00DE1ADE" 
+w:rsidRDefault="00E8211A" w:rsidP="004A1D3F"><w:pPr><w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang 
+w:val="en-ID"/></w:rPr></w:pPr><w:r w:rsidRPr="00DE1ADE"><w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang 
+w:val="en-ID"/></w:rPr><w:t xml:space="preserve">Dr. Rizal Syahyadi, S.T., </w:t></w:r><w:proofErr 
+w:type="spellStart"/><w:r w:rsidRPr="00DE1ADE"><w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang 
+w:val="en-ID"/></w:rPr><w:t>M.Eng.Sc</w:t></w:r><w:proofErr w:type="spellEnd"/><w:r w:rsidRPr="00DE1ADE"><w:rPr><w:sz 
+w:val="22"/><w:szCs w:val="22"/><w:lang w:val="en-ID"/></w:rPr><w:t>.</w:t></w:r><w:r w:rsidR="00F91F01" 
+w:rsidRPr="00DE1ADE"><w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang w:val="en-ID"/></w:rPr><w:t 
+xml:space="preserve">, IPM, </w:t></w:r><w:proofErr w:type="spellStart"/><w:r w:rsidR="00F91F01" 
+w:rsidRPr="00DE1ADE"><w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang 
+w:val="en-ID"/></w:rPr><w:t>ASEAN.Eng</w:t></w:r><w:proofErr w:type="spellEnd"/><w:r w:rsidR="00F91F01" 
+w:rsidRPr="00DE1ADE"><w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang w:val="en-ID"/></w:rPr><w:t 
+xml:space="preserve">., </w:t></w:r><w:proofErr w:type="spellStart"/><w:r w:rsidR="00F91F01" 
+w:rsidRPr="00DE1ADE"><w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang 
+w:val="en-ID"/></w:rPr><w:t>APEC.Eng</w:t></w:r><w:proofErr w:type="spellEnd"/></w:p></w:tc><w:tc><w:tcPr><w:tcW 
+w:w="2268" w:type="dxa"/><w:vAlign w:val="center"/></w:tcPr><w:p w14:paraId="611E49DE" w14:textId="18DD1524" 
+w:rsidR="00E8211A" w:rsidRPr="00E8211A" w:rsidRDefault="00E8211A" w:rsidP="004A1D3F"><w:pPr><w:rPr><w:sz 
+w:val="22"/><w:szCs w:val="22"/><w:lang w:val="en-ID"/></w:rPr></w:pPr></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="2835" 
+w:type="dxa"/><w:vAlign w:val="center"/></w:tcPr><w:p w14:paraId="6D6AA842" w14:textId="45B1EEB7" w:rsidR="00E8211A" 
+w:rsidRPr="00DE1ADE" w:rsidRDefault="00E8211A" w:rsidP="004A1D3F"><w:pPr><w:jc w:val="center"/><w:rPr><w:sz 
+w:val="22"/><w:szCs w:val="22"/><w:lang w:val="en-ID"/></w:rPr></w:pPr><w:proofErr w:type="spellStart"/><w:r 
+w:rsidRPr="00E8211A"><w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang 
+w:val="en-ID"/></w:rPr><w:t>Ketua</w:t></w:r><w:proofErr w:type="spellEnd"/></w:p></w:tc></w:tr><w:tr 
+w:rsidR="00DE1ADE" w:rsidRPr="00DE1ADE" w14:paraId="3B4F40CD" w14:textId="2FC5E6B6" 
+w:rsidTr="00DE1ADE"><w:trPr><w:trHeight w:val="567"/></w:trPr><w:tc><w:tcPr><w:tcW w:w="534" w:type="dxa"/><w:vAlign 
+w:val="center"/></w:tcPr><w:p w14:paraId="67A77C94" w14:textId="40DC78EB" w:rsidR="00E8211A" w:rsidRPr="00E8211A" 
+w:rsidRDefault="00E8211A" w:rsidP="004A1D3F"><w:pPr><w:ind w:left="-15"/><w:jc w:val="center"/><w:rPr><w:sz 
+w:val="22"/><w:szCs w:val="22"/><w:lang w:val="en-ID"/></w:rPr></w:pPr><w:r w:rsidRPr="00E8211A"><w:rPr><w:sz 
+w:val="22"/><w:szCs w:val="22"/><w:lang w:val="en-ID"/></w:rPr><w:t>2</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW 
+w:w="3861" w:type="dxa"/><w:vAlign w:val="center"/></w:tcPr><w:p w14:paraId="5C798E11" w14:textId="628BDBA7" 
+w:rsidR="00E8211A" w:rsidRPr="00DE1ADE" w:rsidRDefault="00E8211A" w:rsidP="004A1D3F"><w:pPr><w:rPr><w:sz 
+w:val="22"/><w:szCs w:val="22"/><w:lang w:val="en-ID"/></w:rPr></w:pPr><w:r w:rsidRPr="00DE1ADE"><w:rPr><w:sz 
+w:val="22"/><w:szCs w:val="22"/><w:lang w:val="en-ID"/></w:rPr><w:t xml:space="preserve">Nurul Hidayati Binti 
+</w:t></w:r><w:proofErr w:type="spellStart"/><w:r w:rsidRPr="00DE1ADE"><w:rPr><w:sz w:val="22"/><w:szCs 
+w:val="22"/><w:lang w:val="en-ID"/></w:rPr><w:t>Saidan</w:t></w:r><w:proofErr w:type="spellEnd"/><w:r 
+w:rsidRPr="00DE1ADE"><w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang w:val="en-ID"/></w:rPr><w:t>, S.T., 
+M.T.</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="2268" w:type="dxa"/><w:vAlign w:val="center"/></w:tcPr><w:p 
+w14:paraId="1F6330AE" w14:textId="5949120B" w:rsidR="00E8211A" w:rsidRPr="00E8211A" w:rsidRDefault="00F91F01" 
+w:rsidP="004A1D3F"><w:pPr><w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang w:val="en-ID"/></w:rPr></w:pPr><w:r 
+w:rsidRPr="00DE1ADE"><w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang 
+w:val="en-ID"/></w:rPr><w:t>198912192025062001</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="2835" 
+w:type="dxa"/><w:vAlign w:val="center"/></w:tcPr><w:p w14:paraId="56309BF9" w14:textId="561FCF33" w:rsidR="00E8211A" 
+w:rsidRPr="00DE1ADE" w:rsidRDefault="00E8211A" w:rsidP="004A1D3F"><w:pPr><w:jc w:val="center"/><w:rPr><w:sz 
+w:val="22"/><w:szCs w:val="22"/><w:lang w:val="en-ID"/></w:rPr></w:pPr><w:proofErr w:type="spellStart"/><w:r 
+w:rsidRPr="00E8211A"><w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang 
+w:val="en-ID"/></w:rPr><w:t>Sekretaris</w:t></w:r><w:proofErr w:type="spellEnd"/></w:p></w:tc></w:tr><w:tr 
+w:rsidR="00DE1ADE" w:rsidRPr="00DE1ADE" w14:paraId="71C11869" w14:textId="21DC80B7" 
+w:rsidTr="00DE1ADE"><w:trPr><w:trHeight w:val="567"/></w:trPr><w:tc><w:tcPr><w:tcW w:w="534" w:type="dxa"/><w:vAlign 
+w:val="center"/></w:tcPr><w:p w14:paraId="6A75DE26" w14:textId="6517AA68" w:rsidR="00E8211A" w:rsidRPr="00E8211A" 
+w:rsidRDefault="00E8211A" w:rsidP="004A1D3F"><w:pPr><w:ind w:left="-15"/><w:jc w:val="center"/><w:rPr><w:sz 
+w:val="22"/><w:szCs w:val="22"/><w:lang w:val="en-ID"/></w:rPr></w:pPr><w:r w:rsidRPr="00E8211A"><w:rPr><w:sz 
+w:val="22"/><w:szCs w:val="22"/><w:lang w:val="en-ID"/></w:rPr><w:t>3</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW 
+w:w="3861" w:type="dxa"/><w:vAlign w:val="center"/></w:tcPr><w:p w14:paraId="06577CE0" w14:textId="43C8C8A0" 
+w:rsidR="00E8211A" w:rsidRPr="00447FDE" w:rsidRDefault="00447FDE" w:rsidP="004A1D3F"><w:pPr><w:rPr><w:sz 
+w:val="22"/><w:szCs w:val="22"/><w:lang w:val="sv-SE"/></w:rPr></w:pPr><w:r w:rsidRPr="00447FDE"><w:rPr><w:sz 
+w:val="22"/><w:szCs w:val="22"/><w:lang w:val="sv-SE"/></w:rPr><w:t>Ir.Syarifah Keumala Intan, 
+S</w:t></w:r><w:r><w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang w:val="sv-SE"/></w:rPr><w:t>.T., 
+M.T.</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="2268" w:type="dxa"/><w:vAlign w:val="center"/></w:tcPr><w:p 
+w14:paraId="46D8444D" w14:textId="09DCA871" w:rsidR="00E8211A" w:rsidRPr="00447FDE" w:rsidRDefault="00E8211A" 
+w:rsidP="004A1D3F"><w:pPr><w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang 
+w:val="sv-SE"/></w:rPr></w:pPr></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="2835" w:type="dxa"/><w:vAlign 
+w:val="center"/></w:tcPr><w:p w14:paraId="2342BD7B" w14:textId="1D5CC6E0" w:rsidR="00E8211A" w:rsidRPr="00DE1ADE" 
+w:rsidRDefault="00E8211A" w:rsidP="004A1D3F"><w:pPr><w:jc w:val="center"/><w:rPr><w:sz w:val="22"/><w:szCs 
+w:val="22"/><w:lang w:val="en-ID"/></w:rPr></w:pPr><w:proofErr w:type="spellStart"/><w:r 
+w:rsidRPr="00E8211A"><w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang 
+w:val="en-ID"/></w:rPr><w:t>Pembimbing</w:t></w:r><w:proofErr w:type="spellEnd"/><w:r 
+w:rsidRPr="00E8211A"><w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang w:val="en-ID"/></w:rPr><w:t 
+xml:space="preserve"> Utama</w:t></w:r></w:p></w:tc></w:tr><w:tr w:rsidR="00DE1ADE" w:rsidRPr="00DE1ADE" 
+w14:paraId="64657406" w14:textId="526BD8B8" w:rsidTr="00DE1ADE"><w:trPr><w:trHeight 
+w:val="567"/></w:trPr><w:tc><w:tcPr><w:tcW w:w="534" w:type="dxa"/><w:vAlign w:val="center"/></w:tcPr><w:p 
+w14:paraId="17D25734" w14:textId="57F14C38" w:rsidR="00E8211A" w:rsidRPr="00E8211A" w:rsidRDefault="00E8211A" 
+w:rsidP="004A1D3F"><w:pPr><w:ind w:left="-15"/><w:jc w:val="center"/><w:rPr><w:sz w:val="22"/><w:szCs 
+w:val="22"/><w:lang w:val="en-ID"/></w:rPr></w:pPr><w:r w:rsidRPr="00E8211A"><w:rPr><w:sz w:val="22"/><w:szCs 
+w:val="22"/><w:lang w:val="en-ID"/></w:rPr><w:t>4</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="3861" 
+w:type="dxa"/><w:vAlign w:val="center"/></w:tcPr><w:p w14:paraId="6F5BE0D6" w14:textId="77777777" w:rsidR="00E8211A" 
+w:rsidRPr="00DE1ADE" w:rsidRDefault="00E8211A" w:rsidP="004A1D3F"><w:pPr><w:rPr><w:sz w:val="22"/><w:szCs 
+w:val="22"/><w:lang w:val="en-ID"/></w:rPr></w:pPr></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="2268" 
+w:type="dxa"/><w:vAlign w:val="center"/></w:tcPr><w:p w14:paraId="7B681E75" w14:textId="7136B085" w:rsidR="00E8211A" 
+w:rsidRPr="00E8211A" w:rsidRDefault="00E8211A" w:rsidP="004A1D3F"><w:pPr><w:rPr><w:sz w:val="22"/><w:szCs 
+w:val="22"/><w:lang w:val="en-ID"/></w:rPr></w:pPr></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="2835" 
+w:type="dxa"/><w:vAlign w:val="center"/></w:tcPr><w:p w14:paraId="0E65FE29" w14:textId="0B462FB5" w:rsidR="00E8211A" 
+w:rsidRPr="00DE1ADE" w:rsidRDefault="00E8211A" w:rsidP="004A1D3F"><w:pPr><w:jc w:val="center"/><w:rPr><w:sz 
+w:val="22"/><w:szCs w:val="22"/><w:lang w:val="en-ID"/></w:rPr></w:pPr><w:proofErr w:type="spellStart"/><w:r 
+w:rsidRPr="00E8211A"><w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang 
+w:val="en-ID"/></w:rPr><w:t>Pembimbing</w:t></w:r><w:proofErr w:type="spellEnd"/><w:r 
+w:rsidRPr="00E8211A"><w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang w:val="en-ID"/></w:rPr><w:t 
+xml:space="preserve"> </w:t></w:r><w:proofErr w:type="spellStart"/><w:r w:rsidRPr="00E8211A"><w:rPr><w:sz 
+w:val="22"/><w:szCs w:val="22"/><w:lang w:val="en-ID"/></w:rPr><w:t>Pendamping</w:t></w:r><w:proofErr 
+w:type="spellEnd"/></w:p></w:tc></w:tr><w:tr w:rsidR="00DE1ADE" w:rsidRPr="00DE1ADE" w14:paraId="0C8BDF51" 
+w14:textId="79D43346" w:rsidTr="00DE1ADE"><w:trPr><w:trHeight w:val="567"/></w:trPr><w:tc><w:tcPr><w:tcW w:w="534" 
+w:type="dxa"/><w:vAlign w:val="center"/></w:tcPr><w:p w14:paraId="2320FE65" w14:textId="5F05E485" w:rsidR="00E8211A" 
+w:rsidRPr="00E8211A" w:rsidRDefault="00E8211A" w:rsidP="004A1D3F"><w:pPr><w:ind w:left="-15"/><w:jc 
+w:val="center"/><w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang w:val="en-ID"/></w:rPr></w:pPr><w:r 
+w:rsidRPr="00E8211A"><w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang 
+w:val="en-ID"/></w:rPr><w:t>5</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="3861" w:type="dxa"/><w:vAlign 
+w:val="center"/></w:tcPr><w:p w14:paraId="0E9642DE" w14:textId="77777777" w:rsidR="00E8211A" w:rsidRPr="00DE1ADE" 
+w:rsidRDefault="00E8211A" w:rsidP="004A1D3F"><w:pPr><w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang 
+w:val="en-ID"/></w:rPr></w:pPr></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="2268" w:type="dxa"/><w:vAlign 
+w:val="center"/></w:tcPr><w:p w14:paraId="43CC37F7" w14:textId="5A1EC45E" w:rsidR="00E8211A" w:rsidRPr="00E8211A" 
+w:rsidRDefault="00E8211A" w:rsidP="004A1D3F"><w:pPr><w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang 
+w:val="en-ID"/></w:rPr></w:pPr></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="2835" w:type="dxa"/><w:vAlign 
+w:val="center"/></w:tcPr><w:p w14:paraId="5CBFF01A" w14:textId="1EA0EC4D" w:rsidR="00E8211A" w:rsidRPr="00DE1ADE" 
+w:rsidRDefault="00E8211A" w:rsidP="004A1D3F"><w:pPr><w:jc w:val="center"/><w:rPr><w:sz w:val="22"/><w:szCs 
+w:val="22"/><w:lang w:val="en-ID"/></w:rPr></w:pPr><w:proofErr w:type="spellStart"/><w:r 
+w:rsidRPr="00E8211A"><w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang 
+w:val="en-ID"/></w:rPr><w:t>Penguji</w:t></w:r><w:proofErr w:type="spellEnd"/><w:r w:rsidRPr="00E8211A"><w:rPr><w:sz 
+w:val="22"/><w:szCs w:val="22"/><w:lang w:val="en-ID"/></w:rPr><w:t xml:space="preserve"> 
+I</w:t></w:r></w:p></w:tc></w:tr><w:tr w:rsidR="00DE1ADE" w:rsidRPr="00DE1ADE" w14:paraId="5744B8C6" 
+w14:textId="4A6AF009" w:rsidTr="00DE1ADE"><w:trPr><w:trHeight w:val="567"/></w:trPr><w:tc><w:tcPr><w:tcW w:w="534" 
+w:type="dxa"/><w:vAlign w:val="center"/></w:tcPr><w:p w14:paraId="6D02DF12" w14:textId="001CBCE7" w:rsidR="00E8211A" 
+w:rsidRPr="00E8211A" w:rsidRDefault="00E8211A" w:rsidP="004A1D3F"><w:pPr><w:ind w:left="-15"/><w:jc 
+w:val="center"/><w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang w:val="en-ID"/></w:rPr></w:pPr><w:r 
+w:rsidRPr="00E8211A"><w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang 
+w:val="en-ID"/></w:rPr><w:t>6</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="3861" w:type="dxa"/><w:vAlign 
+w:val="center"/></w:tcPr><w:p w14:paraId="70EC08E7" w14:textId="77777777" w:rsidR="00E8211A" w:rsidRPr="00DE1ADE" 
+w:rsidRDefault="00E8211A" w:rsidP="004A1D3F"><w:pPr><w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang 
+w:val="en-ID"/></w:rPr></w:pPr></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="2268" w:type="dxa"/><w:vAlign 
+w:val="center"/></w:tcPr><w:p w14:paraId="22349BAB" w14:textId="69603345" w:rsidR="00E8211A" w:rsidRPr="00E8211A" 
+w:rsidRDefault="00E8211A" w:rsidP="004A1D3F"><w:pPr><w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang 
+w:val="en-ID"/></w:rPr></w:pPr></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="2835" w:type="dxa"/><w:vAlign 
+w:val="center"/></w:tcPr><w:p w14:paraId="038753E7" w14:textId="1E960CA2" w:rsidR="00E8211A" w:rsidRPr="00DE1ADE" 
+w:rsidRDefault="00E8211A" w:rsidP="004A1D3F"><w:pPr><w:jc w:val="center"/><w:rPr><w:sz w:val="22"/><w:szCs 
+w:val="22"/><w:lang w:val="en-ID"/></w:rPr></w:pPr><w:proofErr w:type="spellStart"/><w:r 
+w:rsidRPr="00E8211A"><w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/><w:lang 
+w:val="en-ID"/></w:rPr><w:t>Penguji</w:t></w:r><w:proofErr w:type="spellEnd"/><w:r w:rsidRPr="00E8211A"><w:rPr><w:sz 
+w:val="22"/><w:szCs w:val="22"/><w:lang w:val="en-ID"/></w:rPr><w:t xml:space="preserve"> 
+II</w:t></w:r></w:p></w:tc></w:tr></w:tbl><w:p w14:paraId="0A6A78F3" w14:textId="77777777" w:rsidR="00E8211A" 
+w:rsidRDefault="00E8211A" w:rsidP="00F91F01"><w:pPr><w:rPr><w:lang w:val="sv-SE"/></w:rPr></w:pPr></w:p><w:p 
+w14:paraId="313AB17C" w14:textId="77777777" w:rsidR="008C2438" w:rsidRDefault="008C2438" 
+w:rsidP="00DE1ADE"><w:pPr><w:ind w:left="567"/><w:rPr><w:lang w:val="sv-SE"/></w:rPr></w:pPr><w:r 
+w:rsidRPr="008C2438"><w:rPr><w:lang w:val="sv-SE"/></w:rPr><w:t xml:space="preserve">Demikian yang dapat kami 
+sampaikan, atas kerjasama yang baik dan kehadiran Bapak/Ibu tepat waktu diucapkan terima kasih. </w:t></w:r></w:p><w:p 
+w14:paraId="2B819BB3" w14:textId="77777777" w:rsidR="008C2438" w:rsidRDefault="008C2438" 
+w:rsidP="00F91F01"><w:pPr><w:rPr><w:lang w:val="sv-SE"/></w:rPr></w:pPr></w:p><w:p w14:paraId="5E6EE742" 
+w14:textId="77777777" w:rsidR="00DE1ADE" w:rsidRDefault="00DE1ADE" w:rsidP="008C2438"><w:pPr><w:ind 
+w:left="5387"/><w:jc w:val="center"/><w:rPr><w:lang w:val="sv-SE"/></w:rPr></w:pPr></w:p><w:p w14:paraId="26AC0C8C" 
+w14:textId="1313173B" w:rsidR="008C2438" w:rsidRDefault="008C2438" w:rsidP="008C2438"><w:pPr><w:ind 
+w:left="5387"/><w:jc w:val="center"/><w:rPr><w:lang w:val="sv-SE"/></w:rPr></w:pPr><w:r 
+w:rsidRPr="008C2438"><w:rPr><w:lang w:val="sv-SE"/></w:rPr><w:t>Kepala Program Studi</w:t></w:r></w:p><w:p 
+w14:paraId="0C818493" w14:textId="0FE6AF9D" w:rsidR="008C2438" w:rsidRPr="00BA7300" w:rsidRDefault="008C2438" 
+w:rsidP="008C2438"><w:pPr><w:ind w:left="5387"/><w:jc w:val="center"/><w:rPr><w:color w:val="EE0000"/><w:lang 
+w:val="sv-SE"/></w:rPr></w:pPr><w:r w:rsidRPr="00BA7300"><w:rPr><w:color w:val="EE0000"/><w:lang 
+w:val="sv-SE"/></w:rPr><w:t>D</w:t></w:r><w:r w:rsidR="00BA6FA8" w:rsidRPr="00BA7300"><w:rPr><w:color 
+w:val="EE0000"/><w:lang w:val="sv-SE"/></w:rPr><w:t xml:space="preserve">iploma </w:t></w:r><w:r 
+w:rsidRPr="00BA7300"><w:rPr><w:color w:val="EE0000"/><w:lang w:val="sv-SE"/></w:rPr><w:t>IV 
+TRKJJ</w:t></w:r></w:p><w:p w14:paraId="1B469CB1" w14:textId="77777777" w:rsidR="008C2438" w:rsidRDefault="008C2438" 
+w:rsidP="008C2438"><w:pPr><w:ind w:left="5387"/><w:jc w:val="center"/><w:rPr><w:lang 
+w:val="sv-SE"/></w:rPr></w:pPr></w:p><w:p w14:paraId="3C87FD6E" w14:textId="77777777" w:rsidR="008C2438" 
+w:rsidRDefault="008C2438" w:rsidP="008C2438"><w:pPr><w:ind w:left="5387"/><w:jc w:val="center"/><w:rPr><w:lang 
+w:val="sv-SE"/></w:rPr></w:pPr></w:p><w:p w14:paraId="1B6CFFDE" w14:textId="77777777" w:rsidR="004A1D3F" 
+w:rsidRDefault="004A1D3F" w:rsidP="008C2438"><w:pPr><w:ind w:left="5387"/><w:jc w:val="center"/><w:rPr><w:lang 
+w:val="sv-SE"/></w:rPr></w:pPr></w:p><w:p w14:paraId="7BC43563" w14:textId="79434E26" w:rsidR="008C2438" 
+w:rsidRPr="00BA6FA8" w:rsidRDefault="008C2438" w:rsidP="008C2438"><w:pPr><w:ind w:left="5387"/><w:jc 
+w:val="center"/><w:rPr><w:b/><w:bCs/><w:lang w:val="sv-SE"/></w:rPr></w:pPr><w:r 
+w:rsidRPr="00BA6FA8"><w:rPr><w:b/><w:bCs/><w:lang w:val="sv-SE"/></w:rPr><w:t>Ir. Deni Iqbal, S.</w:t></w:r><w:r 
+w:rsidR="00BA6FA8"><w:rPr><w:b/><w:bCs/><w:lang w:val="sv-SE"/></w:rPr><w:t>S</w:t></w:r><w:r 
+w:rsidR="004A1D3F"><w:rPr><w:b/><w:bCs/><w:lang w:val="sv-SE"/></w:rPr><w:t>T</w:t></w:r><w:r w:rsidR="00BA6FA8" 
+w:rsidRPr="00BA6FA8"><w:rPr><w:b/><w:bCs/><w:lang w:val="sv-SE"/></w:rPr><w:t>,</w:t></w:r><w:r 
+w:rsidR="00BA6FA8"><w:rPr><w:b/><w:bCs/><w:lang w:val="sv-SE"/></w:rPr><w:t xml:space="preserve"> 
+M.T.</w:t></w:r></w:p><w:p w14:paraId="228354C6" w14:textId="7C347C84" w:rsidR="00BA6FA8" w:rsidRDefault="00BA6FA8" 
+w:rsidP="008C2438"><w:pPr><w:ind w:left="5387"/><w:jc w:val="center"/><w:rPr><w:lang 
+w:val="sv-SE"/></w:rPr></w:pPr><w:r><w:rPr><w:lang w:val="sv-SE"/></w:rPr><w:t xml:space="preserve">NIP. 
+</w:t></w:r><w:r w:rsidR="004A1D3F"><w:rPr><w:lang w:val="sv-SE"/></w:rPr><w:t>19910505 202203 1 
+007</w:t></w:r></w:p><w:p w14:paraId="1C29E10C" w14:textId="77777777" w:rsidR="00DE1ADE" w:rsidRDefault="00DE1ADE" 
+w:rsidP="008C2438"><w:pPr><w:ind w:left="5387"/><w:jc w:val="center"/><w:rPr><w:lang 
+w:val="sv-SE"/></w:rPr></w:pPr></w:p><w:p w14:paraId="1396754A" w14:textId="77777777" w:rsidR="00DE1ADE" 
+w:rsidRDefault="00DE1ADE" w:rsidP="008C2438"><w:pPr><w:ind w:left="5387"/><w:jc w:val="center"/><w:rPr><w:lang 
+w:val="sv-SE"/></w:rPr></w:pPr></w:p><w:p w14:paraId="4DB5D669" w14:textId="77777777" w:rsidR="00DE1ADE" 
+w:rsidRDefault="00DE1ADE" w:rsidP="008C2438"><w:pPr><w:ind w:left="5387"/><w:jc w:val="center"/><w:rPr><w:lang 
+w:val="sv-SE"/></w:rPr></w:pPr></w:p><w:p w14:paraId="225B5ADB" w14:textId="77777777" w:rsidR="00DE1ADE" 
+w:rsidRDefault="00DE1ADE" w:rsidP="008C2438"><w:pPr><w:ind w:left="5387"/><w:jc w:val="center"/><w:rPr><w:lang 
+w:val="sv-SE"/></w:rPr></w:pPr></w:p><w:p w14:paraId="36572E4F" w14:textId="77777777" w:rsidR="00DE1ADE" 
+w:rsidRPr="00DE1ADE" w:rsidRDefault="00DE1ADE" w:rsidP="00DE1ADE"><w:pPr><w:ind w:left="567"/><w:jc 
+w:val="both"/><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/><w:lang w:val="sv-SE"/></w:rPr></w:pPr><w:r 
+w:rsidRPr="00DE1ADE"><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/><w:lang w:val="sv-SE"/></w:rPr><w:t 
+xml:space="preserve">Catatan: </w:t></w:r></w:p><w:p w14:paraId="2DAF0E2D" w14:textId="2FBF8F8B" w:rsidR="00DE1ADE" 
+w:rsidRPr="00DE1ADE" w:rsidRDefault="00DE1ADE" w:rsidP="00DE1ADE"><w:pPr><w:pStyle 
+w:val="ListParagraph"/><w:numPr><w:ilvl w:val="0"/><w:numId w:val="40"/></w:numPr><w:ind w:left="851" 
+w:hanging="284"/><w:jc w:val="both"/><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/><w:lang 
+w:val="sv-SE"/></w:rPr></w:pPr><w:r w:rsidRPr="00DE1ADE"><w:rPr><w:sz w:val="18"/><w:szCs w:val="18"/><w:lang 
+w:val="sv-SE"/></w:rPr><w:t xml:space="preserve">Seluruh Perangkat Seminar wajib menggunakan pakaian sopan. Pria boleh 
+memakai kemeja berdasi, baju batik, atau baju muslim, sedangkan wanita dapat menyesuaikan; </w:t></w:r></w:p><w:p 
+w14:paraId="0F09BF1D" w14:textId="7A4A9BEA" w:rsidR="0063036A" w:rsidRPr="002E412A" w:rsidRDefault="00DE1ADE" 
+w:rsidP="006F612E"><w:pPr><w:pStyle w:val="ListParagraph"/><w:numPr><w:ilvl w:val="0"/><w:numId 
+w:val="40"/></w:numPr><w:ind w:left="851" w:hanging="284"/><w:jc w:val="both"/><w:rPr><w:sz w:val="10"/><w:szCs 
+w:val="10"/><w:lang w:val="sv-SE"/></w:rPr></w:pPr><w:r w:rsidRPr="002E412A"><w:rPr><w:sz w:val="18"/><w:szCs 
+w:val="18"/><w:lang w:val="sv-SE"/></w:rPr><w:t>Bagi Perangkat Seminar yang berhalangan hadir, harap menghubungi 
+Kaprodi/Koordinator Seminar</w:t></w:r></w:p><w:p w14:paraId="78D341B7" w14:textId="77777777" w:rsidR="0063036A" 
+w:rsidRDefault="0063036A" w:rsidP="006F612E"><w:pPr><w:jc w:val="both"/><w:rPr><w:sz w:val="10"/><w:szCs 
+w:val="10"/><w:lang w:val="sv-SE"/></w:rPr></w:pPr></w:p><w:p w14:paraId="2122737C" w14:textId="77777777" 
+w:rsidR="00447FDE" w:rsidRDefault="00447FDE" w:rsidP="006F612E"><w:pPr><w:jc w:val="both"/><w:rPr><w:sz 
+w:val="10"/><w:szCs w:val="10"/><w:lang w:val="sv-SE"/></w:rPr></w:pPr></w:p><w:p w14:paraId="5C23E233" 
+w14:textId="77777777" w:rsidR="00447FDE" w:rsidRDefault="00447FDE" w:rsidP="006F612E"><w:pPr><w:jc 
+w:val="both"/><w:rPr><w:sz w:val="10"/><w:szCs w:val="10"/><w:lang w:val="sv-SE"/></w:rPr></w:pPr></w:p><w:p 
+w14:paraId="74A54D82" w14:textId="77777777" w:rsidR="00447FDE" w:rsidRDefault="00447FDE" 
+w:rsidP="006F612E"><w:pPr><w:jc w:val="both"/><w:rPr><w:sz w:val="10"/><w:szCs w:val="10"/><w:lang 
+w:val="sv-SE"/></w:rPr></w:pPr></w:p><w:p w14:paraId="5BF68476" w14:textId="77777777" w:rsidR="00447FDE" 
+w:rsidRDefault="00447FDE" w:rsidP="006F612E"><w:pPr><w:jc w:val="both"/><w:rPr><w:sz w:val="10"/><w:szCs 
+w:val="10"/><w:lang w:val="sv-SE"/></w:rPr></w:pPr></w:p><w:p w14:paraId="2F178A6B" w14:textId="77777777" 
+w:rsidR="00447FDE" w:rsidRDefault="00447FDE" w:rsidP="006F612E"><w:pPr><w:jc w:val="both"/><w:rPr><w:sz 
+w:val="10"/><w:szCs w:val="10"/><w:lang w:val="sv-SE"/></w:rPr></w:pPr></w:p><w:p w14:paraId="09F220F2" 
+w14:textId="77777777" w:rsidR="00447FDE" w:rsidRDefault="00447FDE" w:rsidP="006F612E"><w:pPr><w:jc 
+w:val="both"/><w:rPr><w:sz w:val="10"/><w:szCs w:val="10"/><w:lang w:val="sv-SE"/></w:rPr></w:pPr></w:p><w:p 
+w14:paraId="3216BFD2" w14:textId="77777777" w:rsidR="00447FDE" w:rsidRDefault="00447FDE" 
+w:rsidP="006F612E"><w:pPr><w:jc w:val="both"/><w:rPr><w:sz w:val="10"/><w:szCs w:val="10"/><w:lang 
+w:val="sv-SE"/></w:rPr></w:pPr></w:p><w:p w14:paraId="4E379F0C" w14:textId="77777777" w:rsidR="0063036A" 
+w:rsidRDefault="0063036A" w:rsidP="006F612E"><w:pPr><w:jc w:val="both"/><w:rPr><w:sz w:val="10"/><w:szCs 
+w:val="10"/><w:lang w:val="sv-SE"/></w:rPr></w:pPr></w:p><w:p w14:paraId="585C8D84" w14:textId="77777777" 
+w:rsidR="00B450EB" w:rsidRPr="00B450EB" w:rsidRDefault="00B450EB" w:rsidP="006F612E"><w:pPr><w:jc 
+w:val="both"/><w:rPr><w:sz w:val="10"/><w:szCs w:val="10"/><w:lang w:val="sv-SE"/></w:rPr></w:pPr></w:p><w:sectPr 
+w:rsidR="00B450EB" w:rsidRPr="00B450EB" w:rsidSect="0063036A"><w:headerReference w:type="default" r:id="rId8"/><w:pgSz 
+w:w="11907" w:h="20185" w:code="9"/><w:pgMar w:top="851" w:right="851" w:bottom="851" w:left="851" w:header="709" 
+w:footer="709" w:gutter="0"/><w:cols w:space="708"/><w:docGrid w:linePitch="360"/></w:sectPr></w:body></w:document>
+
+
