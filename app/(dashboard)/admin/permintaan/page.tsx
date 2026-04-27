@@ -32,7 +32,9 @@ import {
   IconCalendarEvent,
   IconEye,
   IconFileInvoice,
-  IconFilter
+  IconFilter,
+  IconTrash,
+  IconCheck
 } from '@tabler/icons-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -443,6 +445,26 @@ export default function PermintaanSuratPage() {
     }
   };
 
+  const handleDelete = async (id: string) => {
+    if (!confirm("Apakah Anda yakin ingin menghapus pengajuan ini secara permanen? Tindakan ini tidak dapat dibatalkan.")) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('letter_requests')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      toast.success("Pengajuan berhasil dihapus");
+      fetchRequests();
+    } catch (error) {
+      toast.error("Gagal menghapus pengajuan");
+    }
+  };
+
   const totalPages = Math.ceil(totalCount / itemsPerPage);
 
   const filteredRequests = requests; // Now handled by server-side query
@@ -754,7 +776,15 @@ export default function PermintaanSuratPage() {
                               className="py-2.5 text-rose-500 focus:text-rose-500 focus:bg-rose-50 dark:focus:bg-rose-900/20"
                               onClick={() => handleQuickAction(request.id, 'cancel')}
                             >
+                              <IconX size={16} className="mr-2" />
                               Batalkan Pengajuan
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="py-2.5 text-rose-600 focus:text-rose-600 focus:bg-rose-50 dark:focus:bg-rose-900/20 font-bold"
+                              onClick={() => handleDelete(request.id)}
+                            >
+                              <IconTrash size={16} className="mr-2" />
+                              Hapus Permanen
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>

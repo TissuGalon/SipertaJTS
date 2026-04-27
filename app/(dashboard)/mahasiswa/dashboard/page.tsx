@@ -119,7 +119,7 @@ export default function StudentDashboard() {
 
   const handleDownload = (request: any) => {
     if (!request.letter_url) {
-      toast.error("Surat belum tersedia untuk diunduh.");
+      toast.info("Surat Anda sedang dalam proses finalisasi oleh administrator. Silakan cek berkala.");
       return;
     }
     window.open(request.letter_url, '_blank');

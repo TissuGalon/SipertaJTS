@@ -26,7 +26,9 @@ import {
   IconChevronLeft,
   IconChevronRight,
   IconDownload,
-  IconPaperclip
+  IconPaperclip,
+  IconUpload,
+  IconCircleCheckFilled
 } from '@tabler/icons-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -55,6 +57,9 @@ export default function DocumentVerifierPage() {
   const [notes, setNotes] = useState("");
   const [previewHtml, setPreviewHtml] = useState<string>("");
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+  
+  const [finalFile, setFinalFile] = useState<File | null>(null);
+  const [isAutoGenerating, setIsAutoGenerating] = useState(false);
 
   React.useEffect(() => {
     if (id) {
@@ -193,9 +198,11 @@ export default function DocumentVerifierPage() {
 
       saveAs(out, `${request.letter_templates.name}_${request.users?.nim}.docx`);
       toast.success("Dokumen berhasil diunduh");
+      return out; // Return the blob so it can be used for auto-upload
     } catch (error: any) {
       console.error('Error downloading document:', error);
       toast.error("Gagal menjenerate dokumen: " + (error.message || "Unknown error"));
+      return null;
     } finally {
       setIsProcessing(false);
     }
@@ -204,6 +211,50 @@ export default function DocumentVerifierPage() {
   const handleAction = async (status: 'done' | 'rejected') => {
     try {
       setIsProcessing(true);
+      
+      let letterUrl = request.letter_url;
+
+      if (status === 'done') {
+        let fileToUpload = finalFile;
+        let fileName = "";
+
+        // If no manual file, try to auto-generate
+        if (!fileToUpload) {
+          const autoGen = confirm("Tidak ada file yang diunggah. Apakah Anda ingin men-generate otomatis dari template?");
+          if (autoGen) {
+            setIsAutoGenerating(true);
+            const blob = await handleDownload();
+            if (blob) {
+              fileToUpload = new File([blob], `${request.letter_templates.name}_${request.users?.nim}.docx`, {
+                type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              });
+            }
+            setIsAutoGenerating(false);
+          }
+        }
+
+        if (fileToUpload) {
+          const fileExt = fileToUpload.name.split('.').pop();
+          fileName = `results/${id}/${Date.now()}.${fileExt}`;
+          
+          const { error: uploadError } = await supabase.storage
+            .from('letter_attachments')
+            .upload(fileName, fileToUpload);
+
+          if (uploadError) throw uploadError;
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('letter_attachments')
+            .getPublicUrl(fileName);
+          
+          letterUrl = publicUrl;
+        } else {
+          toast.error("Harap unggah file atau pilih generate otomatis untuk menyelesaikan permintaan.");
+          setIsProcessing(false);
+          return;
+        }
+      }
+
       const { error } = await supabase
         .from('letter_requests')
         .update({
@@ -211,6 +262,7 @@ export default function DocumentVerifierPage() {
           admin_notes: notes,
           letter_number: letterNumber,
           academic_year: academicYear,
+          letter_url: letterUrl,
           updated_at: new Date().toISOString(),
         })
         .eq('id', id);
@@ -500,6 +552,61 @@ export default function DocumentVerifierPage() {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                 />
+              </div>
+
+              {/* Final Document Upload Section */}
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                <Label className="text-sm font-bold text-slate-900 dark:text-white flex items-center">
+                  <IconUpload size={16} className="mr-2 text-indigo-600" />
+                  Upload Surat Final (Tandatangan/PDF)
+                </Label>
+                <div className="flex flex-col space-y-2">
+                  <div className={cn(
+                    "relative border-2 border-dashed rounded-xl p-6 transition-all group",
+                    finalFile ? "bg-emerald-50/50 border-emerald-200" : "bg-slate-50/50 border-slate-200 hover:border-indigo-300"
+                  )}>
+                    <input 
+                      type="file" 
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          setFinalFile(e.target.files[0]);
+                        }
+                      }}
+                    />
+                    <div className="flex flex-col items-center justify-center text-center">
+                      {finalFile ? (
+                        <>
+                          <IconCircleCheckFilled className="text-emerald-500 mb-2" size={32} />
+                          <p className="text-sm font-bold text-emerald-800">{finalFile.name}</p>
+                          <p className="text-[10px] text-emerald-600 uppercase font-black">File siap diunggah</p>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="mt-2 h-7 text-rose-500 hover:text-rose-600 hover:bg-rose-50"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setFinalFile(null);
+                            }}
+                          >
+                            Hapus
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <IconUpload className="text-slate-300 mb-2 group-hover:text-indigo-400 transition-colors" size={32} />
+                          <p className="text-sm font-medium text-slate-500">
+                             Klik atau seret file PDF/DOCX di sini
+                          </p>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">Maksimal 5MB</p>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-slate-500 italic">
+                    * Kosongkan jika ingin men-generate otomatis dari template saat menekan tombol setujui.
+                  </p>
+                </div>
               </div>
             </CardContent>
             <CardFooter className="flex space-x-3 bg-slate-50/50 dark:bg-slate-900/50 p-6 border-t">

@@ -113,7 +113,7 @@ export default function HistoryPage() {
 
   const handleDownload = (request: any) => {
     if (!request.letter_url) {
-      toast.error("Surat belum tersedia.");
+      toast.info("Surat sedang dalam antrean tanda tangan atau belum diunggah oleh admin. Silakan cek kembali nanti.");
       return;
     }
     window.open(request.letter_url, '_blank');

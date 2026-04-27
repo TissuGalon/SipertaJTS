@@ -150,6 +150,34 @@ export default function LandingPage() {
 
       if (error) throw error
 
+      // Link to profiles if they exist or create them
+      const { data: userData } = await supabase.auth.getUser()
+      if (userData?.user) {
+        if (signUpData.role === 'mahasiswa') {
+          await supabase.from('mahasiswa').update({ 
+            user_id: userData.user.id,
+            email: signUpData.email,
+            name: signUpData.name 
+          }).eq('nim', signUpData.nim)
+        } else if (signUpData.role === 'dosen') {
+          await supabase.from('dosen').update({ 
+            user_id: userData.user.id,
+            email: signUpData.email,
+            name: signUpData.name 
+          }).eq('nip', signUpData.nim)
+        }
+
+        // Ensure they have a record in the 'users' profile table for unified access
+        await supabase.from('users').upsert({
+          id: userData.user.id,
+          name: signUpData.name,
+          email: signUpData.email,
+          role: signUpData.role,
+          nim: signUpData.role === 'mahasiswa' ? signUpData.nim : undefined,
+          nip: signUpData.role === 'dosen' ? signUpData.nim : undefined
+        })
+      }
+
       toast.success("Registrasi Berhasil", { 
         description: "Silakan login menggunakan akun baru Anda." 
       })

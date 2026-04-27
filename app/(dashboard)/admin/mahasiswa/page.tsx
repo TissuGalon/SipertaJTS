@@ -209,7 +209,7 @@ export default function DataMahasiswaPage() {
               <DialogHeader>
                 <DialogTitle>Tambah Mahasiswa Baru</DialogTitle>
                 <DialogDescription>
-                  Masukkan detail mahasiswa baru. Data ini disimpan sebagai profil, bukan akun login.
+                  Masukkan detail mahasiswa baru sebagai profil. Mahasiswa dapat mendaftar sendiri, atau Anda dapat mengaktifkan akun mereka secara langsung di sini.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
