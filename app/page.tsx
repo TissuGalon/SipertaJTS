@@ -135,19 +135,7 @@ export default function LandingPage() {
     setIsLoading(true)
 
     try {
-      // Check if NIM/NIP exists in our tables
-      if (signUpData.role === 'mahasiswa') {
-        const { data } = await supabase.from('mahasiswa').select('name').eq('nim', signUpData.nim).single();
-        if (!data) {
-          throw new Error("NIM tidak ditemukan. Pastikan Anda sudah terdaftar di sistem oleh admin.");
-        }
-      } else if (signUpData.role === 'dosen') {
-        const { data } = await supabase.from('dosen').select('name').eq('nip', signUpData.nim).single();
-        if (!data) {
-          throw new Error("NIP tidak ditemukan. Pastikan Anda sudah terdaftar di sistem oleh admin.");
-        }
-      }
-
+      // Proceed directly to sign up without checking existing tables
       const { error } = await supabase.auth.signUp({
         email: signUpData.email,
         password: signUpData.password,
