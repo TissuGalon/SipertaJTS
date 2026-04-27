@@ -28,7 +28,9 @@ import {
   IconDownload,
   IconPaperclip,
   IconUpload,
-  IconCircleCheckFilled
+  IconCircleCheckFilled,
+  IconEye,
+  IconTrash
 } from '@tabler/icons-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -274,6 +276,32 @@ export default function DocumentVerifierPage() {
     } catch (error: any) {
       console.error('Error updating request:', error);
       toast.error("Gagal memproses permintaan");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleResetLetter = async () => {
+    if (!confirm("Hapus file surat saat ini? Mahasiswa tidak akan bisa mendownload surat sampai Anda mengunggah ulang atau men-generate yang baru.")) {
+      return;
+    }
+
+    try {
+      setIsProcessing(true);
+      const { error } = await supabase
+        .from('letter_requests')
+        .update({
+          letter_url: null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      toast.success("File surat berhasil dihapus. Sistem akan kembali ke pengaturan awal.");
+      fetchRequest();
+    } catch (error: any) {
+      toast.error("Gagal menghapus file: " + error.message);
     } finally {
       setIsProcessing(false);
     }
@@ -563,7 +591,9 @@ export default function DocumentVerifierPage() {
                 <div className="flex flex-col space-y-2">
                   <div className={cn(
                     "relative border-2 border-dashed rounded-xl p-6 transition-all group",
-                    finalFile ? "bg-emerald-50/50 border-emerald-200" : "bg-slate-50/50 border-slate-200 hover:border-indigo-300"
+                    finalFile ? "bg-emerald-50/50 border-emerald-200" : 
+                    request?.letter_url ? "bg-indigo-50/30 border-indigo-200" :
+                    "bg-slate-50/50 border-slate-200 hover:border-indigo-300"
                   )}>
                     <input 
                       type="file" 
@@ -579,18 +609,15 @@ export default function DocumentVerifierPage() {
                         <>
                           <IconCircleCheckFilled className="text-emerald-500 mb-2" size={32} />
                           <p className="text-sm font-bold text-emerald-800">{finalFile.name}</p>
-                          <p className="text-[10px] text-emerald-600 uppercase font-black">File siap diunggah</p>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="mt-2 h-7 text-rose-500 hover:text-rose-600 hover:bg-rose-50"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              setFinalFile(null);
-                            }}
-                          >
-                            Hapus
-                          </Button>
+                          <p className="text-[10px] text-emerald-600 uppercase font-black">Baru: File siap diunggah</p>
+                        </>
+                      ) : request?.letter_url ? (
+                        <>
+                          <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 mb-2">
+                             <IconCheck size={24} />
+                          </div>
+                          <p className="text-sm font-bold text-indigo-800">Surat Sudah Tersedia di Sistem</p>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">Seret file baru di sini untuk mengganti</p>
                         </>
                       ) : (
                         <>
@@ -603,9 +630,58 @@ export default function DocumentVerifierPage() {
                       )}
                     </div>
                   </div>
-                  <p className="text-[11px] text-slate-500 italic">
-                    * Kosongkan jika ingin men-generate otomatis dari template saat menekan tombol setujui.
-                  </p>
+                  
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+                    <p className="text-[11px] text-slate-500 italic max-w-xs">
+                      {request?.letter_url 
+                        ? "* Anda dapat mengganti file surat yang sudah ada dengan mengunggah file baru."
+                        : "* Kosongkan jika ingin men-generate otomatis dari template saat menekan tombol setujui."}
+                    </p>
+                    
+                    <div className="flex items-center space-x-2">
+                      {finalFile && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 px-3 text-[10px] uppercase font-black text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-xl"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setFinalFile(null);
+                          }}
+                        >
+                          Batal Ganti
+                        </Button>
+                      )}
+                      
+                      {request?.letter_url && !finalFile && (
+                        <>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-8 px-4 text-[10px] uppercase font-black bg-white dark:bg-slate-900 border-indigo-100 rounded-xl"
+                            asChild
+                          >
+                            <a href={request.letter_url} target="_blank" rel="noopener noreferrer">
+                              <IconEye size={14} className="mr-1.5" />
+                              Lihat Surat
+                            </a>
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 px-3 text-[10px] uppercase font-black text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-xl"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleResetLetter();
+                            }}
+                          >
+                            <IconTrash size={14} className="mr-1.5" />
+                            Hapus File
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </CardContent>

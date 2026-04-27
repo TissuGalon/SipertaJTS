@@ -111,13 +111,16 @@ function RequestLetterContent() {
 
     if (Array.isArray(selectedTemplate.fields)) {
       selectedTemplate.fields.forEach((field: any) => {
+        const isNomorSurat = field.name.toLowerCase().includes('nomor') && field.name.toLowerCase().includes('surat');
+        
         fields.push({
           name: field.name,
           label: field.label,
           type: field.type || 'text',
-          placeholder: field.placeholder,
+          placeholder: isNomorSurat ? "Otomatis diisi oleh admin" : field.placeholder,
           description: field.description,
-          required: field.required !== false,
+          required: isNomorSurat ? false : field.required !== false,
+          disabled: isNomorSurat,
           options: field.type === 'dosen_picker' 
             ? lecturers.map(l => ({ label: `${l.name} (NIP: ${l.nip || '-'})`, value: JSON.stringify({ name: l.name, nip: l.nip }) }))
             : field.options

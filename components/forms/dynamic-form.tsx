@@ -90,6 +90,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                       <Select 
                         onValueChange={fieldProps.onChange} 
                         value={value as string}
+                        disabled={field.disabled}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder={field.placeholder || (field.type === 'dosen_picker' ? "Pilih Dosen..." : "Select an option")} />
@@ -109,6 +110,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                         placeholder={field.placeholder}
                         {...fieldProps}
                         value={(value as string) ?? ""}
+                        disabled={field.disabled}
                       />
                     ) : (
                       <Input 
@@ -116,6 +118,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                         placeholder={field.placeholder} 
                         {...fieldProps} 
                         value={(value as string) ?? ""}
+                        disabled={field.disabled}
                       />
                     )}
                   </FormControl>
