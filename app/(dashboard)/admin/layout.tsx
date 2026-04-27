@@ -27,6 +27,7 @@ const navItems: NavItem[] = [
   // Data Master
   { label: 'Data Mahasiswa', href: '/admin/mahasiswa', icon: IconUsers, category: 'Data Master' },
   { label: 'Data Dosen', href: '/admin/dosen', icon: IconSchool, category: 'Data Master' },
+  { label: 'Jurusan & Prodi', href: '/admin/jurusan-prodi', icon: IconSchool, category: 'Data Master' },
 
   // Pengaturan & Sistem
   { label: 'Manajemen Admin', href: '/admin/manajemen-admin', icon: IconShieldLock, category: 'Pengaturan & Sistem' },
@@ -46,12 +47,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { count: templateCount },
         { count: mahasiswaCount },
         { count: dosenCount },
+        { count: prodiCount },
         { count: adminCount }
       ] = await Promise.all([
         supabase.from('letter_requests').select('*', { count: 'exact', head: true }),
         supabase.from('letter_templates').select('*', { count: 'exact', head: true }),
         supabase.from('mahasiswa').select('*', { count: 'exact', head: true }),
         supabase.from('dosen').select('*', { count: 'exact', head: true }),
+        supabase.from('prodi').select('*', { count: 'exact', head: true }),
         supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'admin')
       ]);
       
@@ -60,6 +63,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         '/admin/jenis-surat': templateCount || 0,
         '/admin/mahasiswa': mahasiswaCount || 0,
         '/admin/dosen': dosenCount || 0,
+        '/admin/jurusan-prodi': prodiCount || 0,
         '/admin/manajemen-admin': adminCount || 0
       });
     };
