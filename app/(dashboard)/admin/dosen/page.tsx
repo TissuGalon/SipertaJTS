@@ -106,11 +106,14 @@ export default function DataDosenPage() {
     const name = formData.get('name') as string;
     const nip = formData.get('nip') as string;
     const email = formData.get('email') as string;
+    const gelar = formData.get('gelar') as string;
+    const hp = formData.get('hp') as string;
+    const prodi = formData.get('prodi') as string;
 
     try {
       const { error } = await supabase
         .from('dosen')
-        .insert([{ name, nip, email }]);
+        .insert([{ name, nip, email, gelar, hp, prodi }]);
 
       if (error) throw error;
 
@@ -137,11 +140,14 @@ export default function DataDosenPage() {
     const name = formData.get('name') as string;
     const email = formData.get('email') as string;
     const nip = formData.get('nip') as string;
+    const gelar = formData.get('gelar') as string;
+    const hp = formData.get('hp') as string;
+    const prodi = formData.get('prodi') as string;
     
     try {
       const { error } = await supabase
         .from('dosen')
-        .update({ name, email, nip })
+        .update({ name, email, nip, gelar, hp, prodi })
         .eq('id', editingLecturer.id);
 
       if (error) throw error;
@@ -323,6 +329,27 @@ export default function DataDosenPage() {
                   <Input id="nip" name="nip" placeholder="NIP / ID Dosen" className="col-span-3" required />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="gelar" className="text-right font-medium">Gelar</Label>
+                  <Input id="gelar" name="gelar" placeholder="M.T. / Ph.D." className="col-span-3" />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="hp" className="text-right font-medium">No. HP/WA</Label>
+                  <Input id="hp" name="hp" placeholder="08..." className="col-span-3" />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="prodi" className="text-right font-medium">Prodi</Label>
+                  <Select name="prodi">
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Pilih Prodi" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(PRODI_LABELS).map(([value, label]) => (
+                        <SelectItem key={value} value={value}>{label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="email" className="text-right font-medium">Email</Label>
                   <Input id="email" name="email" type="email" placeholder="Optional" className="col-span-3" />
                 </div>
@@ -362,7 +389,9 @@ export default function DataDosenPage() {
               <thead className="bg-slate-50/80 dark:bg-slate-800/80 border-b text-slate-500 font-medium">
                 <tr>
                   <th className="h-12 px-6 text-left">Dosen</th>
+                  <th className="h-12 px-6 text-left">Gelar</th>
                   <th className="h-12 px-6 text-left">NIP</th>
+                  <th className="h-12 px-6 text-left">Prodi</th>
                   <th className="h-12 px-6 text-left">Status Akun</th>
                   <th className="h-12 px-6 text-right">Aksi</th>
                 </tr>
@@ -381,19 +410,43 @@ export default function DataDosenPage() {
                   <tr key={lecturer.id} className="group hover:bg-slate-50/80 dark:hover:bg-slate-800/80 transition-all duration-200">
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-3">
-                        <Avatar className="h-10 w-10 ring-2 ring-transparent group-hover:ring-emerald-100 dark:group-hover:ring-emerald-900 transition-all">
+                        <Avatar className="h-10 w-10 ring-2 ring-transparent group-hover:ring-emerald-100 dark:group-hover:ring-emerald-900 transition-all shrink-0">
                           <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${lecturer.name}`} alt={lecturer.name} />
                           <AvatarFallback className="bg-emerald-100 text-emerald-700 text-xs">
                             {lecturer.name.substring(0, 2).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="font-semibold text-slate-900 dark:text-white">{lecturer.name}</span>
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-slate-900 dark:text-white leading-none">{lecturer.name}</span>
+                          <span className="text-[10px] text-slate-400 mt-1">{lecturer.email || 'tanpa email'}</span>
+                        </div>
                       </div>
                     </td>
+                    <td className="px-6 py-4">
+                      {lecturer.gelar ? (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800">
+                          {lecturer.gelar}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-slate-400 italic">-</span>
+                      )}
+                    </td>
                     <td className="px-6 py-4 text-slate-600 dark:text-slate-400">
-                      <code className="text-xs font-mono px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded">
-                        {lecturer.nip}
-                      </code>
+                      <div className="flex flex-col">
+                        <code className="text-xs font-mono px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded w-fit">
+                          {lecturer.nip}
+                        </code>
+                        {lecturer.hp && <span className="text-[10px] text-slate-400 mt-1">{lecturer.hp}</span>}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      {lecturer.prodi ? (
+                        <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                          {PRODI_LABELS[lecturer.prodi as keyof typeof PRODI_LABELS] || lecturer.prodi}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-slate-400 italic">-</span>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       {lecturer.user_id ? (
@@ -484,6 +537,27 @@ export default function DataDosenPage() {
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="edit-nip" className="text-right font-medium">NIP</Label>
                   <Input id="edit-nip" name="nip" defaultValue={editingLecturer.nip ?? ''} className="col-span-3" required />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-gelar" className="text-right font-medium">Gelar</Label>
+                  <Input id="edit-gelar" name="gelar" defaultValue={editingLecturer.gelar ?? ''} className="col-span-3" />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-hp" className="text-right font-medium">No. HP/WA</Label>
+                  <Input id="edit-hp" name="hp" defaultValue={editingLecturer.hp ?? ''} className="col-span-3" />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="edit-prodi" className="text-right font-medium">Prodi</Label>
+                  <Select name="prodi" defaultValue={editingLecturer.prodi}>
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Pilih Prodi" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(PRODI_LABELS).map(([value, label]) => (
+                        <SelectItem key={value} value={value}>{label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="edit-email" className="text-right font-medium">Email</Label>
