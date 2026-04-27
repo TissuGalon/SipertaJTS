@@ -13,25 +13,31 @@ import { cn } from '@/lib/utils';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { TimelineStepper } from '@/components/ui/timeline-stepper';
 import { 
-  IconArrowLeft, 
-  IconDownload, 
-  IconFileDescription, 
+  IconArrowLeft,
+  IconDownload,
+  IconFileDescription,
   IconMessageCircle,
   IconCalendarEvent,
   IconClock,
   IconLoader2,
-  IconFileText
+  IconFileText,
+  IconPlus,
+  IconUpload,
+  IconCheck
 } from '@tabler/icons-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { Label } from '@/components/ui/label';
 
 export default function LetterDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const [request, setRequest] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isUploading, setIsUploading] = useState(false);
   const [attachments, setAttachments] = useState<any[]>([]);
 
   useEffect(() => {
@@ -91,6 +97,62 @@ export default function LetterDetailPage() {
       toast.error("Gagal memuat detail pengajuan: " + error.message);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, fieldName: string, label: string) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setIsUploading(true);
+      const fileExt = file.name.split('.').pop();
+      const filePath = `requests/${id}/${fieldName}_${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('letter_attachments')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const newFile = {
+        name: label,
+        path: filePath,
+        fileName: file.name,
+        fieldName: fieldName,
+        requirementId: fieldName.startsWith('req_') ? fieldName.replace('req_', '') : null,
+        size: file.size,
+        type: file.type
+      };
+
+      const existingIdx = (request.files || []).findIndex((f: any) => 
+        (f.fieldName === fieldName && fieldName) || 
+        (f.requirementId === newFile.requirementId && newFile.requirementId)
+      );
+      let updatedFiles = [...(request.files || [])];
+      
+      if (existingIdx !== -1) {
+        updatedFiles[existingIdx] = newFile;
+      } else {
+        updatedFiles.push(newFile);
+      }
+
+      const { error: updateError } = await supabase
+        .from('letter_requests')
+        .update({ 
+          files: updatedFiles,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+
+      if (updateError) throw updateError;
+
+      toast.success(`Berhasil mengunggah ${label}`);
+      fetchRequestDetail();
+    } catch (error: any) {
+      toast.error("Gagal mengunggah berkas: " + error.message);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -200,12 +262,15 @@ export default function LetterDetailPage() {
 
           {/* Uploaded Files */}
           <Card className="border-none shadow-2xl bg-white dark:bg-slate-900 rounded-3xl overflow-hidden">
-            <CardHeader className="bg-slate-50/50 dark:bg-slate-800/30 border-b border-slate-100 dark:border-slate-800">
+            <CardHeader className="bg-slate-50/50 dark:bg-slate-800/30 border-b border-slate-100 dark:border-slate-800 flex flex-row items-center justify-between">
               <CardTitle className="text-lg">Berkas Lampiran</CardTitle>
+              <div className="px-3 py-1 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-[10px] font-black uppercase">
+                {attachments.length} Berkas
+              </div>
             </CardHeader>
-            <CardContent className="pt-6">
+            <CardContent className="pt-6 space-y-6">
               <div className="grid gap-3">
-                {attachments.length > 0 ? attachments.map((file, i) => (
+                {attachments.map((file, i) => (
                   <div key={i} className="flex items-center justify-between rounded-2xl border border-slate-100 p-4 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-800/20 group hover:border-indigo-200 transition-all">
                     <div className="flex items-center space-x-4">
                       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white dark:bg-slate-800 text-slate-500 shadow-sm group-hover:text-indigo-600 transition-colors">
@@ -220,12 +285,79 @@ export default function LetterDetailPage() {
                       <a href={file.url} target="_blank" rel="noopener noreferrer">Pratinjau</a>
                     </Button>
                   </div>
-                )) : (
-                  <div className="py-10 text-center text-slate-400 italic text-sm">
-                    Tidak ada berkas yang diunggah.
-                  </div>
-                )}
+                ))}
               </div>
+
+              {/* Missing Requirements / Upload Nyusul */}
+              {request.status !== 'done' && request.status !== 'rejected' && (
+                <div className="space-y-4 pt-4 border-t border-dashed">
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Upload Berkas Susulan</h4>
+                  <div className="grid gap-4">
+                    {[
+                      ...(request.letter_templates?.fields?.filter((f: any) => f.type === 'file') || []),
+                      ...(request.letter_templates?.requirements?.map((r: any) => ({ 
+                        ...r, 
+                        name: `req_${r.id}`, 
+                        label: r.label, 
+                        isRequirement: true,
+                        requirementId: r.id 
+                      })) || [])
+                    ].map((field: any) => {
+                        const isUploaded = request.files?.some((f: any) => 
+                          f.fieldName === field.name || f.requirementId === field.requirementId
+                        );
+
+                        return (
+                          <div key={field.name} className="relative group p-4 rounded-2xl border-2 border-slate-50 dark:border-slate-800/50 bg-slate-50/20">
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex flex-col">
+                                <Label className="text-xs font-black text-slate-700 dark:text-slate-200">{field.label}</Label>
+                                {field.description && <p className="text-[10px] text-slate-400 mt-0.5">{field.description}</p>}
+                              </div>
+                              {isUploaded && (
+                                <div className="flex items-center px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 text-[9px] font-black uppercase">
+                                  <IconCheck size={10} className="mr-1" /> Terunggah
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <div className="flex-1 relative">
+                                <Input 
+                                  type="file" 
+                                  disabled={isUploading}
+                                  onChange={(e) => handleFileUpload(e, field.name, field.label)}
+                                  className={cn(
+                                    "h-11 rounded-xl border-dashed border-2 bg-white dark:bg-slate-900 file:hidden pr-10 cursor-pointer transition-all",
+                                    isUploaded ? "border-emerald-200/50 hover:border-emerald-400" : "border-slate-200 hover:border-indigo-300"
+                                  )}
+                                />
+                                <IconUpload className={cn(
+                                  "absolute right-4 top-3 h-5 w-5 pointer-events-none transition-colors",
+                                  isUploaded ? "text-emerald-400" : "text-slate-300"
+                                )} />
+                              </div>
+                            </div>
+                            {isUploaded && (
+                              <p className="mt-2 text-[9px] text-slate-400 font-medium italic">
+                                * Klik untuk mengganti berkas yang sudah ada.
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    
+                    {!([
+                      ...(request.letter_templates?.fields?.filter((f: any) => f.type === 'file') || []),
+                      ...(request.letter_templates?.requirements || [])
+                    ].filter((f: any) => !request.files?.some((uf: any) => uf.fieldName === f.name || uf.requirementId === (f.id || f.requirementId))).length) && (
+                      <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30 flex items-center gap-3 text-emerald-600 shadow-sm">
+                        <IconCheck className="h-5 w-5" />
+                        <span className="text-xs font-black uppercase tracking-wider">Semua persyaratan pengajuan telah terpenuhi</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

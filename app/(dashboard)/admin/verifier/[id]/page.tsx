@@ -41,6 +41,13 @@ import { supabase } from '@/lib/supabase';
 import { LETTER_TYPE_LABELS, RequestStatus } from '@/types';
 import { toast } from 'sonner';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import PizZip from 'pizzip';
 import Docxtemplater from 'docxtemplater';
 import { saveAs } from 'file-saver';
@@ -276,6 +283,28 @@ export default function DocumentVerifierPage() {
     } catch (error: any) {
       console.error('Error updating request:', error);
       toast.error("Gagal memproses permintaan");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleUpdateStatus = async (newStatus: string) => {
+    try {
+      setIsProcessing(true);
+      const { error } = await supabase
+        .from('letter_requests')
+        .update({ 
+          status: newStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      setRequest({ ...request, status: newStatus });
+      toast.success(`Status berhasil diperbarui menjadi ${newStatus}`);
+    } catch (error: any) {
+      toast.error("Gagal memperbarui status: " + error.message);
     } finally {
       setIsProcessing(false);
     }
@@ -540,12 +569,6 @@ export default function DocumentVerifierPage() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="status">Status Saat Ini</Label>
-                  <div className="h-10 flex items-center">
-                    <StatusBadge status={request.status} />
-                  </div>
-                </div>
-                <div className="space-y-2">
                   <Label htmlFor="date">Tanggal Pengajuan</Label>
                   <div className="h-10 flex items-center text-sm font-medium">
                     {new Date(request.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
@@ -683,6 +706,35 @@ export default function DocumentVerifierPage() {
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* Status Override Selector */}
+              <div className="pt-6 mt-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                <Label className="text-sm font-bold text-slate-900 dark:text-white flex items-center">
+                  <IconInfoCircle size={16} className="mr-2 text-indigo-600" />
+                  Override Status Sistem
+                </Label>
+                <Select 
+                  value={request.status} 
+                  disabled={isProcessing}
+                  onValueChange={(val: any) => handleUpdateStatus(val)}
+                >
+                  <SelectTrigger className="w-full h-12 border-indigo-100 bg-white dark:bg-slate-950 font-bold focus:ring-indigo-500 transition-all rounded-xl shadow-sm">
+                    <SelectValue placeholder="Pilih status baru" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-indigo-50 border-none shadow-2xl">
+                    <SelectItem value="pending">Menunggu Antrean</SelectItem>
+                    <SelectItem value="verifying">Sedang Ditinjau</SelectItem>
+                    <SelectItem value="processing">Sedang Diproses Admin</SelectItem>
+                    <SelectItem value="menunggu_admin">Antrean Admin</SelectItem>
+                    <SelectItem value="disetujui_koordinator">Disetujui Koordinator</SelectItem>
+                    <SelectItem value="done">Selesai (Arsip)</SelectItem>
+                    <SelectItem value="rejected">Ditolak</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-[10px] text-slate-400 italic">
+                  * Gunakan ini hanya untuk perbaikan status manual tanpa memproses file.
+                </p>
               </div>
             </CardContent>
             <CardFooter className="flex space-x-3 bg-slate-50/50 dark:bg-slate-900/50 p-6 border-t">

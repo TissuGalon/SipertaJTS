@@ -10,8 +10,8 @@ interface TimelineStepperProps {
 
 const steps: { status: RequestStatus; label: string }[] = [
   { status: 'pending', label: 'Menunggu' },
-  { status: 'verifying', label: 'Verifikasi' },
-  { status: 'processing', label: 'Diproses' },
+  { status: 'disetujui_koordinator', label: 'Verifikasi Kaprodi' },
+  { status: 'processing', label: 'Proses Admin' },
   { status: 'done', label: 'Selesai' },
 ];
 
