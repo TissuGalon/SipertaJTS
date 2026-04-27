@@ -102,7 +102,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
       
       if (session) {
         if (formData.role === "dosen") {
-          window.location.href = "/dosen/dashboard"
+          window.location.href = "/koordinator/dashboard"
         } else {
           window.location.href = "/mahasiswa/dashboard"
         }
@@ -118,7 +118,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
           window.location.href = "/login"
         } else {
           if (formData.role === "dosen") {
-            window.location.href = "/dosen/dashboard"
+            window.location.href = "/koordinator/dashboard"
           } else {
             window.location.href = "/mahasiswa/dashboard"
           }
