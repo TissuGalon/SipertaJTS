@@ -47,146 +47,11 @@ import { toast } from "sonner"
 import { motion } from "framer-motion"
 import { supabase } from "@/lib/supabase"
 
+import { LoginForm } from "@/components/auth/login-form"
+import { RegisterForm } from "@/components/auth/register-form"
+
 export default function LandingPage() {
-  const router = useRouter()
-  const [role, setRole] = useState<"admin" | "mahasiswa" | "dosen">("mahasiswa")
-  const [isLoading, setIsLoading] = useState(false)
-  
-  // Login form state
-  const [loginEmail, setLoginEmail] = useState("")
-  const [loginPassword, setLoginPassword] = useState("")
-
-  // Sign up form state
-  const [signUpData, setSignUpData] = useState({
-    name: "",
-    nim: "",
-    email: "",
-    password: "",
-    role: "mahasiswa" as "mahasiswa" | "dosen"
-  })
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-
-    try {
-      let emailToUse = loginEmail;
-
-      // Identity resolution if not an email
-      if (!loginEmail.includes('@')) {
-        const { data: studentData } = await supabase
-          .from('mahasiswa')
-          .select('email')
-          .eq('nim', loginEmail)
-          .single();
-
-        if (studentData?.email) {
-          emailToUse = studentData.email;
-        } else {
-          const { data: lecturerData } = await supabase
-            .from('dosen')
-            .select('email')
-            .eq('nip', loginEmail)
-            .single();
-          
-          if (lecturerData?.email) {
-            emailToUse = lecturerData.email;
-          } else {
-            emailToUse = `${loginEmail}@siperta.local`;
-          }
-        }
-      }
-
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: emailToUse,
-        password: loginPassword,
-      })
-
-      if (error) throw error
-
-      toast.success("Login Berhasil")
-
-      const { data: profile } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', data.user.id)
-        .single()
-
-      if (profile?.role === "admin") {
-        window.location.href = "/admin/dashboard"
-      } else if (profile?.role === "dosen") {
-        window.location.href = "/koordinator/dashboard"
-      } else {
-        window.location.href = "/mahasiswa/dashboard"
-      }
-    } catch (error: any) {
-      toast.error("Login Gagal", { 
-        description: error.message === "Invalid login credentials" 
-          ? "Akun tidak ditemukan atau kata sandi salah. Gunakan NIM/NIP atau Email yang terdaftar." 
-          : error.message 
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-
-    try {
-      // Proceed directly to sign up without checking existing tables
-      const { error } = await supabase.auth.signUp({
-        email: signUpData.email,
-        password: signUpData.password,
-        options: {
-          data: {
-            name: signUpData.name,
-            nim: signUpData.nim,
-            role: signUpData.role
-          }
-        }
-      })
-
-      if (error) throw error
-
-      // Link to profiles if they exist or create them
-      const { data: userData } = await supabase.auth.getUser()
-      if (userData?.user) {
-        if (signUpData.role === 'mahasiswa') {
-          await supabase.from('mahasiswa').update({ 
-            user_id: userData.user.id,
-            email: signUpData.email,
-            name: signUpData.name 
-          }).eq('nim', signUpData.nim)
-        } else if (signUpData.role === 'dosen') {
-          await supabase.from('dosen').update({ 
-            user_id: userData.user.id,
-            email: signUpData.email,
-            name: signUpData.name 
-          }).eq('nip', signUpData.nim)
-        }
-
-        // Ensure they have a record in the 'users' profile table for unified access
-        await supabase.from('users').upsert({
-          id: userData.user.id,
-          name: signUpData.name,
-          email: signUpData.email,
-          role: signUpData.role,
-          nim: signUpData.role === 'mahasiswa' ? signUpData.nim : undefined,
-          nip: signUpData.role === 'dosen' ? signUpData.nim : undefined
-        })
-      }
-
-      toast.success("Registrasi Berhasil", { 
-        description: "Silakan login menggunakan akun baru Anda." 
-      })
-    } catch (error: any) {
-      toast.error("Registrasi Gagal", { description: error.message })
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  const [activeTab, setActiveTab] = useState<"login" | "signup">("login")
 
   return (
     <div className="min-h-screen bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-50">
@@ -261,133 +126,24 @@ export default function LandingPage() {
                 <TabsList className="grid w-full grid-cols-2 rounded-none bg-slate-50/50 p-0 dark:bg-slate-900/50">
                   <TabsTrigger 
                     value="login" 
-                    className="rounded-none border-b-2 border-transparent py-4 data-[state=active]:border-blue-600 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950"
+                    className="rounded-none border-b-2 border-transparent py-4 data-[state=active]:border-indigo-600 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 font-bold"
                   >
                     Masuk
                   </TabsTrigger>
                   <TabsTrigger 
                     value="signup" 
-                    className="rounded-none border-b-2 border-transparent py-4 data-[state=active]:border-blue-600 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950"
+                    className="rounded-none border-b-2 border-transparent py-4 data-[state=active]:border-indigo-600 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-950 font-bold"
                   >
                     Daftar
                   </TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="login" className="p-6">
-                  <form onSubmit={handleLogin} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="login-email">Email atau NIM/NIP</Label>
-                      <div className="relative">
-                        <IconMail className="absolute top-2.5 left-3 h-4 w-4 text-slate-400" />
-                        <Input
-                          id="login-email"
-                          type="text"
-                          placeholder="Email atau NIM/NIP"
-                          className="pl-10"
-                          value={loginEmail}
-                          onChange={(e) => setLoginEmail(e.target.value)}
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="login-password">Kata Sandi</Label>
-                      <div className="relative">
-                        <IconLock className="absolute top-2.5 left-3 h-4 w-4 text-slate-400" />
-                        <Input
-                          id="login-password"
-                          type="password"
-                          className="pl-10"
-                          value={loginPassword}
-                          onChange={(e) => setLoginPassword(e.target.value)}
-                          required
-                        />
-                      </div>
-                    </div>
-                    <Button
-                      type="submit"
-                      className="mt-2 w-full bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/20"
-                      disabled={isLoading}
-                    >
-                      {isLoading ? "Memproses..." : "Masuk Sekarang"}
-                    </Button>
-                  </form>
+                  <LoginForm />
                 </TabsContent>
 
                 <TabsContent value="signup" className="p-6">
-                  <form onSubmit={handleSignUp} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-name">Nama Lengkap</Label>
-                      <Input 
-                        id="signup-name" 
-                        placeholder="John Doe" 
-                        value={signUpData.name}
-                        onChange={(e) => setSignUpData({...signUpData, name: e.target.value})}
-                        required 
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-nim">NIM / NIP</Label>
-                        <Input 
-                          id="signup-nim" 
-                          placeholder="210101xxx" 
-                          value={signUpData.nim}
-                          onChange={(e) => setSignUpData({...signUpData, nim: e.target.value})}
-                          required 
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-role">Daftar sebagai</Label>
-                        <Select 
-                          value={signUpData.role || "mahasiswa"} 
-                          onValueChange={(v: any) => setSignUpData({...signUpData, role: v})}
-                        >
-                          <SelectTrigger id="signup-role" className="w-full">
-                            <SelectValue placeholder="Role" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="mahasiswa">Mahasiswa</SelectItem>
-                            <SelectItem value="dosen">Dosen</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-email">Email</Label>
-                      <Input 
-                        id="signup-email" 
-                        type="email" 
-                        placeholder="nama@email.com" 
-                        value={signUpData.email}
-                        onChange={(e) => setSignUpData({...signUpData, email: e.target.value})}
-                        required 
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-password">Kata Sandi</Label>
-                      <Input 
-                        id="signup-password" 
-                        type="password" 
-                        placeholder="••••••••"
-                        value={signUpData.password}
-                        onChange={(e) => setSignUpData({...signUpData, password: e.target.value})}
-                        required 
-                      />
-                    </div>
-                    <Button
-                      type="submit"
-                      className="mt-2 w-full bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/20"
-                      disabled={isLoading}
-                    >
-                      {isLoading ? "Memproses..." : "Daftar Akun"}
-                    </Button>
-                    {signUpData.role === "dosen" && (
-                      <p className="text-[10px] text-center text-amber-600 font-medium">
-                        * Peran Dosen memerlukan verifikasi administrator.
-                      </p>
-                    )}
-                  </form>
+                  <RegisterForm onSuccess={() => setActiveTab("login")} />
                 </TabsContent>
               </Tabs>
               <CardFooter className="flex flex-col space-y-4 bg-slate-50/50 p-6 dark:bg-slate-900/50">
