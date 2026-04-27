@@ -245,7 +245,8 @@ function RequestLetterContent() {
             for (const file of fileArray as File[]) {
               const fileExt = file.name.split('.').pop();
               const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
-              const filePath = `${currentUser.id}/${selectedTemplate.id}/${fileName}`;
+              const userId = currentUser.user_id || currentUser.id;
+              const filePath = `${userId}/${selectedTemplate.id}/${fileName}`;
 
               const { error: uploadError } = await supabase.storage
                 .from('letter_attachments')
@@ -318,7 +319,7 @@ function RequestLetterContent() {
       const { error } = await supabase
         .from('letter_requests')
         .insert({
-          user_id: currentUser.id,
+          user_id: currentUser.user_id || currentUser.id, // Use auth user id (user_id from profile or id from user fallback)
           template_id: selectedTemplate.id,
           type: selectedTemplate.id, // Better to use ID or a slug if available
           details: details,
