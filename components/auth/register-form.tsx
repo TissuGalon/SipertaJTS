@@ -56,73 +56,64 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
 
       if (signUpError) throw signUpError
 
-      // Step 2: Create Profiles and Link Records
-      if (signUpResult.user) {
-        const userId = signUpResult.user.id
+      // Step 2: Auto Login Logic
+      const { data: { session: existingSession } } = await supabase.auth.getSession()
+      let activeSession = existingSession;
+      let finalUserId = signUpResult.user.id;
 
-        // Update the identity table (mahasiswa/dosen) to link the user_id
+      if (!activeSession) {
+        const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password,
+        })
+        
+        if (loginError) {
+          toast.error("Registrasi sukses, tapi gagal login otomatis. Silakan login manual.");
+          window.location.href = "/login"
+          return;
+        }
+        activeSession = loginData.session;
+        finalUserId = loginData.user?.id || finalUserId;
+      }
+
+      // Step 3: Create Profiles after Auth
+      try {
         if (formData.role === "mahasiswa") {
-          await supabase
-            .from("mahasiswa")
-            .update({
-              user_id: userId,
-              email: formData.email,
-              name: formData.name,
-            })
-            .eq("nim", formData.nim)
+          await supabase.from("mahasiswa").upsert({
+            user_id: finalUserId,
+            email: formData.email,
+            name: formData.name,
+            nim: formData.nim,
+          }, { onConflict: 'nim' })
         } else if (formData.role === "dosen") {
-          await supabase
-            .from("dosen")
-            .update({
-              user_id: userId,
-              email: formData.email,
-              name: formData.name,
-            })
-            .eq("nip", formData.nim)
+          await supabase.from("dosen").upsert({
+            user_id: finalUserId,
+            email: formData.email,
+            name: formData.name,
+            nip: formData.nim,
+          }, { onConflict: 'nip' })
         }
 
-        // Ensure a record exists in the public.users table (unified profile)
         await supabase.from("users").upsert({
-          id: userId,
+          id: finalUserId,
           name: formData.name,
           email: formData.email,
           role: formData.role,
           nim: formData.role === "mahasiswa" ? formData.nim : undefined,
           nip: formData.role === "dosen" ? formData.nim : undefined,
         })
+      } catch (err) {
+        console.error("Profile sync error:", err);
       }
 
       toast.success("Registrasi Berhasil", {
-        description: "Akun Anda telah dibuat. Melakukan login otomatis...",
+        description: "Akun Anda telah siap.",
       })
 
-      // Step 2: Auto Login Logic
-      // Check if session was already created by signUp (depends on Supabase config)
-      const { data: { session } } = await supabase.auth.getSession()
-      
-      if (session) {
-        if (formData.role === "dosen") {
-          window.location.href = "/koordinator/dashboard"
-        } else {
-          window.location.href = "/mahasiswa/dashboard"
-        }
+      if (formData.role === "dosen") {
+        window.location.href = "/koordinator/dashboard"
       } else {
-        // Fallback login if session not automatically created
-        const { error: loginError } = await supabase.auth.signInWithPassword({
-          email: formData.email,
-          password: formData.password,
-        })
-        
-        if (loginError) {
-          // If login fails for some reason, go to manual login
-          window.location.href = "/login"
-        } else {
-          if (formData.role === "dosen") {
-            window.location.href = "/koordinator/dashboard"
-          } else {
-            window.location.href = "/mahasiswa/dashboard"
-          }
-        }
+        window.location.href = "/mahasiswa/dashboard"
       }
 
       if (onSuccess) onSuccess()

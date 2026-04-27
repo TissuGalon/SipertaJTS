@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   IconLayoutDashboard, 
   IconChecklist, 
-  IconShieldCheck
+  IconShieldCheck,
+  IconUser
 } from '@tabler/icons-react';
 import { supabase } from '@/lib/supabase';
 import { DashboardLayout } from '@/components/dashboard/layout';
@@ -14,9 +15,10 @@ const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/koordinator/dashboard', icon: IconLayoutDashboard, category: 'Utama' },
   { label: 'Verifikasi Surat', href: '/koordinator/verifier', icon: IconChecklist, category: 'Layanan Surat' },
   { label: 'Riwayat Verifikasi', href: '/koordinator/riwayat', icon: IconShieldCheck, category: 'Layanan Surat' },
+  { label: 'Profil Saya', href: '/koordinator/profile', icon: IconUser, category: 'Akun' },
 ];
 
-const categories = ['Utama', 'Layanan Surat'];
+const categories = ['Utama', 'Layanan Surat', 'Akun'];
 
 export default function KoordinatorLayout({ children }: { children: React.ReactNode }) {
   const [navCounts, setNavCounts] = useState<Record<string, number>>({});
