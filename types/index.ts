@@ -99,4 +99,5 @@ export interface FormFieldConfig {
   options?: { label: string; value: string }[]
   validation?: z.ZodTypeAny
   required?: boolean
+  disabled?: boolean
 }

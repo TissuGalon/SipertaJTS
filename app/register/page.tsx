@@ -50,19 +50,7 @@ export default function RegisterPage() {
     setIsLoading(true)
 
     try {
-      // Check if NIM/NIP exists in our tables
-      if (formData.role === 'mahasiswa') {
-        const { data } = await supabase.from('mahasiswa').select('name').eq('nim', formData.nim).single();
-        if (!data) {
-          throw new Error("NIM tidak ditemukan. Pastikan Anda sudah terdaftar di sistem oleh admin.");
-        }
-      } else if (formData.role === 'dosen') {
-        const { data } = await supabase.from('dosen').select('name').eq('nip', formData.nim).single();
-        if (!data) {
-          throw new Error("NIP tidak ditemukan. Pastikan Anda sudah terdaftar di sistem oleh admin.");
-        }
-      }
-
+      // Proceed directly to sign up without checking existing tables
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -76,6 +64,38 @@ export default function RegisterPage() {
       })
 
       if (error) throw error
+
+      // Link to profiles if they exist or create them
+      if (data.user) {
+        if (formData.role === 'mahasiswa') {
+          // Attempt to link to existing mahasiswa record by NIM
+          await supabase.from('mahasiswa').update({ 
+            user_id: data.user.id,
+            email: formData.email,
+            name: formData.name 
+          }).eq('nim', formData.nim)
+          
+          // Fallback: check if we should insert if update didn't affect anything
+          // But for now, we assume the user might not be in the table yet.
+          // The dashboard already handles missing mahasiswa record.
+        } else if (formData.role === 'dosen') {
+          await supabase.from('dosen').update({ 
+            user_id: data.user.id,
+            email: formData.email,
+            name: formData.name 
+          }).eq('nip', formData.nim)
+        }
+
+        // Ensure they have a record in the 'users' profile table for unified access
+        await supabase.from('users').upsert({
+          id: data.user.id,
+          name: formData.name,
+          email: formData.email,
+          role: formData.role,
+          nim: formData.role === 'mahasiswa' ? formData.nim : undefined,
+          nip: formData.role === 'dosen' ? formData.nim : undefined
+        })
+      }
 
       toast.success("Registrasi Berhasil", {
         description: "Akun Anda telah dibuat. Silakan login."

@@ -310,7 +310,7 @@ export default function DataDosenPage() {
               <DialogHeader>
                 <DialogTitle>Tambah Dosen Baru</DialogTitle>
                 <DialogDescription>
-                  Masukkan detail dosen baru. Data ini disimpan sebagai profil, bukan akun login.
+                  Masukkan detail dosen baru sebagai profil. Dosen dapat mendaftar sendiri, atau Anda dapat mengaktifkan akun mereka secara langsung di sini.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">

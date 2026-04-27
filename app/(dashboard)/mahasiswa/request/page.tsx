@@ -18,13 +18,24 @@ import {
 } from '@/components/ui/select';
 import { DynamicForm } from '@/components/forms/dynamic-form';
 import { supabase } from '@/lib/supabase';
-import { FormFieldConfig } from '@/types';
+import { FormFieldConfig, PRODI_LABELS } from '@/types';
 import { toast } from 'sonner';
-import { IconArrowLeft, IconFilePlus, IconLoader2, IconAlertCircle, IconCheck, IconExternalLink } from '@tabler/icons-react';
+import { 
+  IconArrowLeft, 
+  IconFilePlus, 
+  IconLoader2, 
+  IconAlertCircle, 
+  IconCheck, 
+  IconExternalLink,
+  IconSearch,
+  IconCopy,
+  IconUsers
+} from '@tabler/icons-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Input } from '@/components/ui/input';
 
 function RequestLetterContent() {
   const router = useRouter();
@@ -39,6 +50,8 @@ function RequestLetterContent() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [lecturers, setLecturers] = useState<any[]>([]);
+  const [lecturerSearch, setLecturerSearch] = useState("");
+  const [isCopying, setIsCopying] = useState<string | null>(null);
 
   useEffect(() => {
     fetchInitialData();
@@ -64,14 +77,24 @@ function RequestLetterContent() {
         return;
       }
       
-      // Fetch profile to get prodi and other details
+      // Fetch professional profile from 'mahasiswa' table
       const { data: profile } = await supabase
-        .from('users')
+        .from('mahasiswa')
         .select('*')
-        .eq('id', user.id)
+        .eq('user_id', user.id)
         .single();
         
-      setCurrentUser(profile || user);
+      if (profile) {
+        setCurrentUser(profile);
+      } else {
+        // Fallback to basic user data
+        const { data: userData } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+        setCurrentUser(userData || user);
+      }
 
       const { data: templatesData, error: templatesError } = await supabase
         .from('letter_templates')
@@ -111,13 +134,18 @@ function RequestLetterContent() {
 
     if (Array.isArray(selectedTemplate.fields)) {
       selectedTemplate.fields.forEach((field: any) => {
+        const fieldNameLower = field.name.toLowerCase();
+        const isNomorSurat = fieldNameLower.includes('nomor') && fieldNameLower.includes('surat');
+        const isTanggalSurat = fieldNameLower.includes('tanggal') && fieldNameLower.includes('surat');
+        
         fields.push({
           name: field.name,
           label: field.label,
           type: field.type || 'text',
-          placeholder: field.placeholder,
+          placeholder: isNomorSurat ? "Otomatis diisi oleh admin" : field.placeholder,
           description: field.description,
-          required: field.required !== false,
+          required: (isNomorSurat || isTanggalSurat) ? false : field.required !== false,
+          disabled: isNomorSurat || isTanggalSurat,
           options: field.type === 'dosen_picker' 
             ? lecturers.map(l => ({ label: `${l.name} (NIP: ${l.nip || '-'})`, value: JSON.stringify({ name: l.name, nip: l.nip }) }))
             : field.options
@@ -138,6 +166,61 @@ function RequestLetterContent() {
     }
 
     return fields;
+  };
+
+  const getFormDefaultValues = () => {
+    const defaults: Record<string, any> = {};
+    const today = new Date().toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+
+    if (selectedTemplate && Array.isArray(selectedTemplate.fields)) {
+      selectedTemplate.fields.forEach((field: any) => {
+        const n = field.name.toLowerCase();
+        
+        // 1. Tanggal Surat (Always auto)
+        if (n.includes('tanggal') && n.includes('surat')) {
+          defaults[field.name] = today;
+          return;
+        }
+        
+        if (!currentUser) return;
+
+        // 2. Personal Data Mapping
+        // Nama
+        if (n.includes('nama') && (n.includes('mahasiswa') || n === 'nama')) {
+          defaults[field.name] = currentUser.name || '';
+        }
+        // NIM
+        else if (n === 'nim') {
+          defaults[field.name] = currentUser.nim || '';
+        }
+        // Program Studi
+        else if (n.includes('prodi') || n.includes('program studi') || n.includes('studi')) {
+          const prodiVal = currentUser.prodi;
+          defaults[field.name] = prodiVal ? (PRODI_LABELS[prodiVal as keyof typeof PRODI_LABELS] || prodiVal) : '';
+        }
+        // Jurusan (Default match)
+        else if (n.includes('jurusan')) {
+          defaults[field.name] = 'Teknik Sipil';
+        }
+        // Semester
+        else if (n === 'semester') {
+          defaults[field.name] = currentUser.semester?.toString() || '';
+        }
+        // No HP / WA
+        else if (n.includes('hp') || n.includes('telepon') || n.includes('whatsapp') || n === 'wa') {
+          defaults[field.name] = currentUser.hp || '';
+        }
+        // Email
+        else if (n === 'email') {
+          defaults[field.name] = currentUser.email || '';
+        }
+      });
+    }
+    return defaults;
   };
 
   const handleSubmit = async (data: any) => {
@@ -261,6 +344,18 @@ function RequestLetterContent() {
     }
   };
 
+  const handleCopy = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setIsCopying(id);
+    toast.success("Tersalin ke clipboard");
+    setTimeout(() => setIsCopying(null), 2000);
+  };
+
+  const filteredLecturers = lecturers.filter(l => 
+    l.name.toLowerCase().includes(lecturerSearch.toLowerCase()) || 
+    l.nip?.includes(lecturerSearch)
+  ).slice(0, 50); // Limit display for performance
+
   return (
     <div className="mx-auto max-w-4xl space-y-8 pb-12">
       {/* Premium Loading/Success Overlay */}
@@ -352,6 +447,65 @@ function RequestLetterContent() {
               )}
             </CardContent>
           </Card>
+
+          {/* Lecturer Reference Section */}
+          <Card className="mt-8 border-none shadow-xl bg-white/70 dark:bg-slate-900/70 backdrop-blur-md rounded-[2.5rem]">
+            <CardHeader className="p-8 pb-4">
+              <CardTitle className="text-lg font-black flex items-center">
+                <IconUsers className="mr-2 h-5 w-5 text-indigo-600" />
+                Referensi Dosen
+              </CardTitle>
+              <CardDescription className="text-xs font-medium">Bantuan untuk mengisi Nama/NIP Dosen</CardDescription>
+            </CardHeader>
+            <CardContent className="p-8 pt-0 space-y-4">
+              <div className="relative">
+                <IconSearch className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                <Input 
+                  placeholder="Cari Dosen atau NIP..." 
+                  className="pl-10 h-10 text-xs bg-white/50 dark:bg-slate-950/50 rounded-xl"
+                  value={lecturerSearch}
+                  onChange={(e) => setLecturerSearch(e.target.value)}
+                />
+              </div>
+
+              <div className="max-h-[300px] overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                {filteredLecturers.length > 0 ? (
+                  filteredLecturers.map((l) => (
+                    <div key={l.id} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800/50 flex flex-col space-y-1">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-black text-slate-900 dark:text-white leading-tight truncate mr-2">{l.name}</p>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-7 w-7 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+                          onClick={() => handleCopy(l.name, `${l.id}-name`)}
+                          title="Salin Nama"
+                        >
+                          <IconCopy size={12} className={isCopying === `${l.id}-name` ? "text-emerald-500" : ""} />
+                        </Button>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <code className="text-[10px] font-mono text-indigo-600 font-bold bg-indigo-50 dark:bg-indigo-900/20 px-1 rounded truncate flex-1">{l.nip || "NIP tidak tersedia"}</code>
+                        {l.nip && (
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-7 w-7 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+                            onClick={() => handleCopy(l.nip, `${l.id}-nip`)}
+                            title="Salin NIP"
+                          >
+                            <IconCopy size={12} className={isCopying === `${l.id}-nip` ? "text-emerald-500" : ""} />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-[10px] text-center text-slate-400 py-4 italic">Dosen tidak ditemukan.</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="lg:col-span-8">
@@ -373,8 +527,8 @@ function RequestLetterContent() {
                 </CardHeader>
                 <CardContent className="p-8">
                   {selectedTemplate.requirements?.length > 0 && (
-                    <Alert className="mb-10 bg-amber-50/50 border-amber-100 text-amber-900 dark:bg-amber-950/20 dark:border-amber-900/30 rounded-3xl p-6">
-                      <IconAlertCircle className="h-6 w-6 text-amber-600" />
+                    <Alert className="mb-10 bg-indigo-50/50 border-indigo-100 text-indigo-900 dark:bg-indigo-950/20 dark:border-indigo-900/30 rounded-3xl p-6">
+                      <IconAlertCircle className="h-6 w-6 text-indigo-600" />
                       <div className="ml-2">
                         <AlertTitle className="text-sm font-black uppercase tracking-widest mb-1">Perhatian Penting</AlertTitle>
                         <AlertDescription className="text-sm font-medium opacity-80">
@@ -387,6 +541,7 @@ function RequestLetterContent() {
                   <div className="px-1">
                     <DynamicForm 
                       fields={getFormFields()} 
+                      defaultValues={getFormDefaultValues()}
                       onSubmit={handleSubmit}
                       isLoading={isSubmitting}
                       submitLabel="Kirim Pengajuan Sekarang" 

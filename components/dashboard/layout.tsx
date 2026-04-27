@@ -89,6 +89,7 @@ export function DashboardLayout({
       <div className="flex flex-1 flex-col overflow-hidden">
         <Topbar 
           userProfile={userProfile}
+          role={role}
           brandIcon={brandIcon}
           brandName={brandName}
           navItems={navItems}
