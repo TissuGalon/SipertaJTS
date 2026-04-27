@@ -217,10 +217,10 @@ export default function StudentProfilePage() {
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-xl bg-amber-50/50 dark:bg-amber-900/10 border-amber-100 dark:border-amber-900/30">
+          <Card className="border-none shadow-xl bg-indigo-50/50 dark:bg-indigo-900/10 border-indigo-100 dark:border-indigo-900/30">
             <CardContent className="p-4 flex items-start space-x-3">
-              <IconAlertCircle className="text-amber-600 shrink-0 mt-0.5" size={18} />
-              <p className="text-xs text-amber-800 dark:text-amber-400 leading-relaxed font-medium">
+              <IconAlertCircle className="text-indigo-600 shrink-0 mt-0.5" size={18} />
+              <p className="text-xs text-indigo-800 dark:text-indigo-400 leading-relaxed font-medium">
                 Pastikan data profil Anda benar. Data ini akan otomatis digunakan saat Anda mengisi form pengajuan surat.
               </p>
             </CardContent>
@@ -349,7 +349,7 @@ export default function StudentProfilePage() {
           <Card className="border-none shadow-xl bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl">
             <CardHeader className="border-b bg-slate-50/50 dark:bg-slate-800/50 px-8 py-6">
               <CardTitle className="text-xl font-bold flex items-center">
-                <div className="h-8 w-8 rounded-lg bg-rose-100 dark:bg-rose-900/40 text-rose-600 flex items-center justify-center mr-3">
+                <div className="h-8 w-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 flex items-center justify-center mr-3">
                    <IconLock size={18} />
                 </div>
                 Keamanan Akun
@@ -386,10 +386,10 @@ export default function StudentProfilePage() {
               </CardContent>
               <CardFooter className="bg-slate-50/50 dark:bg-slate-800/50 p-6 flex justify-end">
                 <Button 
-                  type="submit" 
-                  variant="outline"
-                  disabled={isChangingPassword}
-                  className="h-11 px-8 rounded-xl font-bold border-rose-200 text-rose-600 hover:bg-rose-50 dark:border-rose-900/30 dark:hover:bg-rose-950/30"
+                   type="submit" 
+                   variant="outline"
+                   disabled={isChangingPassword}
+                   className="h-11 px-8 rounded-xl font-bold border-indigo-200 text-indigo-600 hover:bg-indigo-50 dark:border-indigo-900/30 dark:hover:bg-indigo-950/30"
                 >
                   {isChangingPassword ? (
                     <IconLoader2 className="mr-2 h-5 w-5 animate-spin" />

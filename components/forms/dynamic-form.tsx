@@ -83,8 +83,8 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
             render={({ field: formField }) => {
               const { value, ...fieldProps } = formField;
               return (
-                <FormItem>
-                  <FormLabel>{field.label}</FormLabel>
+                <FormItem className="space-y-2">
+                  <FormLabel className="text-xs font-black uppercase tracking-wider text-slate-500 ml-1">{field.label}</FormLabel>
                   <FormControl>
                     {field.type === 'select' || field.type === 'dosen_picker' ? (
                       <Select 
@@ -92,12 +92,12 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                         value={value as string}
                         disabled={field.disabled}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="h-12 bg-white/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 rounded-xl focus:ring-4 focus:ring-indigo-500/10 transition-all font-medium">
                           <SelectValue placeholder={field.placeholder || (field.type === 'dosen_picker' ? "Pilih Dosen..." : "Select an option")} />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="rounded-xl border-slate-100 dark:border-slate-800 shadow-2xl">
                           {field.options?.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
+                            <SelectItem key={option.value} value={option.value} className="rounded-lg m-1">
                               {option.label}
                             </SelectItem>
                           ))}
@@ -111,6 +111,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                         {...fieldProps}
                         value={(value as string) ?? ""}
                         disabled={field.disabled}
+                        className="min-h-[120px] bg-white/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 rounded-xl focus:ring-4 focus:ring-indigo-500/10 transition-all resize-none"
                       />
                     ) : (
                       <Input 
@@ -119,11 +120,12 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                         {...fieldProps} 
                         value={(value as string) ?? ""}
                         disabled={field.disabled}
+                        className="h-12 bg-white/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 rounded-xl focus:ring-4 focus:ring-indigo-500/10 transition-all font-medium disabled:bg-slate-50 dark:disabled:bg-slate-900/80 disabled:text-slate-400"
                       />
                     )}
                   </FormControl>
-                  {field.description && <FormDescription>{field.description}</FormDescription>}
-                  <FormMessage />
+                  {field.description && <FormDescription className="text-[11px] ml-1">{field.description}</FormDescription>}
+                  <FormMessage className="text-xs font-bold" />
                 </FormItem>
               );
             }}
@@ -131,7 +133,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
         ))}
         <Button 
           type="submit" 
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 dark:shadow-none font-bold h-12 rounded-2xl transition-all" 
+          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-xl shadow-indigo-600/20 dark:shadow-none font-black h-14 rounded-2xl transition-all hover:scale-[1.01] active:scale-[0.99] text-base uppercase tracking-wider mt-4" 
           disabled={isLoading}
         >
           {isLoading ? (
