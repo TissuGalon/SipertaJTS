@@ -42,6 +42,7 @@ interface ImportData {
   identifier: string; // NIM or NIP
   name: string;
   email: string;
+  degree?: string; // Gelar (for lecturers)
   status: 'pending' | 'duplicate' | 'invalid' | 'ready';
   error?: string;
 }
@@ -116,22 +117,40 @@ export default function BulkImportPage() {
     const lines = text.split('\n');
     const results: ImportData[] = [];
     
-    // Improved CSV parsing to handle common issues
+    // Improved CSV parsing for quoted values and different delimiters
+    const parseLine = (line: string) => {
+      const parts = [];
+      let currentPart = "";
+      let inQuotes = false;
+      
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"' || char === "'") {
+          inQuotes = !inQuotes;
+        } else if ((char === ',' || char === ';') && !inQuotes) {
+          parts.push(currentPart.trim());
+          currentPart = "";
+        } else {
+          currentPart += char;
+        }
+      }
+      parts.push(currentPart.trim());
+      return parts;
+    };
+
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i].trim();
       if (!line) continue;
       
-      // Handle comma or semicolon delimiters
-      const delimiter = line.includes(';') ? ';' : ',';
-      const parts = line.split(delimiter).map(s => s.trim().replace(/^["'](.+(?=["']$))["']$/, '$1'));
-      
-      const [identifier, name, email] = parts;
+      const parts = parseLine(line);
+      const [identifier, name, degree, email] = parts;
       
       if (!identifier || !name) {
         results.push({ 
           identifier: identifier || '?', 
           name: name || '?', 
           email: email || '', 
+          degree: degree || '',
           status: 'invalid',
           error: 'Form Gagal: NIM/NIP dan Nama diperlukan'
         });
@@ -141,6 +160,7 @@ export default function BulkImportPage() {
       results.push({ 
         identifier, 
         name, 
+        degree: degree || '',
         email: email || '', 
         status: 'pending' 
       });
@@ -227,6 +247,7 @@ export default function BulkImportPage() {
         [keyColumn]: d.identifier,
         name: d.name,
         email: d.email || null,
+        ...(importType === 'dosen' ? { gelar: d.degree || null } : {})
       }));
 
       const { error: insertError } = await supabase.from(table).insert(rows);
@@ -258,9 +279,12 @@ export default function BulkImportPage() {
   };
 
   const downloadTemplate = () => {
-    const identifier = importType === 'mahasiswa' ? 'NIM' : 'NIP';
-    const header = `${identifier},Nama,Email\n`;
-    const example = importType === 'mahasiswa' ? '2101001,Ahmad Fauzi,ahmad@example.com' : '19850101,Dr. Budi Santoso,budi@example.com';
+    const isDosen = importType === 'dosen';
+    const identifier = isDosen ? 'NIP' : 'NIM';
+    const header = isDosen ? `NIP,Nama,Gelar,Email\n` : `NIM,Nama,Email\n`;
+    const example = isDosen 
+      ? '19850101,Dr. Budi Santoso,M.T.,budi@example.com' 
+      : '2101001,Ahmad Fauzi,ahmad@example.com';
     const blob = new Blob([header + example], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -412,9 +436,9 @@ export default function BulkImportPage() {
 
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="bg-slate-50/80 dark:bg-slate-800/80 border-b text-slate-500 font-medium">
+                      <thead className="bg-slate-50/80 dark:bg-slate-800/80 border-b text-slate-500 font-medium">
                     <tr>
-                      <th className="h-14 px-8 text-left">Profil</th>
+                      <th className="h-14 px-8 text-left">Profil {importType === 'dosen' && "/ Gelar"}</th>
                       <th className="h-14 px-8 text-left uppercase tracking-tight">{importType === 'mahasiswa' ? 'NIM' : 'NIP'}</th>
                       <th className="h-14 px-8 text-left">Email</th>
                       <th className="h-14 px-8 text-left">Status</th>
@@ -436,7 +460,10 @@ export default function BulkImportPage() {
                                 {row.name.substring(0, 2).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
-                            <span className="font-semibold text-slate-900 dark:text-white">{row.name}</span>
+                            <div className="flex flex-col">
+                              <span className="font-semibold text-slate-900 dark:text-white leading-none">{row.name}</span>
+                              {row.degree && <span className="text-[10px] text-indigo-600 font-bold mt-1 uppercase tracking-tight">{row.degree}</span>}
+                            </div>
                           </div>
                         </td>
                         <td className="px-8 py-5">
