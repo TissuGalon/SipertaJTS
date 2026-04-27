@@ -26,12 +26,13 @@ import {
   IconSearch,
   IconSchool,
   IconId,
-  IconFilter
+  IconFilter,
+  IconHash
 } from '@tabler/icons-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
-import { RequestStatus } from '@/types';
+import { RequestStatus, PRODI_LABELS } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -176,8 +177,16 @@ export default function StudentDashboard() {
               </div>
               <div className="flex items-center space-x-2 text-sm bg-white/10 px-4 py-2 rounded-2xl backdrop-blur-sm border border-white/10">
                 <IconSchool size={18} className="text-indigo-300" />
-                <span className="font-bold">Teknik Informatika</span>
+                <span className="font-bold">
+                  {userProfile?.prodi ? (PRODI_LABELS[userProfile.prodi as keyof typeof PRODI_LABELS] || userProfile.prodi) : 'Program Studi Belum Diatur'}
+                </span>
               </div>
+              {userProfile?.semester && (
+                <div className="flex items-center space-x-2 text-sm bg-white/10 px-4 py-2 rounded-2xl backdrop-blur-sm border border-white/10">
+                  <IconHash size={18} className="text-indigo-300" />
+                  <span className="font-bold">Semester {userProfile.semester}</span>
+                </div>
+              )}
             </div>
           </div>
 

@@ -7,7 +7,8 @@ import {
   IconSearch, 
   IconSettings, 
   IconLogout,
-  IconShieldLock
+  IconShieldLock,
+  IconUser
 } from '@tabler/icons-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -25,6 +26,7 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
 import { ThemeToggle } from './theme-toggle';
+import { NotificationBell } from './notification-bell';
 
 interface TopbarProps {
   userProfile: UserProfile | null;
@@ -35,6 +37,7 @@ interface TopbarProps {
   navCounts?: Record<string, number>;
   onSearchOpen: () => void;
   onLogout: () => void;
+  role?: string;
 }
 
 export function Topbar({ 
@@ -45,7 +48,8 @@ export function Topbar({
   categories = [], 
   navCounts = {}, 
   onSearchOpen, 
-  onLogout 
+  onLogout,
+  role
 }: TopbarProps) {
   const pathname = usePathname();
 
@@ -143,10 +147,7 @@ export function Topbar({
       <div className="flex items-center space-x-1 md:space-x-4">
         <div className="flex items-center space-x-1 md:space-x-2">
           <ThemeToggle />
-          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg relative text-slate-600 dark:text-slate-400">
-            <IconBell size={20} />
-            <span className="absolute top-2 right-2.5 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-slate-900" />
-          </Button>
+          <NotificationBell role={role} />
         </div>
 
         <div className="h-8 w-[1px] bg-slate-200 dark:bg-slate-800 hidden sm:block mx-1" />
@@ -178,10 +179,12 @@ export function Topbar({
                   <p className="text-xs leading-none text-slate-500">{userProfile?.email}</p>
                 </div>
               </DropdownMenuLabel>
-              <DropdownMenuItem className="cursor-pointer">
-                <IconSettings className="mr-2 h-4 w-4" />
-                <span>Pengaturan</span>
-              </DropdownMenuItem>
+              <Link href={role === 'admin' ? '/admin/settings' : `/${role}/profile`}>
+                <DropdownMenuItem className="cursor-pointer">
+                  <IconUser className="mr-2 h-4 w-4" />
+                  <span>Profil Saya</span>
+                </DropdownMenuItem>
+              </Link>
               <DropdownMenuItem className="text-rose-500 cursor-pointer focus:bg-rose-50 focus:text-rose-600 dark:focus:bg-rose-950/50" onClick={onLogout}>
                 <IconLogout className="mr-2 h-4 w-4" />
                 <span>Keluar</span>

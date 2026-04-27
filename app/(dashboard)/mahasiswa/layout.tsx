@@ -5,7 +5,8 @@ import {
   IconLayoutDashboard, 
   IconFilePlus, 
   IconFiles, 
-  IconSchool
+  IconSchool,
+  IconUserCircle
 } from '@tabler/icons-react';
 import { supabase } from '@/lib/supabase';
 import { DashboardLayout } from '@/components/dashboard/layout';
@@ -15,9 +16,10 @@ const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/mahasiswa/dashboard', icon: IconLayoutDashboard, category: 'Utama' },
   { label: 'Ajukan Surat', href: '/mahasiswa/request', icon: IconFilePlus, category: 'Layanan Surat' },
   { label: 'Riwayat Surat', href: '/mahasiswa/history', icon: IconFiles, category: 'Layanan Surat' },
+  { label: 'Profil Saya', href: '/mahasiswa/profile', icon: IconUserCircle, category: 'Akun' },
 ];
 
-const categories = ['Utama', 'Layanan Surat'];
+const categories = ['Utama', 'Layanan Surat', 'Akun'];
 
 export default function MahasiswaLayout({ children }: { children: React.ReactNode }) {
   const [navCounts, setNavCounts] = useState<Record<string, number>>({});
