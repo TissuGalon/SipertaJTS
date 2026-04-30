@@ -31,7 +31,9 @@ import {
   IconLoader2,
   IconLock,
   IconAlertCircle,
-  IconArrowLeft
+  IconArrowLeft,
+  IconCamera,
+  IconUpload
 } from '@tabler/icons-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -46,6 +48,7 @@ export default function StudentProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [passwords, setPasswords] = useState({
     new: '',
     confirm: ''
@@ -129,6 +132,69 @@ export default function StudentProfilePage() {
     }
   };
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type and size
+    if (!file.type.startsWith('image/')) {
+      toast.error("Format file tidak valid", { description: "Pilih file gambar (JPG, PNG, dll)" });
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("File terlalu besar", { description: "Maksimal ukuran file adalah 2MB" });
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Sesi tidak valid");
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+      const filePath = fileName;
+
+      // 1. Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { 
+          upsert: true,
+          contentType: file.type 
+        });
+
+      if (uploadError) throw uploadError;
+
+      // 2. Get Public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      // 3. Update Database (mahasiswa & users)
+      const { error: mhsError } = await supabase
+        .from('mahasiswa')
+        .update({ avatar_url: publicUrl })
+        .eq('user_id', user.id);
+      
+      if (mhsError) throw mhsError;
+
+      await supabase
+        .from('users')
+        .update({ avatar_url: publicUrl })
+        .eq('id', user.id);
+
+      // 4. Update local state
+      setProfile({ ...profile, avatar_url: publicUrl });
+      toast.success("Foto profil berhasil diperbarui");
+      
+    } catch (error: any) {
+      console.error("Avatar upload error:", error);
+      toast.error("Gagal mengunggah foto", { description: error.message });
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (passwords.new !== passwords.confirm) {
@@ -187,10 +253,41 @@ export default function StudentProfilePage() {
             </div>
             <CardContent className="relative pt-0 flex flex-col items-center">
               <div className="-mt-16 relative">
-                <div className="h-32 w-32 rounded-3xl bg-white dark:bg-slate-800 p-1 shadow-2xl rotate-3 transform transition-transform hover:rotate-0 duration-500">
-                  <div className="h-full w-full rounded-2xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-indigo-600">
-                    <IconUser size={64} stroke={1.5} />
+                <div className="h-32 w-32 rounded-3xl bg-white dark:bg-slate-800 p-1 shadow-2xl rotate-3 transform transition-transform hover:rotate-0 duration-500 overflow-hidden relative group">
+                  <div className="h-full w-full rounded-2xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-indigo-600 overflow-hidden">
+                    {profile?.avatar_url ? (
+                      <img 
+                        src={profile.avatar_url} 
+                        alt={profile.name} 
+                        className="h-full w-full object-cover transition-transform group-hover:scale-110 duration-500"
+                      />
+                    ) : (
+                      <IconUser size={64} stroke={1.5} />
+                    )}
                   </div>
+                  
+                  {/* Upload Overlay */}
+                  <label 
+                    htmlFor="avatar-upload" 
+                    className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-2xl"
+                  >
+                    {isUploadingAvatar ? (
+                      <IconLoader2 size={32} className="text-white animate-spin" />
+                    ) : (
+                      <div className="text-white flex flex-col items-center">
+                        <IconCamera size={24} />
+                        <span className="text-[10px] font-bold mt-1">Ubah Foto</span>
+                      </div>
+                    )}
+                  </label>
+                  <input 
+                    type="file" 
+                    id="avatar-upload" 
+                    className="hidden" 
+                    accept="image/*"
+                    onChange={handleAvatarUpload}
+                    disabled={isUploadingAvatar}
+                  />
                 </div>
                 <div className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full bg-emerald-500 border-4 border-white dark:border-slate-900 shadow-lg" />
               </div>

@@ -38,14 +38,14 @@ export function DashboardLayout({
       if (user) {
         const { data: profile } = await supabase
           .from("users")
-          .select("name, email, role")
+          .select("name, email, role, avatar_url")
           .eq("id", user.id)
           .single();
         
         if (profile) {
           setUserProfile({
             ...profile,
-            avatar: "", // Can be extended later
+            avatar: (profile as any).avatar_url || "",
           });
         }
       } else {
