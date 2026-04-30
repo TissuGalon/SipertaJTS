@@ -1,7 +1,7 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -59,11 +59,18 @@ export async function middleware(request: NextRequest) {
 
   // unprotected routes
   const isAuthPage = request.nextUrl.pathname.startsWith('/login') || 
-                     request.nextUrl.pathname.startsWith('/register')
+                     request.nextUrl.pathname.startsWith('/register') ||
+                     request.nextUrl.pathname.startsWith('/forgot-password') ||
+                     request.nextUrl.pathname.startsWith('/reset-password') ||
+                     request.nextUrl.pathname.startsWith('/auth/callback')
 
   if (isAuthPage) {
-    if (user) {
-      // If user is already logged in, redirect away from auth pages
+    // If user is already logged in, redirect away from login/register pages
+    // but allow them to stay on reset-password or auth callback
+    if (user && (
+      request.nextUrl.pathname.startsWith('/login') || 
+      request.nextUrl.pathname.startsWith('/register')
+    )) {
       return NextResponse.redirect(new URL('/', request.url))
     }
     return response

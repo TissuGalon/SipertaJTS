@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { IconMail, IconLock, IconLoader2 } from "@tabler/icons-react"
 import { toast } from "sonner"
 import { supabase } from "@/lib/supabase"
+import Link from "next/link"
 
 interface LoginFormProps {
   onSuccess?: () => void
@@ -126,6 +127,14 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
+        </div>
+        <div className="flex justify-end">
+          <Link 
+            href="/forgot-password" 
+            className="text-xs font-medium text-slate-500 hover:text-indigo-600 transition-colors"
+          >
+            Lupa Password?
+          </Link>
         </div>
       </div>
       <Button

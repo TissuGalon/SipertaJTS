@@ -146,14 +146,7 @@ export default function LandingPage() {
                   <RegisterForm onSuccess={() => setActiveTab("login")} />
                 </TabsContent>
               </Tabs>
-              <CardFooter className="flex flex-col space-y-4 bg-slate-50/50 p-6 dark:bg-slate-900/50">
-                <div className="text-center text-xs text-slate-500">
-                  Lupa kata sandi?{" "}
-                  <a href="#" className="font-medium text-blue-600 hover:underline">
-                    Reset di sini
-                  </a>
-                </div>
-              </CardFooter>
+          
             </Card>
           </motion.div>
         </div>
